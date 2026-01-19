@@ -117,19 +117,19 @@
     <string name="show_hide_records">Ẩn dữ liệu vòng lặp</string>
     <!-- ProfileHelperActivity -->
     <string name="profile1">Hồ sơ 1</string>
-    <string name="profile2">Cấu hình 2</string>
-    <string name="profile_type">Loại Cấu hình</string>
+    <string name="profile2">Hồ sơ 2</string>
+    <string name="profile_type">Loại hồ sơ</string>
     <string name="basal_pct_from_tdd_label">% của liều nền</string>
     <string name="selected_profile">Chọn:</string>
-    <string name="compare_profile">So sánh các Cấu hình</string>
-    <string name="nav_profile_helper">Hỗ trợ cấu hình</string>
-    <string name="motol_default_profile">Cấu hình mặc định</string>
-    <string name="current_profile">Cấu hình hiện tại</string>
-    <string name="available_profile">Cấu hình có sẵn</string>
+    <string name="compare_profile">So sánh các Hồ sơ</string>
+    <string name="nav_profile_helper">Hỗ trợ Hồ sơ</string>
+    <string name="motol_default_profile">Hồ sơ mặc định</string>
+    <string name="current_profile">Hồ sơ hiện tại</string>
+    <string name="available_profile">Hồ sơ có sẵn</string>
     <string name="format_with_tdd">Age: %1$d TDD: %2$.0f U</string>
     <string name="format_with_tdd_and_pct">Age: %1$d TDD: %2$.0f U %3$d%%</string>
     <string name="format_with_weight">Age: %1$d Weight: %2$.0f kg</string>
-    <string name="dpv_default_profile">Cấu hình mặc định DPV</string>
+    <string name="dpv_default_profile">Hồ sơ mặc định DPV</string>
     <string name="invalid_pct">Giá trị % không hợp lệ</string>
     <!-- Other dialogs -->
     <string name="basal_rate">Tỷ lệ liều nền</string>
