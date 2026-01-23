@@ -533,7 +533,7 @@
     <string name="daily_units">Đơn vị hàng ngày</string>
     <string name="pump_icon">Biểu tượng pump</string>
     <string name="view_profile">Xem Hồ sơ</string>
-    <string name="pump_history">Lịch sử pump</string>
+    <string name="pump_history">Lịch sử bơm</string>
     <string name="stats">Thống kê</string>
     <string name="pump_driver_change" comment="26 characters max for translation">Thay trình điều khiển bơm.</string>
     <string name="device_changed" comment="26 characters max for translation">Thiết bị đã thay đổi</string>
