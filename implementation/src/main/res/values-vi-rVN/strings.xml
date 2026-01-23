@@ -17,7 +17,7 @@
     <string name="night_tir">TIR ban đêm</string>
     <string name="carbs_short" comment="max 6 characters">Carbs</string>
     <!--    PumpStatusGenerator-->
-    <string name="short_status_last_connection">LastConn: %1$d min ago</string>
+    <string name="short_status_last_connection">Kết nối gần nhất: %1$d phút trước</string>
     <string name="short_status_alert">Cảnh báo: %1$s</string>
     <string name="short_status_last_bolus">LastBolus: %1$sU @ %2$s</string>
     <string name="short_status_temp_basal">Temp: %1$s</string>
