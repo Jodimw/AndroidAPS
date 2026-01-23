@@ -99,7 +99,7 @@
     <!--    Loop -->
     <string name="run_now">Chạy ngay bây giờ</string>
     <string name="smb_frequency_exceeded">Một liều bolus đã được bơm trong vòng 3 phút trước, bỏ qua SMB</string>
-    <string name="pump_not_initialized">Pump chưa được khởi tạo!</string>
+    <string name="pump_not_initialized">Bơm chưa được khởi tạo!</string>
     <string name="loop_shortname">LOOP</string>
     <string name="description_loop">Bật hoặc tắt chức năng thực thi để kích hoạt vòng lặp.</string>
     <string name="no_aps_selected">KHÔNG CÓ APS ĐƯỢC CHỌN HOẶC CUNG CẤP KẾT QUẢ</string>
@@ -165,7 +165,7 @@
     <string name="autotune_revert_local_profile_message">Hoàn nguyên Hồ sơ %1$s về Hồ sơ Đầu vào không?</string>
     <string name="autotune_profile_invalid">Hồ sơ không hợp lệ</string>
     <string name="not_available_full">Không khả dụng</string>
-    <string name="pump_disconnected">Pump đã ngắt kết nối</string>
+    <string name="pump_disconnected">Bơm đã ngắt kết nối</string>
     <!--    autoISF -->
     <string name="half_basal_exercise_target_title">Mục tiêu tập luyện với 50% liều nền</string>
     <string name="half_basal_exercise_target_summary">Đặt thành một số, ví dụ 160, có nghĩa là khi mục tiêu tạm thời (temp target) là 160 mg/dL và tùy chọn \'High temptarget raises sensitivity=true\' được bật, Aaps sẽ chạy 50%% liều nền ở mức này (120 = 75%%; 140 = 60%%).</string>
