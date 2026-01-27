@@ -1,16 +1,16 @@
 package app.aaps.ui.compose.graphs
 
 import androidx.compose.runtime.Immutable
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.unit.dp
 import app.aaps.core.interfaces.overview.graph.BgDataPoint
 import app.aaps.core.interfaces.overview.graph.BgRange
-import com.patrykandpatrick.vico.core.cartesian.data.LineCartesianLayerModel
-import com.patrykandpatrick.vico.core.cartesian.layer.LineCartesianLayer
-import com.patrykandpatrick.vico.core.common.Fill
-import com.patrykandpatrick.vico.core.common.component.ShapeComponent
-import com.patrykandpatrick.vico.core.common.data.ExtraStore
-import com.patrykandpatrick.vico.core.common.shape.CorneredShape
+import com.patrykandpatrick.vico.compose.cartesian.data.LineCartesianLayerModel
+import com.patrykandpatrick.vico.compose.cartesian.layer.LineCartesianLayer
+import com.patrykandpatrick.vico.compose.common.Fill
+import com.patrykandpatrick.vico.compose.common.component.ShapeComponent
+import com.patrykandpatrick.vico.compose.common.data.ExtraStore
 
 /**
  * PointProvider for BUCKETED BG data - colors points by range (LOW/IN_RANGE/HIGH).
@@ -31,10 +31,10 @@ class BucketedPointProvider(
 
     private fun createFilledPoint(color: Color) = LineCartesianLayer.Point(
         component = ShapeComponent(
-            fill = Fill(color.toArgb()),
-            shape = CorneredShape.Pill
+            fill = Fill(color),
+            shape = CircleShape
         ),
-        sizeDp = 6f
+        size = 6.dp
     )
 
     override fun getPoint(

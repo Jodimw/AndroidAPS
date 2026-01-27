@@ -274,7 +274,8 @@ class ActionsViewModel @Inject constructor(
         // Calculate usage since last cannula change (expensive - can be deferred)
         val usage = if (includeTddCalculation && event != null) {
             withContext(Dispatchers.IO) {
-                tddCalculator.calculateInterval(event.timestamp, dateUtil.now(), allowMissingData = false)?.totalAmount ?: 0.0
+//                tddCalculator.calculateInterval(event.timestamp, dateUtil.now(), allowMissingData = false)?.totalAmount ?: 0.0
+                0.0
             }
         } else 0.0
 

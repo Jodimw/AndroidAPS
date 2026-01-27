@@ -5,6 +5,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import app.aaps.ui.compose.graphs.BgGraphCompose
@@ -12,49 +14,83 @@ import app.aaps.ui.compose.graphs.CobGraphCompose
 import app.aaps.ui.compose.graphs.DEFAULT_GRAPH_ZOOM_MINUTES
 import app.aaps.ui.compose.graphs.IobGraphCompose
 import app.aaps.ui.compose.graphs.viewmodels.GraphViewModel
+import com.patrykandpatrick.vico.compose.cartesian.Scroll
+import com.patrykandpatrick.vico.compose.cartesian.Zoom
 import com.patrykandpatrick.vico.compose.cartesian.rememberVicoScrollState
 import com.patrykandpatrick.vico.compose.cartesian.rememberVicoZoomState
-import com.patrykandpatrick.vico.core.cartesian.Scroll
-import com.patrykandpatrick.vico.core.cartesian.Zoom
+import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.drop
 
 /**
  * Overview graphs section using Vico charts.
  *
- * Pattern: Shared State with Gesture Blocking
- * - All graphs share the SAME VicoScrollState and VicoZoomState objects for perfect sync
- * - BG graph: Interactive - user can scroll/zoom to control all graphs
- * - IOB/COB graphs: Non-interactive - wrapped in Box with pointerInput to block ALL gestures
- *   - Box.pointerInput intercepts touch events BEFORE they reach CartesianChartHost
- *   - Prevents secondary graphs from modifying shared state
- *   - They only read and display the state set by BG graph
+ * Pattern: Observe Primary + Sync to Secondary
+ * - Each graph has its OWN VicoScrollState and VicoZoomState
+ * - BG graph: Interactive - user can scroll/zoom
+ * - IOB/COB graphs: Non-interactive - scroll/zoom disabled
+ * - LaunchedEffect observes BG graph's state changes and syncs to IOB/COB
  *
- * Gesture Blocking Implementation:
- * - awaitPointerEventScope with infinite loop swallows all pointer events
- * - No consume() calls needed - just absorbing events prevents propagation
- *
- * Debugging:
- * - MonitorScrollState and MonitorZoomState log all state changes with stack traces
- * - Use XXXX prefix in logs to identify synchronization issues
+ * Synchronization Implementation:
+ * - snapshotFlow observes scroll/zoom values from BG graph
+ * - debounce(50) waits for gesture to settle
+ * - zoomState.zoom() and scrollState.scroll() copy state to secondary graphs
  *
  * Graphs (top to bottom):
  * - BG Graph: Blood glucose readings (200dp height) - Primary interactive
  * - IOB Graph: Insulin on board (75dp height) - Display only, follows BG graph
  * - COB Graph: Carbs on board (75dp height) - Display only, follows BG graph
  */
+@OptIn(FlowPreview::class)
 @Composable
 fun OverviewGraphsSection(
     graphViewModel: GraphViewModel,
     modifier: Modifier = Modifier
 ) {
-    // Shared state - both graphs use the same state objects for perfect sync
-    val scrollState = rememberVicoScrollState(
+    // BG graph - primary interactive
+    val bgScrollState = rememberVicoScrollState(
         scrollEnabled = true,
         initialScroll = Scroll.Absolute.End
     )
-    val zoomState = rememberVicoZoomState(
+    val bgZoomState = rememberVicoZoomState(
+        zoomEnabled = true,
+        initialZoom = Zoom.x(DEFAULT_GRAPH_ZOOM_MINUTES)
+    )
+
+    // IOB graph - non-interactive, synced from BG
+    val iobScrollState = rememberVicoScrollState(
+        scrollEnabled = false,
+        initialScroll = Scroll.Absolute.End
+    )
+    val iobZoomState = rememberVicoZoomState(
         zoomEnabled = false,
         initialZoom = Zoom.x(DEFAULT_GRAPH_ZOOM_MINUTES)
     )
+
+    // COB graph - non-interactive, synced from BG
+    val cobScrollState = rememberVicoScrollState(
+        scrollEnabled = false,
+        initialScroll = Scroll.Absolute.End
+    )
+    val cobZoomState = rememberVicoZoomState(
+        zoomEnabled = false,
+        initialZoom = Zoom.x(DEFAULT_GRAPH_ZOOM_MINUTES)
+    )
+
+    // Observe BG graph scroll/zoom and sync to IOB/COB graphs
+    LaunchedEffect(bgScrollState, bgZoomState, iobScrollState, iobZoomState, cobScrollState, cobZoomState) {
+        snapshotFlow { bgScrollState.value to bgZoomState.value }
+            .debounce(50) // Wait for gesture to settle
+            .collect { (scroll, zoom) ->
+                // Sync zoom first, then scroll (order matters for proper positioning)
+                iobZoomState.zoom(Zoom.fixed(zoom))
+                cobZoomState.zoom(Zoom.fixed(zoom))
+                delay(10)
+                iobScrollState.scroll(Scroll.Absolute.pixels(scroll))
+                cobScrollState.scroll(Scroll.Absolute.pixels(scroll))
+            }
+    }
 
     Column(
         modifier = modifier
@@ -65,24 +101,24 @@ fun OverviewGraphsSection(
         // BG Graph - primary interactive graph
         BgGraphCompose(
             viewModel = graphViewModel,
-            scrollState = scrollState,
-            zoomState = zoomState,
+            scrollState = bgScrollState,
+            zoomState = bgZoomState,
             modifier = Modifier.fillMaxWidth()
         )
 
-        // IOB Graph - non-interactive (scrollEnabled/zoomEnabled = false in state)
+        // IOB Graph - non-interactive, synced from BG graph
         IobGraphCompose(
             viewModel = graphViewModel,
-            scrollState = scrollState,
-            zoomState = zoomState,
+            scrollState = iobScrollState,
+            zoomState = iobZoomState,
             modifier = Modifier.fillMaxWidth()
         )
 
-        // COB Graph - non-interactive (scrollEnabled/zoomEnabled = false in state)
+        // COB Graph - non-interactive, synced from BG graph
         CobGraphCompose(
             viewModel = graphViewModel,
-            scrollState = scrollState,
-            zoomState = zoomState,
+            scrollState = cobScrollState,
+            zoomState = cobZoomState,
             modifier = Modifier.fillMaxWidth()
         )
     }

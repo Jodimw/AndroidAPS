@@ -10,8 +10,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import app.aaps.core.graph.vico.AdaptiveStep
 import app.aaps.core.graph.vico.Square
@@ -20,19 +21,16 @@ import app.aaps.ui.compose.graphs.viewmodels.GraphViewModel
 import com.patrykandpatrick.vico.compose.cartesian.CartesianChartHost
 import com.patrykandpatrick.vico.compose.cartesian.VicoScrollState
 import com.patrykandpatrick.vico.compose.cartesian.VicoZoomState
-import com.patrykandpatrick.vico.compose.cartesian.axis.rememberBottom
-import com.patrykandpatrick.vico.compose.cartesian.axis.rememberStart
+import com.patrykandpatrick.vico.compose.cartesian.axis.HorizontalAxis
+import com.patrykandpatrick.vico.compose.cartesian.axis.VerticalAxis
+import com.patrykandpatrick.vico.compose.cartesian.data.CartesianChartModelProducer
+import com.patrykandpatrick.vico.compose.cartesian.data.lineSeries
+import com.patrykandpatrick.vico.compose.cartesian.layer.LineCartesianLayer
 import com.patrykandpatrick.vico.compose.cartesian.layer.rememberLineCartesianLayer
 import com.patrykandpatrick.vico.compose.cartesian.rememberCartesianChart
+import com.patrykandpatrick.vico.compose.common.Fill
+import com.patrykandpatrick.vico.compose.common.component.TextComponent
 import com.patrykandpatrick.vico.compose.common.component.rememberTextComponent
-import com.patrykandpatrick.vico.core.cartesian.axis.HorizontalAxis
-import com.patrykandpatrick.vico.core.cartesian.axis.VerticalAxis
-import com.patrykandpatrick.vico.core.cartesian.data.CartesianChartModelProducer
-import com.patrykandpatrick.vico.core.cartesian.data.lineSeries
-import com.patrykandpatrick.vico.core.cartesian.layer.LineCartesianLayer
-import com.patrykandpatrick.vico.core.common.Fill
-import com.patrykandpatrick.vico.core.common.component.TextComponent.MinWidth.Companion.fixed
-import com.patrykandpatrick.vico.core.common.shader.ShaderProvider
 
 /**
  * IOB (Insulin On Board) Graph using Vico.
@@ -164,12 +162,14 @@ fun IobGraphCompose(
     // Line style for IOB: solid blue line with square step connector
     val iobLine = remember(iobColor) {
         LineCartesianLayer.Line(
-            fill = LineCartesianLayer.LineFill.single(Fill(iobColor.toArgb())),
+            fill = LineCartesianLayer.LineFill.single(Fill(iobColor)),
             areaFill = LineCartesianLayer.AreaFill.single(
                 Fill(
-                    ShaderProvider.verticalGradient(
-                        iobColor.copy(alpha = 1f).toArgb(),
-                        Color.Transparent.toArgb()
+                    Brush.verticalGradient(
+                        listOf(
+                            iobColor.copy(alpha = 1f),
+                            Color.Transparent
+                        )
                     )
                 )
             ),
@@ -180,7 +180,7 @@ fun IobGraphCompose(
     // Line style for predictions: same as IOB but without gradient fill
     val predictionsLine = remember(iobColor) {
         LineCartesianLayer.Line(
-            fill = LineCartesianLayer.LineFill.single(Fill(iobColor.toArgb())),
+            fill = LineCartesianLayer.LineFill.single(Fill(iobColor)),
             areaFill = null,  // No gradient for predictions
             pointConnector = Square  // Fixed step: horizontal→vertical staircase
         )
@@ -209,15 +209,15 @@ fun IobGraphCompose(
             ),
             startAxis = VerticalAxis.rememberStart(
                 label = rememberTextComponent(
-                    color = MaterialTheme.colorScheme.onSurface,
-                    minWidth = fixed(30.0f)
+                    style = TextStyle(color = MaterialTheme.colorScheme.onSurface),
+                    minWidth = TextComponent.MinWidth.fixed(30.dp)
                 )
             ),
             bottomAxis = HorizontalAxis.rememberBottom(
                 valueFormatter = timeFormatter,
                 itemPlacer = bottomAxisItemPlacer,
                 label = rememberTextComponent(
-                    color = MaterialTheme.colorScheme.onSurface
+                    style = TextStyle(color = MaterialTheme.colorScheme.onSurface)
                 )
             )
         ),

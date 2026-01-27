@@ -1,6 +1,6 @@
 package app.aaps.core.graph.vico
 
-import com.patrykandpatrick.vico.core.cartesian.layer.LineCartesianLayer.PointConnector
+import com.patrykandpatrick.vico.compose.cartesian.layer.LineCartesianLayer.PointConnector
 
 /**
  * Custom Vico PointConnector that creates a stepped (staircase) line appearance.

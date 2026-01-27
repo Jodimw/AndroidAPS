@@ -10,8 +10,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import app.aaps.core.graph.vico.AdaptiveStep
 import app.aaps.core.ui.compose.AapsTheme
@@ -19,21 +21,17 @@ import app.aaps.ui.compose.graphs.viewmodels.GraphViewModel
 import com.patrykandpatrick.vico.compose.cartesian.CartesianChartHost
 import com.patrykandpatrick.vico.compose.cartesian.VicoScrollState
 import com.patrykandpatrick.vico.compose.cartesian.VicoZoomState
-import com.patrykandpatrick.vico.compose.cartesian.axis.rememberBottom
-import com.patrykandpatrick.vico.compose.cartesian.axis.rememberStart
+import com.patrykandpatrick.vico.compose.cartesian.axis.HorizontalAxis
+import com.patrykandpatrick.vico.compose.cartesian.axis.VerticalAxis
+import com.patrykandpatrick.vico.compose.cartesian.data.CartesianChartModelProducer
+import com.patrykandpatrick.vico.compose.cartesian.data.lineSeries
+import com.patrykandpatrick.vico.compose.cartesian.layer.LineCartesianLayer
 import com.patrykandpatrick.vico.compose.cartesian.layer.rememberLineCartesianLayer
 import com.patrykandpatrick.vico.compose.cartesian.rememberCartesianChart
+import com.patrykandpatrick.vico.compose.common.Fill
+import com.patrykandpatrick.vico.compose.common.component.ShapeComponent
+import com.patrykandpatrick.vico.compose.common.component.TextComponent
 import com.patrykandpatrick.vico.compose.common.component.rememberTextComponent
-import com.patrykandpatrick.vico.core.cartesian.axis.HorizontalAxis
-import com.patrykandpatrick.vico.core.cartesian.axis.VerticalAxis
-import com.patrykandpatrick.vico.core.cartesian.data.CartesianChartModelProducer
-import com.patrykandpatrick.vico.core.cartesian.data.lineSeries
-import com.patrykandpatrick.vico.core.cartesian.layer.LineCartesianLayer
-import com.patrykandpatrick.vico.core.common.Fill
-import com.patrykandpatrick.vico.core.common.component.ShapeComponent
-import com.patrykandpatrick.vico.core.common.component.TextComponent.MinWidth.Companion.fixed
-import com.patrykandpatrick.vico.core.common.shader.ShaderProvider
-import com.patrykandpatrick.vico.core.common.shape.CorneredShape
 
 /**
  * COB (Carbs On Board) Graph using Vico.
@@ -168,12 +166,14 @@ fun CobGraphCompose(
     // Line style for COB: solid orange line with adaptive step connector
     val cobLine = remember(cobColor) {
         LineCartesianLayer.Line(
-            fill = LineCartesianLayer.LineFill.single(Fill(cobColor.toArgb())),
+            fill = LineCartesianLayer.LineFill.single(Fill(cobColor)),
             areaFill = LineCartesianLayer.AreaFill.single(
                 Fill(
-                    ShaderProvider.verticalGradient(
-                        cobColor.copy(alpha = 1f).toArgb(),
-                        Color.Transparent.toArgb()
+                    Brush.verticalGradient(
+                        listOf(
+                            cobColor.copy(alpha = 1f),
+                            Color.Transparent
+                        )
                     )
                 )
             ),
@@ -187,15 +187,15 @@ fun CobGraphCompose(
     // Failover dots style - same color as COB line, dots only, no line
     val failoverDotsLine = remember(cobColor) {
         LineCartesianLayer.Line(
-            fill = LineCartesianLayer.LineFill.single(Fill(Color.Transparent.toArgb())),
+            fill = LineCartesianLayer.LineFill.single(Fill(Color.Transparent)),
             areaFill = null,
             pointProvider = LineCartesianLayer.PointProvider.single(
                 LineCartesianLayer.Point(
                     component = ShapeComponent(
-                        fill = Fill(cobColor.toArgb()),
-                        shape = CorneredShape.Pill
+                        fill = Fill(cobColor),
+                        shape = CircleShape
                     ),
-                    sizeDp = 6f
+                    size = 6.dp
                 )
             )
         )
@@ -213,40 +213,6 @@ fun CobGraphCompose(
         }
     }
 
-    // Calculate failover x-ranges for shading decoration
-    val failoverRanges = remember(cobGraphData, minTimestamp) {
-        val failoverTimestamps = cobGraphData.failOverPoints
-            .map { it.timestamp }
-            .sorted()
-
-        if (failoverTimestamps.isEmpty()) {
-            emptyList()
-        } else {
-            // Group consecutive timestamps into ranges
-            val timestampRanges = groupConsecutiveTimestamps(failoverTimestamps, maxGapMinutes = 10)
-
-            // Convert to x-coordinates (minutes from minTimestamp)
-            timestampRanges.map { (startTs, endTs) ->
-                val startX = timestampToX(startTs, minTimestamp)
-                val endX = timestampToX(endTs, minTimestamp)
-                startX..endX
-            }
-        }
-    }
-
-    // Failover shading decoration - same color as COB line
-    val failoverDecoration = remember(failoverRanges, cobColor) {
-        XRangeDecoration(
-            xRanges = failoverRanges,
-            color = cobColor,
-            alpha = 0.15f
-        )
-    }
-
-    val decorations = remember(failoverDecoration) {
-        listOf(failoverDecoration)
-    }
-
     CartesianChartHost(
         chart = rememberCartesianChart(
             rememberLineCartesianLayer(
@@ -254,18 +220,17 @@ fun CobGraphCompose(
             ),
             startAxis = VerticalAxis.rememberStart(
                 label = rememberTextComponent(
-                    color = MaterialTheme.colorScheme.onSurface,
-                    minWidth = fixed(30.0f)
+                    style = TextStyle(color = MaterialTheme.colorScheme.onSurface),
+                    minWidth = TextComponent.MinWidth.fixed(30.dp)
                 )
             ),
             bottomAxis = HorizontalAxis.rememberBottom(
                 valueFormatter = timeFormatter,
                 itemPlacer = bottomAxisItemPlacer,
                 label = rememberTextComponent(
-                    color = MaterialTheme.colorScheme.onSurface
+                    style = TextStyle(color = MaterialTheme.colorScheme.onSurface)
                 )
-            ),
-            decorations = decorations
+            )
         ),
         modelProducer = modelProducer,
         modifier = modifier

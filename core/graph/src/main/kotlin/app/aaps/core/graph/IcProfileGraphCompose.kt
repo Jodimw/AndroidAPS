@@ -6,35 +6,31 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import app.aaps.core.graph.vico.Square
 import app.aaps.core.interfaces.profile.Profile
 import app.aaps.core.ui.compose.AapsTheme
 import com.patrykandpatrick.vico.compose.cartesian.CartesianChartHost
-import com.patrykandpatrick.vico.compose.cartesian.axis.rememberBottom
-import com.patrykandpatrick.vico.compose.cartesian.axis.rememberStart
+import com.patrykandpatrick.vico.compose.cartesian.Zoom
+import com.patrykandpatrick.vico.compose.cartesian.axis.HorizontalAxis
+import com.patrykandpatrick.vico.compose.cartesian.axis.VerticalAxis
+import com.patrykandpatrick.vico.compose.cartesian.data.CartesianChartModelProducer
+import com.patrykandpatrick.vico.compose.cartesian.data.lineSeries
+import com.patrykandpatrick.vico.compose.cartesian.layer.LineCartesianLayer
 import com.patrykandpatrick.vico.compose.cartesian.layer.rememberLineCartesianLayer
 import com.patrykandpatrick.vico.compose.cartesian.rememberCartesianChart
 import com.patrykandpatrick.vico.compose.cartesian.rememberVicoZoomState
+import com.patrykandpatrick.vico.compose.common.Fill
+import com.patrykandpatrick.vico.compose.common.LegendItem
+import com.patrykandpatrick.vico.compose.common.component.rememberShapeComponent
 import com.patrykandpatrick.vico.compose.common.component.rememberTextComponent
-import com.patrykandpatrick.vico.compose.common.component.shapeComponent
-import com.patrykandpatrick.vico.compose.common.fill
-import com.patrykandpatrick.vico.compose.common.insets
+import com.patrykandpatrick.vico.compose.common.data.ExtraStore
+import com.patrykandpatrick.vico.compose.common.Insets
 import com.patrykandpatrick.vico.compose.common.rememberHorizontalLegend
 import com.patrykandpatrick.vico.compose.common.vicoTheme
-import com.patrykandpatrick.vico.core.cartesian.Zoom
-import com.patrykandpatrick.vico.core.cartesian.axis.HorizontalAxis
-import com.patrykandpatrick.vico.core.cartesian.axis.VerticalAxis
-import com.patrykandpatrick.vico.core.cartesian.data.CartesianChartModelProducer
-import com.patrykandpatrick.vico.core.cartesian.data.lineSeries
-import com.patrykandpatrick.vico.core.cartesian.layer.LineCartesianLayer
-import com.patrykandpatrick.vico.core.common.Fill
-import com.patrykandpatrick.vico.core.common.LegendItem
-import com.patrykandpatrick.vico.core.common.data.ExtraStore
-import com.patrykandpatrick.vico.core.common.shader.ShaderProvider
-import com.patrykandpatrick.vico.core.common.shape.CorneredShape
 
 /**
  * Composable that displays IC (Insulin to Carb ratio) profile data as a line chart using Vico charting library.
@@ -114,24 +110,28 @@ fun IcProfileGraphCompose(
     }
 
     val lineColors = listOf(profile2Color, profile1Color)
-    val legendItemLabelComponent = rememberTextComponent(vicoTheme.textColor)
+    val legendItemLabelComponent = rememberTextComponent(style = TextStyle(color = vicoTheme.textColor))
+    val legendIcon1 = rememberShapeComponent(fill = Fill(profile2Color))
+    val legendIcon2 = rememberShapeComponent(fill = Fill(profile1Color))
     CartesianChartHost(
         chart = rememberCartesianChart(
             rememberLineCartesianLayer(
                 lineProvider = if (profile2 != null) {
                     LineCartesianLayer.LineProvider.series(
                         LineCartesianLayer.Line(
-                            fill = remember { LineCartesianLayer.LineFill.single(Fill(profile2Color.toArgb())) },
+                            fill = remember { LineCartesianLayer.LineFill.single(Fill(profile2Color)) },
                             pointConnector = Square
                         ),
                         LineCartesianLayer.Line(
-                            fill = remember { LineCartesianLayer.LineFill.single(Fill(profile1Color.toArgb())) },
+                            fill = remember { LineCartesianLayer.LineFill.single(Fill(profile1Color)) },
                             areaFill = remember {
                                 LineCartesianLayer.AreaFill.single(
                                     Fill(
-                                        ShaderProvider.verticalGradient(
-                                            profile1Color.copy(alpha = 0.3f).toArgb(),
-                                            Color.Transparent.toArgb()
+                                        Brush.verticalGradient(
+                                            listOf(
+                                                profile1Color.copy(alpha = 0.3f),
+                                                Color.Transparent
+                                            )
                                         )
                                     )
                                 )
@@ -142,13 +142,15 @@ fun IcProfileGraphCompose(
                 } else {
                     LineCartesianLayer.LineProvider.series(
                         LineCartesianLayer.Line(
-                            fill = remember { LineCartesianLayer.LineFill.single(Fill(profile1Color.toArgb())) },
+                            fill = remember { LineCartesianLayer.LineFill.single(Fill(profile1Color)) },
                             areaFill = remember {
                                 LineCartesianLayer.AreaFill.single(
                                     Fill(
-                                        ShaderProvider.verticalGradient(
-                                            profile1Color.copy(alpha = 0.3f).toArgb(),
-                                            Color.Transparent.toArgb()
+                                        Brush.verticalGradient(
+                                            listOf(
+                                                profile1Color.copy(alpha = 0.3f),
+                                                Color.Transparent
+                                            )
                                         )
                                     )
                                 )
@@ -166,14 +168,14 @@ fun IcProfileGraphCompose(
                         extraStore[LegendLabelKey].forEachIndexed { index, label ->
                             add(
                                 LegendItem(
-                                    shapeComponent(fill(lineColors[index]), CorneredShape.Pill),
+                                    if (index == 0) legendIcon1 else legendIcon2,
                                     legendItemLabelComponent,
                                     label,
                                 )
                             )
                         }
                     },
-                    padding = insets(top = 8.dp, start = 8.dp),
+                    padding = Insets(top = 8.dp, start = 8.dp),
                 )
             } else null
         ),

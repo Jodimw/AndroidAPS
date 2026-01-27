@@ -1,14 +1,15 @@
 package app.aaps.ui.compose.graphs
 
-import android.graphics.Color
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import com.patrykandpatrick.vico.core.cartesian.axis.HorizontalAxis
-import com.patrykandpatrick.vico.core.cartesian.data.CartesianValueFormatter
-import com.patrykandpatrick.vico.core.cartesian.layer.LineCartesianLayer
-import com.patrykandpatrick.vico.core.common.Fill
-import com.patrykandpatrick.vico.core.common.component.ShapeComponent
-import com.patrykandpatrick.vico.core.common.shape.CorneredShape
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
+import com.patrykandpatrick.vico.compose.cartesian.axis.HorizontalAxis
+import com.patrykandpatrick.vico.compose.cartesian.data.CartesianValueFormatter
+import com.patrykandpatrick.vico.compose.cartesian.layer.LineCartesianLayer
+import com.patrykandpatrick.vico.compose.common.Fill
+import com.patrykandpatrick.vico.compose.common.component.ShapeComponent
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import java.text.SimpleDateFormat
@@ -193,15 +194,15 @@ fun createInvisibleAnchorSeries(
  */
 fun createInvisibleDots(): LineCartesianLayer.Line =
     LineCartesianLayer.Line(
-        fill = LineCartesianLayer.LineFill.single(Fill(Color.TRANSPARENT)),  // No line
+        fill = LineCartesianLayer.LineFill.single(Fill(Color.Transparent)),  // No line
         areaFill = null,
         pointProvider = LineCartesianLayer.PointProvider.single(
             LineCartesianLayer.Point(
                 component = ShapeComponent(
-                    fill = Fill(Color.TRANSPARENT),
-                    shape = CorneredShape.Pill
+                    fill = Fill(Color.Transparent),
+                    shape = CircleShape
                 ),
-                sizeDp = 4f
+                size = 4.dp
             )
         )
     )

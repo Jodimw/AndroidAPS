@@ -18,11 +18,11 @@ annotation = "1.9.1"
 
 # Compose
 activityCompose = "1.12.2"
-composeBom = "2025.12.01"
+composeBom = "2026.01.00"
 navigationCompose = "2.9.6"
 lifecycleRuntimeKtx = "2.10.0"
 materialPullRefresh = "1.2.0"
-vico = "2.4.1"
+vico = "3.0.0-beta.3"
 
 [plugins]
 android-library = { id = "com.android.library" }
@@ -44,7 +44,7 @@ com-google-dagger-android-processor = { group = "com.google.dagger", name = "dag
 com-google-dagger-android-support = { group = "com.google.dagger", name = "dagger-android-support", version.ref = "dagger" }
 
 com-google-firebase-gradle = { group = "com.google.firebase", name = "firebase-crashlytics-gradle", version = "3.0.6" }
-com-google-firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version = "34.7.0" }
+com-google-firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version = "34.8.0" }
 com-google-firebase-analytics = { group = "com.google.firebase", name = "firebase-analytics" }
 com-google-firebase-crashlytics = { group = "com.google.firebase", name = "firebase-crashlytics" }
 com-google-firebase-messaging = { group = "com.google.firebase", name = "firebase-messaging" }
