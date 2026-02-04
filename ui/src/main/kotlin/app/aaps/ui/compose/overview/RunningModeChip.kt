@@ -27,6 +27,7 @@ fun RunningModeChip(
     mode: RM.Mode,
     text: String,
     progress: Float,
+    onClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val isTemporary = mode.mustBeTemporary()
@@ -35,6 +36,7 @@ fun RunningModeChip(
     val containerColor = if (isTemporary) iconColor.copy(alpha = 0.2f) else Color.Transparent
 
     Surface(
+        onClick = onClick,
         shape = RoundedCornerShape(8.dp),
         color = containerColor,
         modifier = modifier
@@ -76,8 +78,11 @@ fun RunningModeChip(
     }
 }
 
+/**
+ * Extension to get theme color for RM.Mode
+ */
 @Composable
-private fun RM.Mode.toColor(): Color = when (this) {
+internal fun RM.Mode.toColor(): Color = when (this) {
     RM.Mode.CLOSED_LOOP       -> AapsTheme.generalColors.loopClosed
     RM.Mode.CLOSED_LOOP_LGS   -> AapsTheme.generalColors.loopLgs
     RM.Mode.OPEN_LOOP         -> AapsTheme.generalColors.loopOpened
@@ -91,7 +96,10 @@ private fun RM.Mode.toColor(): Color = when (this) {
     RM.Mode.RESUME            -> AapsTheme.generalColors.loopClosed
 }
 
-private fun RM.Mode.toIconRes(): Int = when (this) {
+/**
+ * Extension to get icon resource for RM.Mode
+ */
+internal fun RM.Mode.toIconRes(): Int = when (this) {
     RM.Mode.CLOSED_LOOP       -> app.aaps.core.objects.R.drawable.ic_loop_closed
     RM.Mode.CLOSED_LOOP_LGS   -> app.aaps.core.ui.R.drawable.ic_loop_lgs
     RM.Mode.OPEN_LOOP         -> app.aaps.core.ui.R.drawable.ic_loop_open

@@ -34,6 +34,7 @@ fun OverviewScreen(
     graphViewModel: GraphViewModel,
     onProfileManagementClick: () -> Unit,
     onTempTargetClick: () -> Unit,
+    onRunningModeClick: () -> Unit,
     paddingValues: PaddingValues,
     modifier: Modifier = Modifier
 ) {
@@ -71,7 +72,8 @@ fun OverviewScreen(
                     RunningModeChip(
                         mode = runningMode,
                         text = runningModeText,
-                        progress = runningModeProgress
+                        progress = runningModeProgress,
+                        onClick = onRunningModeClick
                     )
                 }
                 // Profile chip

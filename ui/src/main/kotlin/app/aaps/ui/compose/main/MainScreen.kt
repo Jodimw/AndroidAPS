@@ -47,6 +47,7 @@ fun MainScreen(
     onSwitchToClassicUi: () -> Unit,
     onAboutDialogDismiss: () -> Unit,
     // Actions callbacks
+    onRunningModeClick: () -> Unit,
     onTempTargetClick: () -> Unit,
     onTempBasalClick: () -> Unit,
     onExtendedBolusClick: () -> Unit,
@@ -160,6 +161,7 @@ fun MainScreen(
                         graphViewModel = graphViewModel,
                         onProfileManagementClick = onProfileManagementClick,
                         onTempTargetClick = onTempTargetClick,
+                        onRunningModeClick = onRunningModeClick,
                         paddingValues = paddingValues
                     )
                 }

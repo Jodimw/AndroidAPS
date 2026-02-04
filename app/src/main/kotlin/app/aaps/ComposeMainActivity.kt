@@ -56,6 +56,8 @@ import app.aaps.ui.compose.profileManagement.ProfileManagementScreen
 import app.aaps.ui.compose.profileManagement.viewmodels.ProfileEditorViewModel
 import app.aaps.ui.compose.profileManagement.viewmodels.ProfileHelperViewModel
 import app.aaps.ui.compose.profileManagement.viewmodels.ProfileManagementViewModel
+import app.aaps.ui.compose.runningMode.RunningModeManagementViewModel
+import app.aaps.ui.compose.runningMode.RunningModeScreen
 import app.aaps.ui.compose.stats.StatsScreen
 import app.aaps.ui.compose.stats.viewmodels.StatsViewModel
 import app.aaps.ui.compose.tempTarget.TempTargetManagementScreen
@@ -92,6 +94,7 @@ class ComposeMainActivity : DaggerAppCompatActivityWithResult() {
     @Inject lateinit var profileHelperViewModel: ProfileHelperViewModel
     @Inject lateinit var profileEditorViewModel: ProfileEditorViewModel
     @Inject lateinit var profileManagementViewModel: ProfileManagementViewModel
+    @Inject lateinit var runningModeManagementViewModel: RunningModeManagementViewModel
 
     private val disposable = CompositeDisposable()
 
@@ -186,6 +189,13 @@ class ComposeMainActivity : DaggerAppCompatActivityWithResult() {
                             onSwitchToClassicUi = { switchToClassicUi() },
                             onAboutDialogDismiss = { mainViewModel.setShowAboutDialog(false) },
                             // Actions callbacks
+                            onRunningModeClick = {
+                                protectionCheck.requestProtection(ProtectionCheck.Protection.BOLUS) { result ->
+                                    if (result == ProtectionResult.GRANTED) {
+                                        navController.navigate(AppRoute.RunningMode.route)
+                                    }
+                                }
+                            },
                             onTempTargetClick = {
                                 protectionCheck.requestProtection(ProtectionCheck.Protection.BOLUS) { result ->
                                     if (result == ProtectionResult.GRANTED) {
@@ -277,6 +287,14 @@ class ComposeMainActivity : DaggerAppCompatActivityWithResult() {
                     composable(AppRoute.TempTargetManagement.route) {
                         TempTargetManagementScreen(
                             viewModel = tempTargetManagementViewModel,
+                            onNavigateBack = { navController.popBackStack() }
+                        )
+                    }
+
+                    composable(AppRoute.RunningMode.route) {
+                        RunningModeScreen(
+                            viewModel = runningModeManagementViewModel,
+                            showOkCancel = true,
                             onNavigateBack = { navController.popBackStack() }
                         )
                     }

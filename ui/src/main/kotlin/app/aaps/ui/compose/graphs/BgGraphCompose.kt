@@ -40,13 +40,13 @@ private const val SERIES_REGULAR = "regular"
 private const val SERIES_BUCKETED = "bucketed"
 
 /**
- * BG Graph using Vico with independent series updates.
+ * BG Graph using Vico.
  *
  * Architecture:
- * - Each series (regular, bucketed) collected independently
- * - Separate LaunchedEffect per series
+ * - Both series (regular, bucketed) collected and updated atomically
+ * - Single LaunchedEffect handles both series to prevent race conditions
  * - Series registry tracks current data
- * - Chart rebuilds only when specific series changes
+ * - Chart rebuilds when any series or time range changes
  *
  * Rendering:
  * - Regular BG: White outlined circles (STROKE style)
@@ -154,14 +154,10 @@ fun BgGraphCompose(
         }
     }
 
-    // LaunchedEffect for REGULAR series - only runs when bgReadings changes
-    LaunchedEffect(bgReadings, stableTimeRange) {
+    // Single LaunchedEffect for both series - ensures atomic updates and prevents
+    // race conditions when stableTimeRange changes during navigation
+    LaunchedEffect(bgReadings, bucketedData, stableTimeRange) {
         seriesRegistry[SERIES_REGULAR] = bgReadings
-        rebuildChart()
-    }
-
-    // LaunchedEffect for BUCKETED series - only runs when bucketedData changes
-    LaunchedEffect(bucketedData, stableTimeRange) {
         seriesRegistry[SERIES_BUCKETED] = bucketedData
         rebuildChart()
     }

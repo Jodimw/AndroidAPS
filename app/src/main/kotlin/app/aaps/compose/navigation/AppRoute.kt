@@ -25,4 +25,6 @@ sealed class AppRoute(val route: String) {
 
         fun createRoute(pluginKey: String) = "plugin_preferences/$pluginKey"
     }
+
+    data object RunningMode : AppRoute("running_mode")
 }
