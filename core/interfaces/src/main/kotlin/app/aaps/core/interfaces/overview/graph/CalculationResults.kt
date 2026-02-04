@@ -1,5 +1,6 @@
 package app.aaps.core.interfaces.overview.graph
 
+import app.aaps.core.data.model.RM
 import app.aaps.core.data.model.TrendArrow
 
 /**
@@ -207,23 +208,34 @@ enum class TempTargetState {
 
 /**
  * Temp target display data for overview chips.
- * Stores raw timing data - ViewModel computes progress from current time.
+ * Stores raw data - ViewModel computes display text with remaining time.
  */
 data class TempTargetDisplayData(
-    val targetText: String,              // Formatted target range + "until HH:MM"
+    val targetRangeText: String,         // Formatted target range only (e.g., "100-120")
     val state: TempTargetState,          // NONE/ACTIVE/ADJUSTED for UI styling
     val timestamp: Long,                 // When TT started (for progress calculation)
-    val duration: Long                   // TT duration in ms (0 if not active)
+    val duration: Long,                  // TT duration in ms (0 if not active)
+    val reason: String? = null           // TT reason for icon coloring (null if no TT)
 )
 
 /**
  * Profile display data for overview chips.
- * Stores raw timing data - ViewModel computes progress from current time.
+ * Stores raw data - ViewModel computes display text with remaining time.
  */
 data class ProfileDisplayData(
-    val profileName: String,             // Profile name with remaining time
+    val profileName: String,             // Profile name only (no remaining time)
     val isLoaded: Boolean,               // True if profile is loaded
     val isModified: Boolean,             // True if percentage/timeshift/duration modified
     val timestamp: Long,                 // When profile switch started (for progress)
     val duration: Long                   // Profile switch duration in ms (0 if permanent)
+)
+
+/**
+ * Running mode display data for overview chips.
+ * Stores raw data - ViewModel computes display text with remaining time.
+ */
+data class RunningModeDisplayData(
+    val mode: RM.Mode,                   // Current running mode
+    val timestamp: Long,                 // When mode started (for progress calculation)
+    val duration: Long                   // Mode duration in ms (0 if permanent)
 )

@@ -3,6 +3,7 @@ package app.aaps.ui.compose.graphs
 import app.aaps.core.data.model.EPS
 import app.aaps.core.data.model.GV
 import app.aaps.core.data.model.GlucoseUnit
+import app.aaps.core.data.model.RM
 import app.aaps.core.data.model.TT
 import app.aaps.core.interfaces.aps.Loop
 import app.aaps.core.interfaces.configuration.Config
@@ -25,6 +26,7 @@ import app.aaps.core.interfaces.overview.graph.IobGraphData
 import app.aaps.core.interfaces.overview.graph.OverviewDataCache
 import app.aaps.core.interfaces.overview.graph.ProfileDisplayData
 import app.aaps.core.interfaces.overview.graph.RatioGraphData
+import app.aaps.core.interfaces.overview.graph.RunningModeDisplayData
 import app.aaps.core.interfaces.overview.graph.TempTargetDisplayData
 import app.aaps.core.interfaces.overview.graph.TempTargetState
 import app.aaps.core.interfaces.overview.graph.TimeRange
@@ -87,6 +89,7 @@ class OverviewDataCacheImpl @Inject constructor(
             updateBgInfoFromDatabase()
             updateProfileFromDatabase()
             updateTempTargetFromDatabase()
+            updateRunningModeFromDatabase()
         }
 
         // Observe GlucoseValue changes
@@ -112,6 +115,14 @@ class OverviewDataCacheImpl @Inject constructor(
                 updateProfileFromDatabase()
                 // TT display depends on profile being loaded (for default target)
                 updateTempTargetFromDatabase()
+            }
+        }
+
+        // Observe RunningMode changes
+        scope.launch {
+            persistenceLayer.observeChanges(RM::class.java).collect {
+                aapsLogger.debug(LTag.UI, "RM change detected, updating RunningMode state")
+                updateRunningModeFromDatabase()
             }
         }
     }
@@ -169,14 +180,14 @@ class OverviewDataCacheImpl @Inject constructor(
         val tempTarget = persistenceLayer.getTemporaryTargetActiveAt(now)
 
         val displayData = if (tempTarget != null) {
-            // Active TT - show target range + "until HH:MM"
-            val targetText = profileUtil.toTargetRangeString(tempTarget.lowTarget, tempTarget.highTarget, GlucoseUnit.MGDL, units) +
-                " " + dateUtil.untilString(tempTarget.end, rh)
+            // Active TT - store target range only (ViewModel adds "until HH:MM")
+            val targetRange = profileUtil.toTargetRangeString(tempTarget.lowTarget, tempTarget.highTarget, GlucoseUnit.MGDL, units)
             TempTargetDisplayData(
-                targetText = targetText,
+                targetRangeText = targetRange,
                 state = TempTargetState.ACTIVE,
                 timestamp = tempTarget.timestamp,
-                duration = tempTarget.duration
+                duration = tempTarget.duration,
+                reason = tempTarget.reason.text
             )
         } else {
             // No active TT - check profile
@@ -225,11 +236,27 @@ class OverviewDataCacheImpl @Inject constructor(
         }
 
         _profileFlow.value = ProfileDisplayData(
-            profileName = profileFunction.getProfileNameWithRemainingTime(),
+            profileName = profileFunction.getProfileName(),  // Raw name, ViewModel adds remaining time
             isLoaded = profile != null,
             isModified = isModified,
             timestamp = timestamp,
             duration = duration
+        )
+    }
+
+    // =========================================================================
+    // Running mode computation
+    // =========================================================================
+
+    private fun updateRunningModeFromDatabase() {
+        val mode = loop.runningMode
+        val rmRecord = loop.runningModeRecord
+
+        // Store raw data only - ViewModel computes display text
+        _runningModeFlow.value = RunningModeDisplayData(
+            mode = mode,
+            timestamp = rmRecord.timestamp,
+            duration = rmRecord.duration
         )
     }
 
@@ -255,9 +282,11 @@ class OverviewDataCacheImpl @Inject constructor(
     // Overview chip flows
     private val _tempTargetFlow = MutableStateFlow<TempTargetDisplayData?>(null)
     private val _profileFlow = MutableStateFlow<ProfileDisplayData?>(null)
+    private val _runningModeFlow = MutableStateFlow<RunningModeDisplayData?>(null)
 
     override val tempTargetFlow: StateFlow<TempTargetDisplayData?> = _tempTargetFlow.asStateFlow()
     override val profileFlow: StateFlow<ProfileDisplayData?> = _profileFlow.asStateFlow()
+    override val runningModeFlow: StateFlow<RunningModeDisplayData?> = _runningModeFlow.asStateFlow()
 
     // Secondary graph flows
     private val _iobGraphFlow = MutableStateFlow(IobGraphData(emptyList(), emptyList()))
@@ -343,6 +372,7 @@ class OverviewDataCacheImpl @Inject constructor(
         _bgInfoFlow.value = null
         _tempTargetFlow.value = null
         _profileFlow.value = null
+        _runningModeFlow.value = null
         // Secondary graph flows
         _iobGraphFlow.value = IobGraphData(emptyList(), emptyList())
         _absIobGraphFlow.value = AbsIobGraphData(emptyList())

@@ -76,7 +76,14 @@ data class GeneralColors(
     val cobPrediction: Color,
     val aCobPrediction: Color,
     val uamPrediction: Color,
-    val ztPrediction: Color
+    val ztPrediction: Color,
+    // Loop mode colors
+    val loopClosed: Color,
+    val loopOpened: Color,
+    val loopDisabled: Color,
+    val loopDisconnected: Color,
+    val loopLgs: Color,
+    val loopSuperBolus: Color
 )
 
 /**
@@ -109,7 +116,14 @@ internal val LightGeneralColors = GeneralColors(
     cobPrediction = Color(0xFFFB8C00),       // orange for COB predictions (matches cobColor attr)
     aCobPrediction = Color(0x80FB8C00),      // lighter orange for absorbed COB (50% alpha)
     uamPrediction = Color(0xFFC9BD60),       // yellow-ish for UAM predictions (matches uamColor attr)
-    ztPrediction = Color(0xFF00D2D2)         // cyan for zero-temp predictions (matches ztColor attr)
+    ztPrediction = Color(0xFF00D2D2),        // cyan for zero-temp predictions (matches ztColor attr)
+    // Loop mode colors
+    loopClosed = Color(0xFF00C03E),          // green for closed loop
+    loopOpened = Color(0xFF4983D7),          // blue for open loop
+    loopDisabled = Color(0xFFFF1313),        // red for disabled/paused loop
+    loopDisconnected = Color(0xFF939393),    // gray for disconnected pump
+    loopLgs = Color(0xFF800080),             // purple for LGS mode
+    loopSuperBolus = Color(0xFFFB8C00)       // orange for super bolus
 )
 
 /**
@@ -142,7 +156,14 @@ internal val DarkGeneralColors = GeneralColors(
     cobPrediction = Color(0xFFFFB74D),       // lighter orange for COB predictions (dark mode)
     aCobPrediction = Color(0x80FFB74D),      // lighter orange for absorbed COB (50% alpha, dark mode)
     uamPrediction = Color(0xFFE6D39A),       // lighter yellow for UAM predictions (dark mode)
-    ztPrediction = Color(0xFF4DD4D4)         // lighter cyan for zero-temp predictions (dark mode)
+    ztPrediction = Color(0xFF4DD4D4),        // lighter cyan for zero-temp predictions (dark mode)
+    // Loop mode colors (same in both modes)
+    loopClosed = Color(0xFF00C03E),          // green for closed loop
+    loopOpened = Color(0xFF4983D7),          // blue for open loop
+    loopDisabled = Color(0xFFFF1313),        // red for disabled/paused loop
+    loopDisconnected = Color(0xFF939393),    // gray for disconnected pump
+    loopLgs = Color(0xFF800080),             // purple for LGS mode
+    loopSuperBolus = Color(0xFFFB8C00)       // orange for super bolus
 )
 
 /**

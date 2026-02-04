@@ -2,6 +2,7 @@ package app.aaps.ui.compose.main
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import app.aaps.core.data.model.RM
 import app.aaps.core.data.plugin.PluginType
 import app.aaps.core.interfaces.configuration.Config
 import app.aaps.core.interfaces.configuration.ConfigBuilder
@@ -58,41 +59,94 @@ class MainViewModel @Inject constructor(
     }
 
     /**
-     * Observe TempTarget and Profile from cache, combined with ticker for progress updates.
-     * Progress is computed from timestamp/duration using current time.
+     * Observe TempTarget, Profile, and RunningMode from cache, combined with ticker for progress updates.
+     * Progress and display text are computed from raw timestamp/duration data on each tick.
      */
     private fun observeTempTargetAndProfile() {
         combine(
             overviewDataCache.tempTargetFlow,
             overviewDataCache.profileFlow,
+            overviewDataCache.runningModeFlow,
             progressTicker
-        ) { ttData, profileData, now ->
-            // Compute TT progress from raw timing data
+        ) { ttData, profileData, rmData, now ->
+            // Compute TT progress and display text from raw timing data
             val ttProgress = if (ttData != null && ttData.duration > 0) {
                 val elapsed = now - ttData.timestamp
                 (elapsed.toFloat() / ttData.duration.toFloat()).coerceIn(0f, 1f)
             } else 0f
 
-            // Compute profile progress from raw timing data
+            val ttText = if (ttData != null) {
+                if (ttData.state == TempTargetState.ACTIVE && ttData.duration > 0) {
+                    "${ttData.targetRangeText} ${dateUtil.untilString(ttData.timestamp + ttData.duration, rh)}"
+                } else {
+                    ttData.targetRangeText
+                }
+            } else ""
+
+            // Compute profile progress and display text from raw timing data
             val profileProgress = if (profileData != null && profileData.duration > 0) {
                 val elapsed = now - profileData.timestamp
                 (elapsed.toFloat() / profileData.duration.toFloat()).coerceIn(0f, 1f)
             } else 0f
 
+            val profileText = if (profileData != null && profileData.profileName.isNotEmpty()) {
+                if (profileData.duration > 0) {
+                    "${profileData.profileName} ${dateUtil.untilString(profileData.timestamp + profileData.duration, rh)}"
+                } else {
+                    profileData.profileName
+                }
+            } else ""
+
+            // Compute running mode progress and display text from raw timing data
+            val rmProgress = if (rmData != null && rmData.duration > 0) {
+                val elapsed = now - rmData.timestamp
+                (elapsed.toFloat() / rmData.duration.toFloat()).coerceIn(0f, 1f)
+            } else 0f
+
+            val rmText = if (rmData != null) {
+                val modeName = getModeNameString(rmData.mode)
+                if (rmData.mode.mustBeTemporary() && rmData.duration > 0) {
+                    "$modeName ${dateUtil.untilString(rmData.timestamp + rmData.duration, rh)}"
+                } else {
+                    modeName
+                }
+            } else ""
+
             _uiState.update {
                 it.copy(
                     // TempTarget state
-                    tempTargetText = ttData?.targetText ?: "",
+                    tempTargetText = ttText,
                     tempTargetState = ttData?.state?.toChipState() ?: TempTargetChipState.None,
                     tempTargetProgress = ttProgress,
+                    tempTargetReason = ttData?.reason,
                     // Profile state
                     isProfileLoaded = profileData?.isLoaded ?: false,
-                    profileName = profileData?.profileName ?: "",
+                    profileName = profileText,
                     isProfileModified = profileData?.isModified ?: false,
-                    profileProgress = profileProgress
+                    profileProgress = profileProgress,
+                    // Running mode state
+                    runningMode = rmData?.mode ?: RM.Mode.DISABLED_LOOP,
+                    runningModeText = rmText,
+                    runningModeProgress = rmProgress
                 )
             }
         }.launchIn(viewModelScope)
+    }
+
+    /**
+     * Get localized name string for running mode
+     */
+    private fun getModeNameString(mode: RM.Mode): String = when (mode) {
+        RM.Mode.CLOSED_LOOP       -> rh.gs(app.aaps.core.ui.R.string.closedloop)
+        RM.Mode.CLOSED_LOOP_LGS   -> rh.gs(app.aaps.core.ui.R.string.lowglucosesuspend)
+        RM.Mode.OPEN_LOOP         -> rh.gs(app.aaps.core.ui.R.string.openloop)
+        RM.Mode.DISABLED_LOOP     -> rh.gs(app.aaps.core.ui.R.string.disabled_loop)
+        RM.Mode.SUPER_BOLUS       -> rh.gs(app.aaps.core.ui.R.string.superbolus)
+        RM.Mode.DISCONNECTED_PUMP -> rh.gs(app.aaps.core.ui.R.string.pump_disconnected)
+        RM.Mode.SUSPENDED_BY_PUMP -> rh.gs(app.aaps.core.ui.R.string.pump_suspended)
+        RM.Mode.SUSPENDED_BY_USER -> rh.gs(app.aaps.core.ui.R.string.loopsuspended)
+        RM.Mode.SUSPENDED_BY_DST  -> rh.gs(app.aaps.core.ui.R.string.loop_suspended_by_dst)
+        RM.Mode.RESUME            -> rh.gs(app.aaps.core.ui.R.string.resumeloop)
     }
 
     // Map cache state to UI chip state

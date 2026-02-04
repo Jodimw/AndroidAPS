@@ -1,5 +1,7 @@
 package app.aaps.ui.compose.main
 
+import app.aaps.core.data.model.RM
+
 /**
  * State of the TempTarget chip in Overview
  */
@@ -31,5 +33,10 @@ data class MainUiState(
     // TempTarget state for chip
     val tempTargetText: String = "",
     val tempTargetState: TempTargetChipState = TempTargetChipState.None,
-    val tempTargetProgress: Float = 0f // 0-1 progress for active temp target
+    val tempTargetProgress: Float = 0f, // 0-1 progress for active temp target
+    val tempTargetReason: String? = null, // TT reason for icon coloring
+    // Running mode state for chip
+    val runningMode: RM.Mode = RM.Mode.DISABLED_LOOP,
+    val runningModeText: String = "",
+    val runningModeProgress: Float = 0f // 0-1 progress for temporary modes
 )

@@ -19,21 +19,22 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import app.aaps.core.data.model.RM
 import app.aaps.core.ui.compose.AapsTheme
 
 @Composable
-fun ProfileChip(
-    profileName: String,
-    isModified: Boolean,
+fun RunningModeChip(
+    mode: RM.Mode,
+    text: String,
     progress: Float,
-    onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val containerColor = if (isModified) AapsTheme.generalColors.inProgress.copy(alpha = 0.2f) else Color.Transparent
-    val contentColor = if (isModified) AapsTheme.generalColors.inProgress else MaterialTheme.colorScheme.onSurfaceVariant
+    val isTemporary = mode.mustBeTemporary()
+    val iconColor = mode.toColor()
+    val textColor = MaterialTheme.colorScheme.onSurfaceVariant
+    val containerColor = if (isTemporary) iconColor.copy(alpha = 0.2f) else Color.Transparent
 
     Surface(
-        onClick = onClick,
         shape = RoundedCornerShape(8.dp),
         color = containerColor,
         modifier = modifier
@@ -46,14 +47,14 @@ fun ProfileChip(
                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
             ) {
                 Icon(
-                    painter = painterResource(app.aaps.core.ui.R.drawable.ic_ribbon_profile),
+                    painter = painterResource(mode.toIconRes()),
                     contentDescription = null,
-                    tint = contentColor,
+                    tint = iconColor,
                     modifier = Modifier.size(24.dp)
                 )
                 Text(
-                    text = profileName,
-                    color = contentColor,
+                    text = text,
+                    color = textColor,
                     modifier = Modifier.padding(start = 8.dp)
                 )
             }
@@ -66,11 +67,40 @@ fun ProfileChip(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(3.dp),
-                        color = contentColor,
-                        trackColor = contentColor.copy(alpha = 0.3f)
+                        color = iconColor,
+                        trackColor = iconColor.copy(alpha = 0.3f)
                     )
                 }
             }
         }
     }
+}
+
+@Composable
+private fun RM.Mode.toColor(): Color = when (this) {
+    RM.Mode.CLOSED_LOOP       -> AapsTheme.generalColors.loopClosed
+    RM.Mode.CLOSED_LOOP_LGS   -> AapsTheme.generalColors.loopLgs
+    RM.Mode.OPEN_LOOP         -> AapsTheme.generalColors.loopOpened
+    RM.Mode.DISABLED_LOOP     -> AapsTheme.generalColors.loopDisabled
+    RM.Mode.SUPER_BOLUS       -> AapsTheme.generalColors.loopSuperBolus
+    RM.Mode.DISCONNECTED_PUMP -> AapsTheme.generalColors.loopDisconnected
+    RM.Mode.SUSPENDED_BY_PUMP,
+    RM.Mode.SUSPENDED_BY_USER,
+    RM.Mode.SUSPENDED_BY_DST  -> AapsTheme.generalColors.loopDisabled
+
+    RM.Mode.RESUME            -> AapsTheme.generalColors.loopClosed
+}
+
+private fun RM.Mode.toIconRes(): Int = when (this) {
+    RM.Mode.CLOSED_LOOP       -> app.aaps.core.objects.R.drawable.ic_loop_closed
+    RM.Mode.CLOSED_LOOP_LGS   -> app.aaps.core.ui.R.drawable.ic_loop_lgs
+    RM.Mode.OPEN_LOOP         -> app.aaps.core.ui.R.drawable.ic_loop_open
+    RM.Mode.DISABLED_LOOP     -> app.aaps.core.ui.R.drawable.ic_loop_disabled
+    RM.Mode.SUPER_BOLUS       -> app.aaps.core.ui.R.drawable.ic_loop_superbolus
+    RM.Mode.DISCONNECTED_PUMP -> app.aaps.core.ui.R.drawable.ic_loop_disconnected
+    RM.Mode.SUSPENDED_BY_PUMP,
+    RM.Mode.SUSPENDED_BY_USER,
+    RM.Mode.SUSPENDED_BY_DST  -> app.aaps.core.ui.R.drawable.ic_loop_paused
+
+    RM.Mode.RESUME            -> app.aaps.core.objects.R.drawable.ic_loop_closed
 }
