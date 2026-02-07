@@ -70,7 +70,7 @@
     <string name="objectives_exam_learned_iob">Nếu bạn phân tích xem AAPS có hoạt động tốt với bạn hay không, việc theo dõi biểu đồ IOB có thể cung cấp cho bạn rất nhiều thông tin hữu ích.</string>
     <string name="objectives_exam_learned_cob">Việc tính toán COB phụ thuộc vào mối quan hệ giữa ISF và IC. Tăng ISF hoặc giảm IC sẽ dẫn đến thời gian hấp thụ dài hơn. Tuy nhiên, khi chuyển Hồ sơ bằng cách thay đổi phần trăm thì cả hai giá trị này đều thay đổi cùng lúc, và do đó thời gian hấp thụ không bị ảnh hưởng.</string>
     <string name="objectives_exam_learned_breadgrams">Chỉ được phép nhập carbohydrate theo đơn vị gram.</string>
-    <string name="objectives_exam_learned_ecarbs">E-carbs là sự thay thế cho bolus mở rộng (extended bolus) trong thế giới bơm insulin.</string>
+    <string name="objectives_exam_learned_ecarbs">E-carbs là sự thay thế cho bolus kéo dài trong thế giới bơm insulin.</string>
     <string name="objectives_exam_learned_nsclient">Giám sát và điều khiển từ xa là có thể, nhưng không phải tất cả các tính năng đều khả dụng từ xa.</string>
     <string name="answerdisabledto">Trả lời bị vô hiệu hóa cho đến: %1$s</string>
     <string name="wronganswer">Câu trả lời sai!</string>
