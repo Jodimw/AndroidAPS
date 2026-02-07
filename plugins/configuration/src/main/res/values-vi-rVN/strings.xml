@@ -112,7 +112,7 @@
     <string name="protection">Bảo mật</string>
     <string name="master_password_missing">Chưa thiết lập mật khẩu chính!\n\nVui lòng đặt mật khẩu chính trong Tùy chọn cài đặt (%1$s)</string>
     <!--    Maintenance-->
-    <string name="maintenance">Maintenance</string>
+    <string name="maintenance">Bảo trì hệ thống</string>
     <string name="maintenance_shortname">MAINT</string>
     <string name="description_maintenance">Cung cấp một số chức năng bảo trì (ví dụ: gửi nhật ký, xóa nhật ký).</string>
     <string name="database_cleanup">Dọn dẹp cơ sở dữ liệu</string>
