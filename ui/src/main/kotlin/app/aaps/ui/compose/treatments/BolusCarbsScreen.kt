@@ -129,7 +129,7 @@ fun BolusCarbsScreen(
                 TreatmentLazyColumn(
                     items = uiState.mealLinks,
                     getTimestamp = { it.bolusCalculatorResult?.timestamp ?: it.bolus?.timestamp ?: it.carbs?.timestamp ?: 0L },
-                    getItemKey = { it.bolus?.id ?: it.carbs?.id ?: it.bolusCalculatorResult?.id ?: 0L },
+                    getItemKey = { "b${it.bolus?.id}_c${it.carbs?.id}_bcr${it.bolusCalculatorResult?.id}" },
                     dateUtil = viewModel.dateUtil,
                     rh = viewModel.rh,
                     itemContent = { ml ->

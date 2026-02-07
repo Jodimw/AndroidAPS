@@ -43,6 +43,8 @@ import app.aaps.plugins.configuration.activities.SingleFragmentActivity
 import app.aaps.plugins.configuration.setupwizard.SetupWizardActivity
 import app.aaps.plugins.main.skins.SkinProvider
 import app.aaps.ui.compose.actions.viewmodels.ActionsViewModel
+import app.aaps.ui.compose.careDialog.CareDialogScreen
+import app.aaps.ui.compose.careDialog.CareDialogViewModel
 import app.aaps.ui.compose.graphs.viewmodels.GraphViewModel
 import app.aaps.ui.compose.main.MainMenuItem
 import app.aaps.ui.compose.main.MainNavDestination
@@ -95,6 +97,7 @@ class ComposeMainActivity : DaggerAppCompatActivityWithResult() {
     @Inject lateinit var profileEditorViewModel: ProfileEditorViewModel
     @Inject lateinit var profileManagementViewModel: ProfileManagementViewModel
     @Inject lateinit var runningModeManagementViewModel: RunningModeManagementViewModel
+    @Inject lateinit var careDialogViewModel: CareDialogViewModel
 
     private val disposable = CompositeDisposable()
 
@@ -236,25 +239,25 @@ class ComposeMainActivity : DaggerAppCompatActivityWithResult() {
                                 startActivity(Intent(this@ComposeMainActivity, uiInteraction.tddStatsActivity))
                             },
                             onBgCheckClick = {
-                                uiInteraction.runCareDialog(supportFragmentManager, UiInteraction.EventType.BGCHECK, app.aaps.core.ui.R.string.careportal_bgcheck)
+                                navController.navigate(AppRoute.CareDialog.createRoute(UiInteraction.EventType.BGCHECK.ordinal))
                             },
                             onSensorInsertClick = {
-                                uiInteraction.runCareDialog(supportFragmentManager, UiInteraction.EventType.SENSOR_INSERT, app.aaps.core.ui.R.string.cgm_sensor_insert)
+                                navController.navigate(AppRoute.CareDialog.createRoute(UiInteraction.EventType.SENSOR_INSERT.ordinal))
                             },
                             onBatteryChangeClick = {
-                                uiInteraction.runCareDialog(supportFragmentManager, UiInteraction.EventType.BATTERY_CHANGE, app.aaps.core.ui.R.string.pump_battery_change)
+                                navController.navigate(AppRoute.CareDialog.createRoute(UiInteraction.EventType.BATTERY_CHANGE.ordinal))
                             },
                             onNoteClick = {
-                                uiInteraction.runCareDialog(supportFragmentManager, UiInteraction.EventType.NOTE, app.aaps.core.ui.R.string.careportal_note)
+                                navController.navigate(AppRoute.CareDialog.createRoute(UiInteraction.EventType.NOTE.ordinal))
                             },
                             onExerciseClick = {
-                                uiInteraction.runCareDialog(supportFragmentManager, UiInteraction.EventType.EXERCISE, app.aaps.core.ui.R.string.careportal_exercise)
+                                navController.navigate(AppRoute.CareDialog.createRoute(UiInteraction.EventType.EXERCISE.ordinal))
                             },
                             onQuestionClick = {
-                                uiInteraction.runCareDialog(supportFragmentManager, UiInteraction.EventType.QUESTION, app.aaps.core.ui.R.string.careportal_question)
+                                navController.navigate(AppRoute.CareDialog.createRoute(UiInteraction.EventType.QUESTION.ordinal))
                             },
                             onAnnouncementClick = {
-                                uiInteraction.runCareDialog(supportFragmentManager, UiInteraction.EventType.ANNOUNCEMENT, app.aaps.core.ui.R.string.careportal_announcement)
+                                navController.navigate(AppRoute.CareDialog.createRoute(UiInteraction.EventType.ANNOUNCEMENT.ordinal))
                             },
                             onSiteRotationClick = {
                                 uiInteraction.runSiteRotationDialog(supportFragmentManager)
@@ -296,6 +299,26 @@ class ComposeMainActivity : DaggerAppCompatActivityWithResult() {
                             viewModel = runningModeManagementViewModel,
                             showOkCancel = true,
                             onNavigateBack = { navController.popBackStack() }
+                        )
+                    }
+
+                    composable(
+                        route = AppRoute.CareDialog.route,
+                        arguments = listOf(
+                            androidx.navigation.navArgument("eventTypeOrdinal") {
+                                type = androidx.navigation.NavType.IntType
+                            }
+                        )
+                    ) { backStackEntry ->
+                        val ordinal = backStackEntry.arguments?.getInt("eventTypeOrdinal") ?: 0
+                        val eventType = UiInteraction.EventType.entries[ordinal]
+                        CareDialogScreen(
+                            viewModel = careDialogViewModel,
+                            eventType = eventType,
+                            onNavigateBack = { navController.popBackStack() },
+                            onShowSiteRotationDialog = {
+                                uiInteraction.runSiteRotationDialog(supportFragmentManager)
+                            }
                         )
                     }
 

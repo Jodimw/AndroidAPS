@@ -7,6 +7,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -19,6 +20,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
@@ -84,7 +86,10 @@ fun ActionsScreen(
             sensorStatus = state.sensorStatus,
             insulinStatus = state.insulinStatus,
             cannulaStatus = state.cannulaStatus,
-            batteryStatus = state.batteryStatus
+            batteryStatus = state.batteryStatus,
+            onSensorInsertClick = onSensorInsertClick,
+            onFillClick = if (state.showFill) onFillClick else null,
+            onBatteryChangeClick = if (state.showPumpBatteryChange) onBatteryChangeClick else null
         )
 
         // Quick Actions Section
@@ -162,8 +167,14 @@ private fun StatusSection(
     sensorStatus: StatusItem?,
     insulinStatus: StatusItem?,
     cannulaStatus: StatusItem?,
-    batteryStatus: StatusItem?
+    batteryStatus: StatusItem?,
+    onSensorInsertClick: (() -> Unit)? = null,
+    onFillClick: (() -> Unit)? = null,
+    onBatteryChangeClick: (() -> Unit)? = null
 ) {
+    val addLabel = stringResource(app.aaps.core.ui.R.string.add)
+    val fillLabel = stringResource(app.aaps.core.ui.R.string.prime_fill)
+
     ElevatedCard(
         modifier = Modifier.fillMaxWidth(),
         elevation = CardDefaults.elevatedCardElevation(defaultElevation = 1.dp),
@@ -182,7 +193,9 @@ private fun StatusSection(
                 color = MaterialTheme.colorScheme.onSurface
             )
 
-            sensorStatus?.let { StatusRow(item = it) }
+            sensorStatus?.let {
+                StatusRow(item = it, actionLabel = addLabel, onActionClick = onSensorInsertClick)
+            }
             if (sensorStatus != null && insulinStatus != null) {
                 HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
             }
@@ -190,11 +203,15 @@ private fun StatusSection(
             if (insulinStatus != null && cannulaStatus != null) {
                 HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
             }
-            cannulaStatus?.let { StatusRow(item = it) }
+            cannulaStatus?.let {
+                StatusRow(item = it, actionLabel = fillLabel, onActionClick = onFillClick)
+            }
             if (cannulaStatus != null && batteryStatus != null) {
                 HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
             }
-            batteryStatus?.let { StatusRow(item = it) }
+            batteryStatus?.let {
+                StatusRow(item = it, actionLabel = addLabel, onActionClick = onBatteryChangeClick)
+            }
         }
     }
 }
@@ -214,7 +231,11 @@ private fun statusLevelToColor(status: StatusLevel): androidx.compose.ui.graphic
 }
 
 @Composable
-private fun StatusRow(item: StatusItem) {
+private fun StatusRow(
+    item: StatusItem,
+    actionLabel: String? = null,
+    onActionClick: (() -> Unit)? = null
+) {
     val ageColor = statusLevelToColor(item.ageStatus)
     val levelColor = statusLevelToColor(item.levelStatus)
 
@@ -255,6 +276,17 @@ private fun StatusRow(item: StatusItem) {
                 progress = item.levelPercent,
                 progressColor = levelColor
             )
+        }
+
+        // Action button
+        if (actionLabel != null && onActionClick != null) {
+            FilledTonalButton(
+                onClick = onActionClick,
+                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp),
+                modifier = Modifier.height(32.dp)
+            ) {
+                Text(text = actionLabel, style = MaterialTheme.typography.labelMedium)
+            }
         }
     }
 }

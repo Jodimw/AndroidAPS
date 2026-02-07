@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.aaps.core.data.model.RM
 import app.aaps.core.data.plugin.PluginType
+import app.aaps.core.data.time.T
 import app.aaps.core.interfaces.configuration.Config
 import app.aaps.core.interfaces.configuration.ConfigBuilder
 import app.aaps.core.interfaces.overview.graph.OverviewDataCache
@@ -99,14 +100,16 @@ class MainViewModel @Inject constructor(
             } else ""
 
             // Compute running mode progress and display text from raw timing data
-            val rmProgress = if (rmData != null && rmData.duration > 0) {
-                val elapsed = now - rmData.timestamp
+            // Duration >= 30 days is effectively permanent (e.g. loop disabled uses Int.MAX_VALUE minutes)
+            val rmIsFinite = rmData != null && rmData.duration > 0 && rmData.duration < T.days(30).msecs()
+            val rmProgress = if (rmIsFinite) {
+                val elapsed = now - rmData!!.timestamp
                 (elapsed.toFloat() / rmData.duration.toFloat()).coerceIn(0f, 1f)
             } else 0f
 
             val rmText = if (rmData != null) {
                 val modeName = getModeNameString(rmData.mode)
-                if (rmData.mode.mustBeTemporary() && rmData.duration > 0) {
+                if (rmData.mode.mustBeTemporary() && rmIsFinite) {
                     "$modeName ${dateUtil.untilString(rmData.timestamp + rmData.duration, rh)}"
                 } else {
                     modeName

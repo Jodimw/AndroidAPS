@@ -100,14 +100,12 @@ fun TempTargetManagementScreen(
     // State to trigger pager scroll (set by navigation event, consumed by pager)
     var scrollToPage by remember { mutableStateOf<Int?>(null) }
 
-    // Observe navigation events
+    // Observe side effects
     LaunchedEffect(Unit) {
-        viewModel.navigationEvent.collect { event ->
-            when (event) {
-                is TempTargetManagementViewModel.NavigationEvent.NavigateBack -> onNavigateBack()
-
-                is TempTargetManagementViewModel.NavigationEvent.ScrollToPreset -> {
-                    scrollToPage = event.index
+        viewModel.sideEffect.collect { effect ->
+            when (effect) {
+                is TempTargetManagementViewModel.SideEffect.ScrollToPreset -> {
+                    scrollToPage = effect.index
                 }
             }
         }
@@ -141,7 +139,7 @@ fun TempTargetManagementScreen(
             title = viewModel.rh.gs(app.aaps.core.ui.R.string.activate_profile).removeSuffix(" profile"),
             message = confirmMessage,
             onConfirm = {
-                viewModel.activateWithEditorValues()
+                viewModel.activateWithEditorValues(onSuccess = onNavigateBack)
                 showActivateDialog = false
             },
             onDismiss = { showActivateDialog = false }
@@ -301,9 +299,9 @@ fun TempTargetManagementScreen(
                         ) { page ->
                             val isStandaloneActiveCard = hasStandaloneActiveTT && page == 0
                             val presetIndex = when {
-                                isStandaloneActiveCard  -> null
-                                hasStandaloneActiveTT   -> page - 1
-                                else                    -> page
+                                isStandaloneActiveCard -> null
+                                hasStandaloneActiveTT  -> page - 1
+                                else                   -> page
                             }
                             val preset = presetIndex?.let { uiState.presets.getOrNull(it) }
                             val isActivePreset = presetIndex != null && presetIndex == uiState.activePresetIndex

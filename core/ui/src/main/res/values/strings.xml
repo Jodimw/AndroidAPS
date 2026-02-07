@@ -696,6 +696,7 @@
     <string name="localalertsettings_title">Local alerts</string>
 
     <!-- Actions Screen -->
+    <string name="add">Add</string>
     <string name="actions">Actions</string>
     <string name="status">Status</string>
     <string name="pump_actions">Pump actions</string>

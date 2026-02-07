@@ -50,7 +50,7 @@ fun <T> TreatmentLazyColumn(
         verticalArrangement = Arrangement.spacedBy(2.dp)
     ) {
         groupedByDay.forEach { (dateString, itemsForDay) ->
-            stickyHeader(key = dateString) {
+            stickyHeader(key = "header_$dateString") {
                 Text(
                     text = dateUtil.dateStringRelative(getTimestamp(itemsForDay.first()), rh),
                     modifier = Modifier

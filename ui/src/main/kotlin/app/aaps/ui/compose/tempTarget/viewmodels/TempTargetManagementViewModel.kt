@@ -65,17 +65,15 @@ class TempTargetManagementViewModel @Inject constructor(
     val uiState: StateFlow<TempTargetManagementUiState>
         field = MutableStateFlow(TempTargetManagementUiState())
 
-    // Navigation events (one-time events)
-    val navigationEvent: SharedFlow<NavigationEvent>
+    val sideEffect: SharedFlow<SideEffect>
         field = MutableSharedFlow(
             replay = 0,                          // Don't replay to new collectors
             extraBufferCapacity = 1,             // Buffer one event if no collector
             onBufferOverflow = BufferOverflow.DROP_OLDEST  // Drop old events
         )
 
-    sealed class NavigationEvent {
-        data object NavigateBack : NavigationEvent()
-        data class ScrollToPreset(val index: Int) : NavigationEvent()
+    sealed class SideEffect {
+        data class ScrollToPreset(val index: Int) : SideEffect()
     }
 
     init {
@@ -421,7 +419,7 @@ class TempTargetManagementViewModel @Inject constructor(
                 // Scroll to new preset (account for standalone active TT card at position 0)
                 val hasStandaloneActiveTT = uiState.value.activeTT != null && uiState.value.activePresetIndex == null
                 val pageIndex = if (hasStandaloneActiveTT) presetIndex + 1 else presetIndex
-                navigationEvent.emit(NavigationEvent.ScrollToPreset(pageIndex))
+                sideEffect.emit(SideEffect.ScrollToPreset(pageIndex))
             } catch (e: Exception) {
                 aapsLogger.error(LTag.UI, "Failed to add preset", e)
             }
@@ -447,7 +445,7 @@ class TempTargetManagementViewModel @Inject constructor(
     /**
      * Activate temp target with current editor values
      */
-    fun activateWithEditorValues() {
+    fun activateWithEditorValues(onSuccess: () -> Unit) {
         viewModelScope.launch {
             try {
                 val currentState = uiState.value
@@ -483,8 +481,7 @@ class TempTargetManagementViewModel @Inject constructor(
                     )
                 )
 
-                // Navigate back after successful activation
-                navigationEvent.emit(NavigationEvent.NavigateBack)
+                onSuccess()
             } catch (e: Exception) {
                 aapsLogger.error(LTag.UI, "Failed to activate temp target", e)
             }

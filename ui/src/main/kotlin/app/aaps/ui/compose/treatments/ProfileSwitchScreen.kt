@@ -144,7 +144,7 @@ fun ProfileSwitchScreen(
                 TreatmentLazyColumn(
                     items = uiState.profileSwitches,
                     getTimestamp = { it.timestamp },
-                    getItemKey = { it.id },
+                    getItemKey = { if (it is ProfileSealed.EPS) "eps_${it.id}" else "ps_${it.id}" },
                     dateUtil = viewModel.dateUtil,
                     rh = viewModel.rh,
                     itemContent = { profileSwitch ->

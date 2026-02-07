@@ -16,6 +16,7 @@ sealed class AppRoute(val route: String) {
 
         fun createRoute(profileIndex: Int) = "profile_activation/$profileIndex"
     }
+
     data object Treatments : AppRoute("treatments")
     data object TempTargetManagement : AppRoute("temp_target_management")
     data object Stats : AppRoute("stats")
@@ -27,4 +28,8 @@ sealed class AppRoute(val route: String) {
     }
 
     data object RunningMode : AppRoute("running_mode")
+    data object CareDialog : AppRoute("care_dialog/{eventTypeOrdinal}") {
+
+        fun createRoute(eventTypeOrdinal: Int) = "care_dialog/$eventTypeOrdinal"
+    }
 }
