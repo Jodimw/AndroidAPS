@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="bolus_constraint_applied">Giới hạn liều bolus đã bật</string>
+    <string name="bolus_constraint_applied">Áp dụng giới hạn liều bolus</string>
     <string name="carbs_constraint_applied">Giới hạn Carbs đã bật</string>
     <string name="temp_target_short">TT</string>
     <string name="dialog_canceled">Đã hủy hộp thoại</string>
@@ -103,7 +103,7 @@
     <string name="treatments_wizard_correction_label">Hiệu chỉnh</string>
     <string name="meal_bolus">Bữa ăn</string>
     <string name="prime">Mồi bơm</string>
-    <string name="carbs_and_bolus">Carbs and bolus</string>
+    <string name="carbs_and_bolus">Carb và liều bolus</string>
     <string name="show_invalidated_records">Hiển thị bản ghi không hợp lệ / đã xóa</string>
     <string name="hide_invalidated_records">Ẩn bản ghi không hợp lệ / đã xóa</string>
     <string name="show_invalidated">Hiện các bản ghi không hợp lệ</string>
