@@ -43,22 +43,22 @@ internal fun StatusSectionContent(
     val addLabel = stringResource(app.aaps.core.ui.R.string.add)
     val fillLabel = stringResource(app.aaps.core.ui.R.string.prime_fill)
 
-    sensorStatus?.let {
-        StatusRow(item = it, actionLabel = addLabel, onActionClick = onSensorInsertClick)
+    cannulaStatus?.let {
+        StatusRow(item = it, actionLabel = fillLabel, onActionClick = onFillClick)
     }
-    if (sensorStatus != null && insulinStatus != null) {
+    if (cannulaStatus != null && insulinStatus != null) {
         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
     }
     insulinStatus?.let {
         StatusRow(item = it, actionLabel = fillLabel, onActionClick = onInsulinChangeClick)
     }
-    if (insulinStatus != null && cannulaStatus != null) {
+    if (insulinStatus != null && sensorStatus != null) {
         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
     }
-    cannulaStatus?.let {
-        StatusRow(item = it, actionLabel = fillLabel, onActionClick = onFillClick)
+    sensorStatus?.let {
+        StatusRow(item = it, actionLabel = addLabel, onActionClick = onSensorInsertClick)
     }
-    if (cannulaStatus != null && batteryStatus != null) {
+    if (sensorStatus != null && batteryStatus != null) {
         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
     }
     batteryStatus?.let {

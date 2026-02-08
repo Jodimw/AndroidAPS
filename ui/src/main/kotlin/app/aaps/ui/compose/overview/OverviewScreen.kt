@@ -6,6 +6,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -36,7 +37,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import app.aaps.core.data.model.RM
 import app.aaps.core.ui.compose.statusLevelToColor
@@ -163,7 +168,7 @@ private fun OverviewStatusSection(
     onInsulinChangeClick: () -> Unit,
     onBatteryChangeClick: () -> Unit
 ) {
-    val items = listOfNotNull(sensorStatus, insulinStatus, cannulaStatus, batteryStatus)
+    val items = listOfNotNull(cannulaStatus, insulinStatus, sensorStatus, batteryStatus)
     if (items.isEmpty()) return
 
     var expanded by rememberSaveable { mutableStateOf(false) }
@@ -171,15 +176,15 @@ private fun OverviewStatusSection(
     ElevatedCard(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 8.dp),
+            .padding(horizontal = 4.dp),
         elevation = CardDefaults.elevatedCardElevation(defaultElevation = 1.dp),
         colors = CardDefaults.elevatedCardColors(
             containerColor = MaterialTheme.colorScheme.surfaceContainerLow
         )
     ) {
         Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             // Header row — clickable to toggle
             Row(
@@ -197,9 +202,15 @@ private fun OverviewStatusSection(
                     )
                     Spacer(modifier = Modifier.weight(1f))
                 } else {
-                    Spacer(modifier = Modifier.weight(1f))
-                    CompactStatusItems(items = items)
-                    Spacer(modifier = Modifier.weight(1f))
+                    FlowRow(
+                        modifier = Modifier.weight(1f),
+                        horizontalArrangement = Arrangement.SpaceEvenly,
+                        verticalArrangement = Arrangement.spacedBy(2.dp)
+                    ) {
+                        items.forEach { item ->
+                            CompactStatusItem(item = item)
+                        }
+                    }
                 }
 
                 Icon(
@@ -233,20 +244,9 @@ private fun OverviewStatusSection(
 }
 
 @Composable
-private fun CompactStatusItems(items: List<StatusItem>) {
-    Row(
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        items.forEach { item ->
-            CompactStatusItem(item = item)
-        }
-    }
-}
-
-@Composable
 private fun CompactStatusItem(item: StatusItem) {
     val ageColor = statusLevelToColor(item.ageStatus)
+    val levelColor = if (item.level != null) statusLevelToColor(item.levelStatus) else ageColor
 
     Row(
         verticalAlignment = Alignment.CenterVertically
@@ -254,20 +254,24 @@ private fun CompactStatusItem(item: StatusItem) {
         Icon(
             painter = painterResource(id = item.iconRes),
             contentDescription = item.label,
-            modifier = Modifier.size(24.dp),
-            tint = ageColor
+            modifier = Modifier.size(20.dp),
+            tint = Color.Unspecified
         )
-        Spacer(modifier = Modifier.width(4.dp))
+        Spacer(modifier = Modifier.width(2.dp))
         Text(
-            text = buildString {
-                append(item.age)
+            text = buildAnnotatedString {
+                withStyle(SpanStyle(color = ageColor)) {
+                    append(item.age)
+                }
                 if (item.level != null) {
-                    append(" ")
-                    append(item.level)
+                    withStyle(SpanStyle(color = levelColor)) {
+                        append(" ")
+                        append(item.level)
+                    }
                 }
             },
-            style = MaterialTheme.typography.bodyMedium,
-            color = ageColor
+            style = MaterialTheme.typography.bodyMedium
         )
     }
 }
+

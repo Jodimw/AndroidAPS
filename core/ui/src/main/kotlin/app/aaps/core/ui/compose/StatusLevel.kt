@@ -23,7 +23,7 @@ enum class StatusLevel {
 fun statusLevelToColor(status: StatusLevel): Color {
     val colors = AapsTheme.generalColors
     return when (status) {
-        StatusLevel.NORMAL      -> colors.statusNormal
+        StatusLevel.NORMAL      -> MaterialTheme.colorScheme.onSurface
         StatusLevel.WARNING     -> colors.statusWarning
         StatusLevel.CRITICAL    -> colors.statusCritical
         StatusLevel.UNSPECIFIED -> MaterialTheme.colorScheme.onSurfaceVariant
