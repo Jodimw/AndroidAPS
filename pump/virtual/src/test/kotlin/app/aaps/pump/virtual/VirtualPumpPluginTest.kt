@@ -37,7 +37,7 @@ class VirtualPumpPluginTest : TestBaseWithProfile() {
     fun refreshConfiguration() {
         whenever(preferences.get(StringKey.VirtualPumpType)).thenReturn("Accu-Chek Combo")
         virtualPumpPlugin.refreshConfiguration()
-        assertThat(virtualPumpPlugin.pumpType).isEqualTo(PumpType.ACCU_CHEK_COMBO)
+        assertThat(virtualPumpPlugin.pumpTypeFlow.value).isEqualTo(PumpType.ACCU_CHEK_COMBO)
     }
 
     @Test
@@ -46,7 +46,7 @@ class VirtualPumpPluginTest : TestBaseWithProfile() {
         virtualPumpPlugin.refreshConfiguration()
         whenever(preferences.get(StringKey.VirtualPumpType)).thenReturn("Accu-Chek Combo")
         virtualPumpPlugin.refreshConfiguration()
-        assertThat(virtualPumpPlugin.pumpType).isEqualTo(PumpType.ACCU_CHEK_COMBO)
+        assertThat(virtualPumpPlugin.pumpTypeFlow.value).isEqualTo(PumpType.ACCU_CHEK_COMBO)
     }
 
     @Test
