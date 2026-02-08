@@ -7,7 +7,6 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -15,15 +14,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
-import androidx.compose.material3.FilledTonalButton
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -31,7 +26,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -39,17 +33,15 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import app.aaps.core.interfaces.pump.actions.CustomAction
-import app.aaps.core.ui.compose.AapsTheme
 import app.aaps.ui.compose.actions.viewmodels.ActionsViewModel
 
 /**
  * Material 3 Expressive Actions Screen
  *
  * Design philosophy:
- * - Status cards with progress indicators for visual health overview
  * - Tile buttons (icon on top, text below) in 2-column grid layout
  * - Consistent sizing matching original ActionsFragment layout
- * - Color-coded status (green=ok, amber=warning, red=critical)
+ * - Status section is now on the Overview screen
  */
 @Composable
 fun ActionsScreen(
@@ -58,12 +50,9 @@ fun ActionsScreen(
     onTempTargetClick: () -> Unit,
     onTempBasalClick: () -> Unit,
     onExtendedBolusClick: () -> Unit,
-    onFillClick: () -> Unit,
     onHistoryBrowserClick: () -> Unit,
     onTddStatsClick: () -> Unit,
     onBgCheckClick: () -> Unit,
-    onSensorInsertClick: () -> Unit,
-    onBatteryChangeClick: () -> Unit,
     onNoteClick: () -> Unit,
     onExerciseClick: () -> Unit,
     onQuestionClick: () -> Unit,
@@ -81,17 +70,6 @@ fun ActionsScreen(
             .padding(horizontal = 16.dp, vertical = 8.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // Status Section
-        StatusSection(
-            sensorStatus = state.sensorStatus,
-            insulinStatus = state.insulinStatus,
-            cannulaStatus = state.cannulaStatus,
-            batteryStatus = state.batteryStatus,
-            onSensorInsertClick = onSensorInsertClick,
-            onFillClick = if (state.showFill) onFillClick else null,
-            onBatteryChangeClick = if (state.showPumpBatteryChange) onBatteryChangeClick else null
-        )
-
         // Quick Actions Section
         QuickActionsSection(
             showTempTarget = state.showTempTarget,
@@ -129,12 +107,7 @@ fun ActionsScreen(
 
         // Careportal Section
         CareportalSection(
-            showFill = state.showFill,
-            showPumpBatteryChange = state.showPumpBatteryChange,
             onBgCheckClick = onBgCheckClick,
-            onSensorInsertClick = onSensorInsertClick,
-            onFillClick = onFillClick,
-            onBatteryChangeClick = onBatteryChangeClick,
             onNoteClick = onNoteClick,
             onExerciseClick = onExerciseClick,
             onQuestionClick = onQuestionClick,
@@ -159,166 +132,6 @@ fun ActionsScreen(
         }
 
         Spacer(modifier = Modifier.height(8.dp))
-    }
-}
-
-@Composable
-private fun StatusSection(
-    sensorStatus: StatusItem?,
-    insulinStatus: StatusItem?,
-    cannulaStatus: StatusItem?,
-    batteryStatus: StatusItem?,
-    onSensorInsertClick: (() -> Unit)? = null,
-    onFillClick: (() -> Unit)? = null,
-    onBatteryChangeClick: (() -> Unit)? = null
-) {
-    val addLabel = stringResource(app.aaps.core.ui.R.string.add)
-    val fillLabel = stringResource(app.aaps.core.ui.R.string.prime_fill)
-
-    ElevatedCard(
-        modifier = Modifier.fillMaxWidth(),
-        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 1.dp),
-        colors = CardDefaults.elevatedCardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainerLow
-        )
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            Text(
-                text = stringResource(app.aaps.core.ui.R.string.status),
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-
-            sensorStatus?.let {
-                StatusRow(item = it, actionLabel = addLabel, onActionClick = onSensorInsertClick)
-            }
-            if (sensorStatus != null && insulinStatus != null) {
-                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-            }
-            insulinStatus?.let { StatusRow(item = it) }
-            if (insulinStatus != null && cannulaStatus != null) {
-                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-            }
-            cannulaStatus?.let {
-                StatusRow(item = it, actionLabel = fillLabel, onActionClick = onFillClick)
-            }
-            if (cannulaStatus != null && batteryStatus != null) {
-                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-            }
-            batteryStatus?.let {
-                StatusRow(item = it, actionLabel = addLabel, onActionClick = onBatteryChangeClick)
-            }
-        }
-    }
-}
-
-/**
- * Maps a StatusLevel to the appropriate color from the theme.
- */
-@Composable
-private fun statusLevelToColor(status: StatusLevel): androidx.compose.ui.graphics.Color {
-    val colors = AapsTheme.generalColors
-    return when (status) {
-        StatusLevel.NORMAL      -> colors.statusNormal
-        StatusLevel.WARNING     -> colors.statusWarning
-        StatusLevel.CRITICAL    -> colors.statusCritical
-        StatusLevel.UNSPECIFIED -> MaterialTheme.colorScheme.onSurfaceVariant
-    }
-}
-
-@Composable
-private fun StatusRow(
-    item: StatusItem,
-    actionLabel: String? = null,
-    onActionClick: (() -> Unit)? = null
-) {
-    val ageColor = statusLevelToColor(item.ageStatus)
-    val levelColor = statusLevelToColor(item.levelStatus)
-
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        // Icon
-        Icon(
-            painter = painterResource(id = item.iconRes),
-            contentDescription = item.label,
-            modifier = Modifier.size(28.dp),
-            tint = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-
-        // Label
-        Text(
-            text = item.label,
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurface,
-            modifier = Modifier.weight(1f)
-        )
-
-        // Age with vertical progress
-        StatusValueWithProgress(
-            value = item.age,
-            valueColor = ageColor,
-            progress = item.agePercent,
-            progressColor = ageColor
-        )
-
-        // Level with vertical progress (if available)
-        if (item.level != null) {
-            StatusValueWithProgress(
-                value = item.level,
-                valueColor = levelColor,
-                progress = item.levelPercent,
-                progressColor = levelColor
-            )
-        }
-
-        // Action button
-        if (actionLabel != null && onActionClick != null) {
-            FilledTonalButton(
-                onClick = onActionClick,
-                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp),
-                modifier = Modifier.height(32.dp)
-            ) {
-                Text(text = actionLabel, style = MaterialTheme.typography.labelMedium)
-            }
-        }
-    }
-}
-
-@Composable
-private fun StatusValueWithProgress(
-    value: String,
-    valueColor: androidx.compose.ui.graphics.Color,
-    progress: Float,
-    progressColor: androidx.compose.ui.graphics.Color
-) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(4.dp)
-    ) {
-        Text(
-            text = value,
-            style = MaterialTheme.typography.bodyMedium,
-            fontWeight = FontWeight.Medium,
-            color = valueColor
-        )
-        if (progress >= 0) {
-            LinearProgressIndicator(
-                progress = { progress },
-                modifier = Modifier
-                    .width(56.dp)
-                    .height(6.dp),
-                color = progressColor,
-                trackColor = MaterialTheme.colorScheme.surfaceContainerHighest,
-                strokeCap = StrokeCap.Round
-            )
-        }
     }
 }
 
@@ -493,12 +306,7 @@ private fun TileButton(
 
 @Composable
 private fun CareportalSection(
-    showFill: Boolean,
-    showPumpBatteryChange: Boolean,
     onBgCheckClick: () -> Unit,
-    onSensorInsertClick: () -> Unit,
-    onFillClick: () -> Unit,
-    onBatteryChangeClick: () -> Unit,
     onNoteClick: () -> Unit,
     onExerciseClick: () -> Unit,
     onQuestionClick: () -> Unit,
@@ -522,7 +330,7 @@ private fun CareportalSection(
                 color = MaterialTheme.colorScheme.onSurface
             )
 
-            // Row 1: BG Check, Sensor Insert
+            // Row 1: BG Check, Note
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -534,74 +342,44 @@ private fun CareportalSection(
                     modifier = Modifier.weight(1f)
                 )
                 TileButton(
-                    text = stringResource(app.aaps.core.ui.R.string.cgm_sensor_insert),
-                    iconRes = app.aaps.core.objects.R.drawable.ic_cp_cgm_insert,
-                    onClick = onSensorInsertClick,
-                    modifier = Modifier.weight(1f)
-                )
-            }
-
-            // Row 2: Fill, Battery Change (conditional)
-            if (showFill || showPumpBatteryChange) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    if (showFill) {
-                        TileButton(
-                            text = stringResource(app.aaps.core.ui.R.string.prime_fill),
-                            iconRes = app.aaps.core.objects.R.drawable.ic_cp_pump_cannula,
-                            onClick = onFillClick,
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
-                    if (showPumpBatteryChange) {
-                        TileButton(
-                            text = stringResource(app.aaps.core.ui.R.string.pump_battery_change),
-                            iconRes = app.aaps.core.objects.R.drawable.ic_cp_pump_battery,
-                            onClick = onBatteryChangeClick,
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
-                }
-            }
-
-            // Row 3: Note, Exercise
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                TileButton(
                     text = stringResource(app.aaps.core.ui.R.string.careportal_note),
                     iconRes = app.aaps.core.objects.R.drawable.ic_cp_note,
                     onClick = onNoteClick,
                     modifier = Modifier.weight(1f)
                 )
+            }
+
+            // Row 2: Exercise, Question
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
                 TileButton(
                     text = stringResource(app.aaps.core.ui.R.string.careportal_exercise),
                     iconRes = app.aaps.core.objects.R.drawable.ic_cp_exercise,
                     onClick = onExerciseClick,
                     modifier = Modifier.weight(1f)
                 )
-            }
-
-            // Row 4: Question, Announcement
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
                 TileButton(
                     text = stringResource(app.aaps.core.ui.R.string.careportal_question),
                     iconRes = app.aaps.core.objects.R.drawable.ic_cp_question,
                     onClick = onQuestionClick,
                     modifier = Modifier.weight(1f)
                 )
+            }
+
+            // Row 3: Announcement
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
                 TileButton(
                     text = stringResource(app.aaps.core.ui.R.string.careportal_announcement),
                     iconRes = app.aaps.core.objects.R.drawable.ic_cp_announcement,
                     onClick = onAnnouncementClick,
                     modifier = Modifier.weight(1f)
                 )
+                Spacer(modifier = Modifier.weight(1f))
             }
         }
     }

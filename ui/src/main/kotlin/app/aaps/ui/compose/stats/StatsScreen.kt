@@ -4,9 +4,9 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -16,7 +16,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
-import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -29,11 +29,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import app.aaps.core.ui.compose.AapsCard
-import app.aaps.core.ui.compose.AapsSmallFab
 import app.aaps.core.ui.compose.AapsTopAppBar
 import app.aaps.ui.R
 import app.aaps.ui.compose.stats.viewmodels.StatsViewModel
@@ -77,72 +74,56 @@ fun StatsScreen(
             verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
             // TDD Section
-            Box(
+            AapsCard(
                 modifier = Modifier.fillMaxWidth()
             ) {
-                AapsCard(
-                    modifier = Modifier.fillMaxWidth()
+                Column(
+                    modifier = Modifier.padding(16.dp)
                 ) {
-                    Column(
-                        modifier = Modifier.padding(16.dp)
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { viewModel.toggleTddExpanded() }
+                            .padding(bottom = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable { viewModel.toggleTddExpanded() }
-                                .padding(bottom = 8.dp),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                imageVector = if (state.tddExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                                contentDescription = if (state.tddExpanded) "Collapse" else "Expand"
-                            )
-                            Text(
-                                text = stringResource(app.aaps.core.ui.R.string.tdd),
-                                style = MaterialTheme.typography.titleMedium
-                            )
+                        Text(
+                            text = stringResource(app.aaps.core.ui.R.string.tdd),
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                        Spacer(modifier = Modifier.weight(1f))
+                        if (state.tddExpanded && !state.tddLoading) {
+                            FilledTonalButton(onClick = { viewModel.recalculateTdd(context) }) {
+                                Text(text = stringResource(R.string.recalculate))
+                            }
                         }
+                        Icon(
+                            imageVector = if (state.tddExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
 
-                        AnimatedVisibility(visible = state.tddExpanded) {
-                            Crossfade(
-                                targetState = state.tddLoading,
-                                label = stringResource(app.aaps.core.ui.R.string.loading)
-                            ) { isLoading ->
-                                if (isLoading) {
-                                    LoadingSection(
-                                        title = stringResource(app.aaps.core.ui.R.string.tdd),
-                                        message = stringResource(R.string.calculation_in_progress)
+                    AnimatedVisibility(visible = state.tddExpanded) {
+                        Crossfade(
+                            targetState = state.tddLoading,
+                            label = stringResource(app.aaps.core.ui.R.string.loading)
+                        ) { isLoading ->
+                            if (isLoading) {
+                                LoadingSection(
+                                    title = stringResource(app.aaps.core.ui.R.string.tdd),
+                                    message = stringResource(R.string.calculation_in_progress)
+                                )
+                            } else {
+                                state.tddStatsData?.let { data ->
+                                    TddStatsCompose(
+                                        tddStatsData = data,
+                                        dateUtil = viewModel.dateUtil,
+                                        modifier = Modifier.fillMaxWidth()
                                     )
-                                } else {
-                                    state.tddStatsData?.let { data ->
-                                        TddStatsCompose(
-                                            tddStatsData = data,
-                                            dateUtil = viewModel.dateUtil,
-                                            modifier = Modifier.fillMaxWidth()
-                                        )
-                                    }
                                 }
                             }
                         }
-                    }
-                }
-
-                if (state.tddExpanded && !state.tddLoading) {
-                    val recalculateLabel = stringResource(R.string.recalculate)
-                    AapsSmallFab(
-                        onClick = { viewModel.recalculateTdd(context) },
-                        modifier = Modifier
-                            .align(Alignment.TopEnd)
-                            .padding(8.dp)
-                            .semantics {
-                                contentDescription = recalculateLabel
-                            }
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Refresh,
-                            contentDescription = null
-                        )
                     }
                 }
             }
@@ -159,16 +140,17 @@ fun StatsScreen(
                             .fillMaxWidth()
                             .clickable { viewModel.toggleTirExpanded() }
                             .padding(bottom = 8.dp),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(
-                            imageVector = if (state.tirExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                            contentDescription = if (state.tirExpanded) "Collapse" else "Expand"
-                        )
                         Text(
                             text = stringResource(app.aaps.core.ui.R.string.tir),
                             style = MaterialTheme.typography.titleMedium
+                        )
+                        Spacer(modifier = Modifier.weight(1f))
+                        Icon(
+                            imageVector = if (state.tirExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
 
@@ -209,16 +191,17 @@ fun StatsScreen(
                             .fillMaxWidth()
                             .clickable { viewModel.toggleDexcomTirExpanded() }
                             .padding(bottom = 8.dp),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(
-                            imageVector = if (state.dexcomTirExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                            contentDescription = if (state.dexcomTirExpanded) "Collapse" else "Expand"
-                        )
                         Text(
                             text = stringResource(R.string.dexcom_tir),
                             style = MaterialTheme.typography.titleMedium
+                        )
+                        Spacer(modifier = Modifier.weight(1f))
+                        Icon(
+                            imageVector = if (state.dexcomTirExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
 
@@ -246,72 +229,56 @@ fun StatsScreen(
                 }
             }
 
-            // Activity Section with Reset button
-            Box(
+            // Activity Section
+            AapsCard(
                 modifier = Modifier.fillMaxWidth()
             ) {
-                AapsCard(
-                    modifier = Modifier.fillMaxWidth()
+                Column(
+                    modifier = Modifier.padding(16.dp)
                 ) {
-                    Column(
-                        modifier = Modifier.padding(16.dp)
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { viewModel.toggleActivityExpanded() }
+                            .padding(bottom = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable { viewModel.toggleActivityExpanded() }
-                                .padding(bottom = 8.dp),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                imageVector = if (state.activityExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                                contentDescription = if (state.activityExpanded) "Collapse" else "Expand"
-                            )
-                            Text(
-                                text = stringResource(R.string.activity_monitor),
-                                style = MaterialTheme.typography.titleMedium
-                            )
+                        Text(
+                            text = stringResource(R.string.activity_monitor),
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                        Spacer(modifier = Modifier.weight(1f))
+                        if (state.activityExpanded && !state.activityLoading) {
+                            FilledTonalButton(onClick = { viewModel.resetActivityStats(context) }) {
+                                Text(text = stringResource(app.aaps.core.ui.R.string.reset))
+                            }
                         }
+                        Icon(
+                            imageVector = if (state.activityExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
 
-                        AnimatedVisibility(visible = state.activityExpanded) {
-                            Crossfade(
-                                targetState = state.activityLoading,
-                                label = stringResource(app.aaps.core.ui.R.string.loading)
-                            ) { isLoading ->
-                                if (isLoading) {
-                                    LoadingSection(
-                                        title = stringResource(R.string.activity_monitor),
-                                        message = stringResource(R.string.calculation_in_progress)
+                    AnimatedVisibility(visible = state.activityExpanded) {
+                        Crossfade(
+                            targetState = state.activityLoading,
+                            label = stringResource(app.aaps.core.ui.R.string.loading)
+                        ) { isLoading ->
+                            if (isLoading) {
+                                LoadingSection(
+                                    title = stringResource(R.string.activity_monitor),
+                                    message = stringResource(R.string.calculation_in_progress)
+                                )
+                            } else {
+                                state.activityStatsData?.let { data ->
+                                    ActivityStatsCompose(
+                                        activityStats = data,
+                                        modifier = Modifier.fillMaxWidth()
                                     )
-                                } else {
-                                    state.activityStatsData?.let { data ->
-                                        ActivityStatsCompose(
-                                            activityStats = data,
-                                            modifier = Modifier.fillMaxWidth()
-                                        )
-                                    }
                                 }
                             }
                         }
-                    }
-                }
-
-                if (state.activityExpanded && !state.activityLoading) {
-                    val resetLabel = stringResource(app.aaps.core.ui.R.string.reset)
-                    AapsSmallFab(
-                        onClick = { viewModel.resetActivityStats(context) },
-                        modifier = Modifier
-                            .align(Alignment.TopEnd)
-                            .padding(8.dp)
-                            .semantics {
-                                contentDescription = resetLabel
-                            }
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Refresh,
-                            contentDescription = null
-                        )
                     }
                 }
             }

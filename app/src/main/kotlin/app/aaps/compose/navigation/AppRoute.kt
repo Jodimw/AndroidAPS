@@ -32,4 +32,9 @@ sealed class AppRoute(val route: String) {
 
         fun createRoute(eventTypeOrdinal: Int) = "care_dialog/$eventTypeOrdinal"
     }
+
+    data object FillDialog : AppRoute("fill_dialog/{preselect}") {
+
+        fun createRoute(preselect: Int) = "fill_dialog/$preselect"
+    }
 }

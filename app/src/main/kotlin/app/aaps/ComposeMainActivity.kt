@@ -45,6 +45,9 @@ import app.aaps.plugins.main.skins.SkinProvider
 import app.aaps.ui.compose.actions.viewmodels.ActionsViewModel
 import app.aaps.ui.compose.careDialog.CareDialogScreen
 import app.aaps.ui.compose.careDialog.CareDialogViewModel
+import app.aaps.ui.compose.fillDialog.FillDialogScreen
+import app.aaps.ui.compose.fillDialog.FillDialogViewModel
+import app.aaps.ui.compose.fillDialog.FillPreselect
 import app.aaps.ui.compose.graphs.viewmodels.GraphViewModel
 import app.aaps.ui.compose.main.MainMenuItem
 import app.aaps.ui.compose.main.MainNavDestination
@@ -98,6 +101,7 @@ class ComposeMainActivity : DaggerAppCompatActivityWithResult() {
     @Inject lateinit var profileManagementViewModel: ProfileManagementViewModel
     @Inject lateinit var runningModeManagementViewModel: RunningModeManagementViewModel
     @Inject lateinit var careDialogViewModel: CareDialogViewModel
+    @Inject lateinit var fillDialogViewModel: FillDialogViewModel
 
     private val disposable = CompositeDisposable()
 
@@ -191,6 +195,27 @@ class ComposeMainActivity : DaggerAppCompatActivityWithResult() {
                             },
                             onSwitchToClassicUi = { switchToClassicUi() },
                             onAboutDialogDismiss = { mainViewModel.setShowAboutDialog(false) },
+                            // Overview status callbacks
+                            onSensorInsertClick = {
+                                navController.navigate(AppRoute.CareDialog.createRoute(UiInteraction.EventType.SENSOR_INSERT.ordinal))
+                            },
+                            onFillClick = {
+                                protectionCheck.requestProtection(ProtectionCheck.Protection.BOLUS) { result ->
+                                    if (result == ProtectionResult.GRANTED) {
+                                        navController.navigate(AppRoute.FillDialog.createRoute(FillPreselect.SITE_CHANGE.ordinal))
+                                    }
+                                }
+                            },
+                            onInsulinChangeClick = {
+                                protectionCheck.requestProtection(ProtectionCheck.Protection.BOLUS) { result ->
+                                    if (result == ProtectionResult.GRANTED) {
+                                        navController.navigate(AppRoute.FillDialog.createRoute(FillPreselect.CARTRIDGE_CHANGE.ordinal))
+                                    }
+                                }
+                            },
+                            onBatteryChangeClick = {
+                                navController.navigate(AppRoute.CareDialog.createRoute(UiInteraction.EventType.BATTERY_CHANGE.ordinal))
+                            },
                             // Actions callbacks
                             onRunningModeClick = {
                                 protectionCheck.requestProtection(ProtectionCheck.Protection.BOLUS) { result ->
@@ -225,13 +250,6 @@ class ComposeMainActivity : DaggerAppCompatActivityWithResult() {
                                     }
                                 }
                             },
-                            onFillClick = {
-                                protectionCheck.requestProtection(ProtectionCheck.Protection.BOLUS) { result ->
-                                    if (result == ProtectionResult.GRANTED) {
-                                        uiInteraction.runFillDialog(supportFragmentManager)
-                                    }
-                                }
-                            },
                             onHistoryBrowserClick = {
                                 startActivity(Intent(this@ComposeMainActivity, uiInteraction.historyBrowseActivity))
                             },
@@ -240,12 +258,6 @@ class ComposeMainActivity : DaggerAppCompatActivityWithResult() {
                             },
                             onBgCheckClick = {
                                 navController.navigate(AppRoute.CareDialog.createRoute(UiInteraction.EventType.BGCHECK.ordinal))
-                            },
-                            onSensorInsertClick = {
-                                navController.navigate(AppRoute.CareDialog.createRoute(UiInteraction.EventType.SENSOR_INSERT.ordinal))
-                            },
-                            onBatteryChangeClick = {
-                                navController.navigate(AppRoute.CareDialog.createRoute(UiInteraction.EventType.BATTERY_CHANGE.ordinal))
                             },
                             onNoteClick = {
                                 navController.navigate(AppRoute.CareDialog.createRoute(UiInteraction.EventType.NOTE.ordinal))
@@ -318,6 +330,29 @@ class ComposeMainActivity : DaggerAppCompatActivityWithResult() {
                             onNavigateBack = { navController.popBackStack() },
                             onShowSiteRotationDialog = {
                                 uiInteraction.runSiteRotationDialog(supportFragmentManager)
+                            }
+                        )
+                    }
+
+                    composable(
+                        route = AppRoute.FillDialog.route,
+                        arguments = listOf(
+                            androidx.navigation.navArgument("preselect") {
+                                type = androidx.navigation.NavType.IntType
+                            }
+                        )
+                    ) { backStackEntry ->
+                        val preselectOrdinal = backStackEntry.arguments?.getInt("preselect") ?: 0
+                        val preselect = FillPreselect.entries[preselectOrdinal]
+                        FillDialogScreen(
+                            viewModel = fillDialogViewModel,
+                            preselect = preselect,
+                            onNavigateBack = { navController.popBackStack() },
+                            onShowSiteRotationDialog = {
+                                uiInteraction.runSiteRotationDialog(supportFragmentManager)
+                            },
+                            onShowDeliveryError = { comment ->
+                                uiInteraction.runAlarm(comment, rh.gs(app.aaps.core.ui.R.string.treatmentdeliveryerror), app.aaps.core.ui.R.raw.boluserror)
                             }
                         )
                     }

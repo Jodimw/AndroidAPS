@@ -14,7 +14,6 @@ import app.aaps.core.interfaces.db.ProcessedTbrEbData
 import app.aaps.core.interfaces.logging.UserEntryLogger
 import app.aaps.core.interfaces.plugin.ActivePlugin
 import app.aaps.core.interfaces.profile.ProfileFunction
-import app.aaps.core.interfaces.pump.WarnColors
 import app.aaps.core.interfaces.pump.actions.CustomActionType
 import app.aaps.core.interfaces.queue.Callback
 import app.aaps.core.interfaces.queue.CommandQueue
@@ -69,7 +68,6 @@ class ActionsViewModel @Inject constructor(
     private val aapsSchedulers: AapsSchedulers,
     private val fabricPrivacy: FabricPrivacy,
     private val preferences: Preferences,
-    private val warnColors: WarnColors,
     private val tddCalculator: TddCalculator,
     private val decimalFormatter: DecimalFormatter
 ) : ViewModel() {
