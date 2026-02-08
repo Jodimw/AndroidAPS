@@ -54,6 +54,8 @@ import app.aaps.pump.virtual.keys.VirtualBooleanNonPreferenceKey
 import io.reactivex.rxjava3.disposables.CompositeDisposable
 import io.reactivex.rxjava3.kotlin.plusAssign
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import javax.inject.Provider
@@ -80,6 +82,16 @@ open class VirtualPumpPlugin @Inject constructor(
     pluginDescription = PluginDescription()
         .mainType(PluginType.PUMP)
         .fragmentClass(VirtualPumpFragment::class.java.name)
+        .composeContent { plugin ->
+            VirtualPumpComposeContent(
+                virtualPumpPlugin = plugin as VirtualPumpPlugin,
+                rh = rh,
+                profileFunction = profileFunction,
+                dateUtil = dateUtil,
+                persistenceLayer = persistenceLayer,
+                preferences = preferences
+            )
+        }
         .pluginIcon(app.aaps.core.objects.R.drawable.ic_virtual_pump)
         .pluginName(app.aaps.core.ui.R.string.virtual_pump)
         .shortName(R.string.virtual_pump_shortname)
@@ -92,12 +104,22 @@ open class VirtualPumpPlugin @Inject constructor(
 ), Pump, VirtualPump {
 
     private val disposable = CompositeDisposable()
-    var batteryPercent = 50
-    var reservoirInUnits = 50
 
-    var pumpType: PumpType? = null
-        private set
+    val batteryPercentFlow: StateFlow<Int>
+        field = MutableStateFlow(50)
+
+    val reservoirInUnitsFlow: StateFlow<Int>
+        field = MutableStateFlow(50)
+
+    val pumpTypeFlow: StateFlow<PumpType?>
+        field = MutableStateFlow(null)
+
     override var lastDataTime: Long = 0
+
+    fun notifyStateChanged() {
+        rxBus.send(EventVirtualPumpUpdateGui()) // TODO: Remove after fragment cleanup
+    }
+
     override val pumpDescription = PumpDescription().also {
         it.isBolusCapable = true
         it.bolusStep = 0.1
@@ -177,9 +199,9 @@ open class VirtualPumpPlugin @Inject constructor(
     override val reservoirLevel: Double
         get() =
             if (config.AAPSCLIENT) processedDeviceStatusData.pumpData?.reservoir ?: -1.0
-            else reservoirInUnits.toDouble()
+            else reservoirInUnitsFlow.value.toDouble()
 
-    override val batteryLevel: Int? get() = batteryPercent
+    override val batteryLevel: Int? get() = batteryPercentFlow.value
 
     override fun deliverTreatment(detailedBolusInfo: DetailedBolusInfo): PumpEnactResult {
         // Insulin value must be greater than 0
@@ -206,7 +228,7 @@ open class VirtualPumpPlugin @Inject constructor(
         rxBus.send(EventOverviewBolusProgress(rh, percent = 100, id = detailedBolusInfo.id))
         SystemClock.sleep(1000)
         aapsLogger.debug(LTag.PUMP, "Delivering treatment insulin: " + detailedBolusInfo.insulin + "U carbs: " + detailedBolusInfo.carbs + "g " + result)
-        rxBus.send(EventVirtualPumpUpdateGui())
+        notifyStateChanged()
         lastDataTime = System.currentTimeMillis()
         if (detailedBolusInfo.insulin > 0) {
             if (config.AAPSCLIENT) // do not store pump serial (record will not be marked PH)
@@ -223,7 +245,7 @@ open class VirtualPumpPlugin @Inject constructor(
                     amount = detailedBolusInfo.insulin,
                     type = detailedBolusInfo.bolusType,
                     pumpId = dateUtil.now(),
-                    pumpType = pumpType ?: PumpType.GENERIC_AAPS,
+                    pumpType = pumpTypeFlow.value ?: PumpType.GENERIC_AAPS,
                     pumpSerial = serialNumber()
                 )
         }
@@ -246,11 +268,11 @@ open class VirtualPumpPlugin @Inject constructor(
             isAbsolute = true,
             type = tbrType,
             pumpId = dateUtil.now(),
-            pumpType = pumpType ?: PumpType.GENERIC_AAPS,
+            pumpType = pumpTypeFlow.value ?: PumpType.GENERIC_AAPS,
             pumpSerial = serialNumber()
         )
         aapsLogger.debug(LTag.PUMP, "Setting temp basal absolute: ${result.toText(rh)}")
-        rxBus.send(EventVirtualPumpUpdateGui())
+        notifyStateChanged()
         lastDataTime = System.currentTimeMillis()
         return result
     }
@@ -271,11 +293,11 @@ open class VirtualPumpPlugin @Inject constructor(
             isAbsolute = false,
             type = tbrType,
             pumpId = dateUtil.now(),
-            pumpType = pumpType ?: PumpType.GENERIC_AAPS,
+            pumpType = pumpTypeFlow.value ?: PumpType.GENERIC_AAPS,
             pumpSerial = serialNumber()
         )
         aapsLogger.debug(LTag.PUMP, "Settings temp basal percent: ${result.toText(rh)}")
-        rxBus.send(EventVirtualPumpUpdateGui())
+        notifyStateChanged()
         lastDataTime = System.currentTimeMillis()
         return result
     }
@@ -295,11 +317,11 @@ open class VirtualPumpPlugin @Inject constructor(
             duration = T.mins(durationInMinutes.toLong()).msecs(),
             isEmulatingTB = false,
             pumpId = dateUtil.now(),
-            pumpType = pumpType ?: PumpType.GENERIC_AAPS,
+            pumpType = pumpTypeFlow.value ?: PumpType.GENERIC_AAPS,
             pumpSerial = serialNumber()
         )
         aapsLogger.debug(LTag.PUMP, "Setting extended bolus: ${result.toText(rh)}")
-        rxBus.send(EventVirtualPumpUpdateGui())
+        notifyStateChanged()
         lastDataTime = System.currentTimeMillis()
         return result
     }
@@ -314,11 +336,11 @@ open class VirtualPumpPlugin @Inject constructor(
             pumpSync.syncStopTemporaryBasalWithPumpId(
                 timestamp = dateUtil.now(),
                 endPumpId = dateUtil.now(),
-                pumpType = pumpType ?: PumpType.GENERIC_AAPS,
+                pumpType = pumpTypeFlow.value ?: PumpType.GENERIC_AAPS,
                 pumpSerial = serialNumber()
             )
             aapsLogger.debug(LTag.PUMP, "Canceling temp basal: ${result.toText(rh)}")
-            rxBus.send(EventVirtualPumpUpdateGui())
+            notifyStateChanged()
         }
         lastDataTime = System.currentTimeMillis()
         return result
@@ -330,7 +352,7 @@ open class VirtualPumpPlugin @Inject constructor(
             pumpSync.syncStopExtendedBolusWithPumpId(
                 timestamp = dateUtil.now(),
                 endPumpId = dateUtil.now(),
-                pumpType = pumpType ?: PumpType.GENERIC_AAPS,
+                pumpType = pumpTypeFlow.value ?: PumpType.GENERIC_AAPS,
                 pumpSerial = serialNumber()
             )
         }
@@ -339,7 +361,7 @@ open class VirtualPumpPlugin @Inject constructor(
         result.isTempCancel = true
         result.comment = rh.gs(app.aaps.core.ui.R.string.virtualpump_resultok)
         aapsLogger.debug(LTag.PUMP, "Canceling extended bolus: ${result.toText(rh)}")
-        rxBus.send(EventVirtualPumpUpdateGui())
+        notifyStateChanged()
         lastDataTime = System.currentTimeMillis()
         return result
     }
@@ -353,10 +375,11 @@ open class VirtualPumpPlugin @Inject constructor(
         val pumpType = preferences.get(StringKey.VirtualPumpType)
         val pumpTypeNew = PumpType.getByDescription(pumpType)
         aapsLogger.debug(LTag.PUMP, "Pump in configuration: $pumpType, PumpType object: $pumpTypeNew")
-        if (this.pumpType == pumpTypeNew) return
-        aapsLogger.debug(LTag.PUMP, "New pump configuration found ($pumpTypeNew), changing from previous (${this.pumpType})")
+        if (pumpTypeFlow.value == pumpTypeNew) return
+        aapsLogger.debug(LTag.PUMP, "New pump configuration found ($pumpTypeNew), changing from previous (${pumpTypeFlow.value})")
         pumpDescription.fillFor(pumpTypeNew)
-        this.pumpType = pumpTypeNew
+        pumpTypeFlow.value = pumpTypeNew
+        notifyStateChanged() // TODO: Remove after fragment cleanup
     }
 
     override fun timezoneOrDSTChanged(timeChangeType: TimeChangeType) {}

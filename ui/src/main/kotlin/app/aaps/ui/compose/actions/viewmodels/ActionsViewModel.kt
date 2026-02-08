@@ -37,9 +37,9 @@ import app.aaps.core.keys.interfaces.Preferences
 import app.aaps.core.objects.extensions.toStringMedium
 import app.aaps.core.objects.extensions.toStringShort
 import app.aaps.core.ui.R
+import app.aaps.core.ui.compose.StatusLevel
 import app.aaps.ui.compose.actions.ActionsUiState
 import app.aaps.ui.compose.actions.StatusItem
-import app.aaps.ui.compose.actions.StatusLevel
 import io.reactivex.rxjava3.disposables.CompositeDisposable
 import io.reactivex.rxjava3.kotlin.plusAssign
 import kotlinx.coroutines.Dispatchers

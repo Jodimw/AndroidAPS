@@ -183,6 +183,8 @@
     <string name="lowglucosesuspend">Low Glucose Suspend</string>
     <string name="pump_disconnected">Pump disconnected</string>
     <string name="pump_suspended">Pump suspended</string>
+    <string name="pump_suspend">Suspend pump</string>
+    <string name="pump_resume">Resume pump</string>
     <string name="mode_reverted">Mode reverted</string>
     <string name="dia">DIA</string>
     <string name="ic_short">IC</string>
@@ -596,6 +598,7 @@
     <string name="tempbasal_label">Temp basal</string>
     <string name="extended_bolus_label">Extended bolus</string>
     <string name="serial_number">Serial number</string>
+    <string name="last_bolus_format">%1$.2f U %2$s</string>
     <string name="disconnected">Disconnected</string>
     <string name="connecting">Connecting</string>
     <string name="clicked_connect_to_pump" comment="26 characters max for translation">Clicked connect to pump</string>

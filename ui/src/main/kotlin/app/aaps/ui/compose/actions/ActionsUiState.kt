@@ -1,18 +1,8 @@
 package app.aaps.ui.compose.actions
+
 import androidx.compose.runtime.Immutable
-
 import app.aaps.core.interfaces.pump.actions.CustomAction
-
-/**
- * Status severity level for theming
- */
-enum class StatusLevel {
-
-    NORMAL,
-    WARNING,
-    CRITICAL,
-    UNSPECIFIED
-}
+import app.aaps.core.ui.compose.StatusLevel
 
 /**
  * UI state for the Actions screen

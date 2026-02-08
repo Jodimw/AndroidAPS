@@ -115,11 +115,11 @@ class VirtualPumpFragment : DaggerFragment() {
             ?: ""
         binding.extendedbolus.text = runBlocking { persistenceLayer.getExtendedBolusActiveAt(dateUtil.now()) }?.toStringFull(dateUtil, rh)
             ?: ""
-        binding.battery.text = rh.gs(app.aaps.core.ui.R.string.format_percent, virtualPumpPlugin.batteryPercent)
-        binding.reservoir.text = rh.gs(app.aaps.core.ui.R.string.format_insulin_units, virtualPumpPlugin.reservoirInUnits.toDouble())
+        binding.battery.text = rh.gs(app.aaps.core.ui.R.string.format_percent, virtualPumpPlugin.batteryPercentFlow.value)
+        binding.reservoir.text = rh.gs(app.aaps.core.ui.R.string.format_insulin_units, virtualPumpPlugin.reservoirInUnitsFlow.value.toDouble())
 
         virtualPumpPlugin.refreshConfiguration()
-        val pumpType = virtualPumpPlugin.pumpType
+        val pumpType = virtualPumpPlugin.pumpTypeFlow.value
 
         binding.type.text = pumpType?.description
         binding.typeDef.text = pumpType?.getFullDescription(rh.gs(R.string.virtual_pump_pump_def), pumpType.hasExtendedBasals(), rh)

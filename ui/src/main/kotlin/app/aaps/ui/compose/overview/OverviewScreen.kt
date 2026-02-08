@@ -39,9 +39,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import app.aaps.core.data.model.RM
+import app.aaps.core.ui.compose.statusLevelToColor
 import app.aaps.ui.compose.actions.StatusItem
 import app.aaps.ui.compose.actions.StatusSectionContent
-import app.aaps.ui.compose.actions.statusLevelToColor
 import app.aaps.ui.compose.actions.viewmodels.ActionsViewModel
 import app.aaps.ui.compose.graphs.viewmodels.GraphViewModel
 import app.aaps.ui.compose.main.TempTargetChipState

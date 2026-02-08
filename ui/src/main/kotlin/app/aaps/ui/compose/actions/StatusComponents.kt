@@ -23,21 +23,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import app.aaps.core.ui.compose.AapsTheme
-
-/**
- * Maps a StatusLevel to the appropriate color from the theme.
- */
-@Composable
-internal fun statusLevelToColor(status: StatusLevel): Color {
-    val colors = AapsTheme.generalColors
-    return when (status) {
-        StatusLevel.NORMAL      -> colors.statusNormal
-        StatusLevel.WARNING     -> colors.statusWarning
-        StatusLevel.CRITICAL    -> colors.statusCritical
-        StatusLevel.UNSPECIFIED -> MaterialTheme.colorScheme.onSurfaceVariant
-    }
-}
+import app.aaps.core.ui.compose.statusLevelToColor
 
 /**
  * Status rows content — sensor/insulin/cannula/battery with optional action buttons.
