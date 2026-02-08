@@ -158,6 +158,13 @@ fun TempTargetEditor(
                 value = editorDuration.toDouble(),
                 onValueChange = { onDurationChange((it * 60000L).toLong()) },
                 valueRange = 0.0..Constants.MAX_PROFILE_SWITCH_DURATION,
+                controlPoints = listOf(
+                    0.0 to 0.0,             // 0% slider -> 0h
+                    0.25 to 6.0 * 60.0,     // 25% slider -> 6h
+                    0.5 to 24.0 * 60.0,     // 50% slider -> 24h
+                    0.75 to 48.0 * 60.0,    // 75% slider -> 48h
+                    1.0 to Constants.MAX_PROFILE_SWITCH_DURATION   // 100% slider -> 168h
+                ),
                 step = 5.0,
                 showValue = true,
                 valueFormat = DecimalFormat("0"),

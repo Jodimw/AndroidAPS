@@ -74,6 +74,7 @@ fun formatMinutesAsDuration(minutes: Int, rh: ResourceHelper): String {
  * @param onValueChange Called when value changes
  * @param valueRange The range of values the slider can represent
  * @param step The step size for +/- buttons (default 0.1)
+ * @param controlPoints Pairs of (position [0-1], value) to create a non linear slider, if null slider is linear
  * @param showValue Whether to show a clickable value label (default false)
  * @param valueFormatResId Resource ID for formatting value with unit (e.g., "%1$.1f U" or "%1$d min")
  * @param formatAsInt If true, value is formatted as Int for stringResource (use with %d format strings)
@@ -90,6 +91,7 @@ fun SliderWithButtons(
     onValueChange: (Double) -> Unit,
     valueRange: ClosedFloatingPointRange<Double>,
     step: Double = 0.1,
+    controlPoints: List<Pair<Double, Double>>? = null,
     showValue: Boolean = false,
     valueFormatResId: Int? = null,
     formatAsInt: Boolean = false,
@@ -103,6 +105,77 @@ fun SliderWithButtons(
     val minValue = valueRange.start
     val maxValue = valueRange.endInclusive
     var showDialog by remember { mutableStateOf(false) }
+
+    // Normalise ControlPoints to ensure % and values are consistent with min & maxValue
+    val normalizedControlPoints by remember(controlPoints, minValue, maxValue) {
+        mutableStateOf(
+            if (controlPoints != null) {
+                // check controlPoints are valid
+                require(controlPoints.size >= 2) { "At least 2 control points required" }
+                require(controlPoints.first().first == 0.0) { "First point must have 0.0 position" }
+                require(controlPoints.last().first == 1.0) { "Last point must have 1.0 position" }
+                require(controlPoints.map { it.first }.zipWithNext { a, b -> a < b }.all { it }) {
+                    "Control points must be in increasing order"
+                }
+                controlPoints
+            } else {
+                // linear ControlPoints by default
+                listOf(0.0 to minValue, 1.0 to maxValue)
+            }
+        )
+    }
+
+    // Calculate slider position [0.1] from targetValue
+    fun valueToPosition(targetValue: Double): Float {
+        val clampedValue = targetValue.coerceIn(minValue, maxValue)
+
+        // find the right segment
+        for (i in 0 until normalizedControlPoints.size - 1) {
+            val (startPos, startValue) = normalizedControlPoints[i]
+            val (endPos, endValue) = normalizedControlPoints[i + 1]
+
+            if (clampedValue in startValue..endValue || clampedValue in endValue..startValue) {
+                // linear interpolation between the two points
+                if (endValue == startValue) return startPos.toFloat()
+
+                val segmentRatio = (clampedValue - startValue) / (endValue - startValue)
+                val position = startPos + segmentRatio * (endPos - startPos)
+                return position.toFloat()
+            }
+        }
+
+        // Fallback: linear conversion (should never occur with valid points)
+        return ((clampedValue - minValue) / (maxValue - minValue)).toFloat()
+    }
+
+    // Convert slider position [0-1] to targetValue
+    fun positionToValue(position: Float): Double {
+        val clampedPos = position.coerceIn(0f, 1f)
+        // find slider segment
+        for (i in 0 until normalizedControlPoints.size - 1) {
+            val (startPos, startValue) = normalizedControlPoints[i]
+            val (endPos, endValue) = normalizedControlPoints[i + 1]
+
+            if (clampedPos in startPos.toFloat()..endPos.toFloat()) {
+                // Linear interpolation within segment
+                if (endPos == startPos) return startValue
+
+                val segmentRatio = (clampedPos - startPos) / (endPos - startPos)
+                return startValue + segmentRatio * (endValue - startValue)
+            }
+        }
+        // Fallback: linear conversion (should never occur with valid points)
+        return minValue + clampedPos * (maxValue - minValue)
+    }
+
+    // Calculate current position [0-1]
+    val currentPosition = valueToPosition(value)
+
+    // Calculer le déplacement en position pour maintenir le même effet relatif
+    val currentValue = value.coerceIn(minValue, maxValue)
+    val posForCurrent = valueToPosition(currentValue)
+    val posForCurrentPlusStep = valueToPosition(currentValue + step)
+    val dynamicStepPos = (posForCurrentPlusStep - posForCurrent)
 
     // Check if this is minutes input for special formatting
     val isMinutesUnit = unitLabelResId == KeysR.string.units_min
@@ -119,8 +192,10 @@ fun SliderWithButtons(
         // Minus button
         RepeatingIconButton(
             onClick = {
-                val newValue = roundToStep(value - step, step).coerceIn(minValue, maxValue)
-                onValueChange(newValue)
+                val newPos = (currentPosition - dynamicStepPos).coerceAtLeast(0f)
+                val newValue = positionToValue(newPos)
+                val roundedValue = roundToStep(newValue, step).coerceIn(minValue, maxValue)
+                onValueChange(roundedValue)
             },
             enabled = value > minValue,
             modifier = Modifier.size(32.dp)
@@ -132,22 +207,25 @@ fun SliderWithButtons(
             )
         }
 
-        // Slider
+        // Non-Linear Slider
         Slider(
-            value = value.toFloat(),
-            onValueChange = { newValue ->
-                val rounded = roundToStep(newValue.toDouble(), step)
+            value = currentPosition,
+            onValueChange = { newPos ->
+                val newValue = positionToValue(newPos)
+                val rounded = roundToStep(newValue, step)
                 onValueChange(rounded.coerceIn(minValue, maxValue))
             },
-            valueRange = minValue.toFloat()..maxValue.toFloat(),
+            valueRange = 0f..1f,
             modifier = Modifier.weight(1f)
         )
 
         // Plus button
         RepeatingIconButton(
             onClick = {
-                val newValue = roundToStep(value + step, step).coerceIn(minValue, maxValue)
-                onValueChange(newValue)
+                val newPos = (currentPosition + dynamicStepPos).coerceAtMost(1f)
+                val newValue = positionToValue(newPos)
+                val roundedValue = roundToStep(newValue, step).coerceIn(minValue, maxValue)
+                onValueChange(roundedValue)
             },
             enabled = value < maxValue,
             modifier = Modifier.size(32.dp)
@@ -183,7 +261,7 @@ fun SliderWithButtons(
                 color = MaterialTheme.colorScheme.primary,
                 textAlign = TextAlign.End,
                 modifier = Modifier
-                    .widthIn(min = if (isMinutesUnit || valueFormatResId != null || resolvedUnitLabel.isNotEmpty()) 56.dp else 40.dp)
+                    .widthIn(min = if (isMinutesUnit || valueFormatResId != null || resolvedUnitLabel.isNotEmpty()) 70.dp else 40.dp)
                     .clickable { showDialog = true }
                     .padding(start = 4.dp)
             )
