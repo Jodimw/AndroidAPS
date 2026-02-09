@@ -40,7 +40,7 @@ fun BgInfoSection(
     bgInfo: BgInfoData?,
     timeAgoText: String,
     modifier: Modifier = Modifier,
-    size: Dp = 110.dp
+    size: Dp = 100.dp
 ) {
     if (bgInfo == null) {
         // Show placeholder when no data
@@ -62,11 +62,11 @@ fun BgInfoSection(
 
     Box(
         contentAlignment = Alignment.Center,
-        modifier = modifier.padding(8.dp)
+        modifier = modifier.padding(4.dp)
     ) {
         // Background ring + trend arc indicator
         Canvas(modifier = Modifier.size(size)) {
-            val strokeWidth = 8.dp.toPx()
+            val strokeWidth = 6.dp.toPx()
             val arcSize = Size(size.toPx() - strokeWidth, size.toPx() - strokeWidth)
             val topLeft = Offset(strokeWidth / 2, strokeWidth / 2)
 
@@ -109,13 +109,13 @@ fun BgInfoSection(
         // Center content: delta on top, BG value, time ago below
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+            verticalArrangement = Arrangement.spacedBy((-2).dp, Alignment.CenterVertically)
         ) {
             // Delta on top
             bgInfo.deltaText?.let { delta ->
                 Text(
                     text = delta,
-                    style = MaterialTheme.typography.bodySmall,
+                    style = MaterialTheme.typography.bodySmall.copy(lineHeight = 14.sp),
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
@@ -124,8 +124,9 @@ fun BgInfoSection(
             Text(
                 text = bgInfo.bgText,
                 style = MaterialTheme.typography.displayMedium.copy(
-                    fontSize = 36.sp,
-                    fontWeight = FontWeight.Bold
+                    fontSize = 34.sp,
+                    fontWeight = FontWeight.Bold,
+                    lineHeight = 36.sp
                 ),
                 color = bgColor,
                 textDecoration = if (bgInfo.isOutdated) TextDecoration.LineThrough else TextDecoration.None
@@ -134,7 +135,7 @@ fun BgInfoSection(
             // Time ago below
             Text(
                 text = timeAgoText,
-                style = MaterialTheme.typography.bodySmall,
+                style = MaterialTheme.typography.bodySmall.copy(lineHeight = 14.sp),
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }

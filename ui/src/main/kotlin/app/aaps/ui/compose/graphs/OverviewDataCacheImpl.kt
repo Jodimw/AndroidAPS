@@ -158,9 +158,12 @@ class OverviewDataCacheImpl @Inject constructor(
         }
 
         // Observe EffectiveProfileSwitch changes
+        // Delay allows ProfileFunctionImpl cache to be invalidated via RxJava path
+        // (EventEffectiveProfileSwitchChanged) before we read the profile
         scope.launch {
             persistenceLayer.observeChanges(EPS::class.java).collect {
                 aapsLogger.debug(LTag.UI, "EPS change detected, updating Profile state")
+                kotlinx.coroutines.delay(500)
                 updateProfileFromDatabase()
                 // TT display depends on profile being loaded (for default target)
                 updateTempTargetFromDatabase()

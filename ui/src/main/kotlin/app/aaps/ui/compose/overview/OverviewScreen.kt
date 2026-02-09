@@ -103,7 +103,7 @@ fun OverviewScreen(
                 modifier = Modifier
                     .weight(1f)
                     .padding(start = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
+                verticalArrangement = Arrangement.spacedBy(2.dp)
             ) {
                 // Running mode chip
                 if (runningModeText.isNotEmpty()) {

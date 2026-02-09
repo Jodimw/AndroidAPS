@@ -4,6 +4,10 @@ import androidx.compose.runtime.Stable
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import app.aaps.core.interfaces.aps.Loop
+import app.aaps.core.interfaces.configuration.Config
+import app.aaps.core.interfaces.db.PersistenceLayer
+import app.aaps.core.interfaces.iob.IobCobCalculator
 import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.logging.LTag
 import app.aaps.core.interfaces.overview.graph.BgDataPoint
@@ -11,9 +15,13 @@ import app.aaps.core.interfaces.overview.graph.BgInfoData
 import app.aaps.core.interfaces.overview.graph.OverviewDataCache
 import app.aaps.core.interfaces.resources.ResourceHelper
 import app.aaps.core.interfaces.utils.DateUtil
+import app.aaps.core.interfaces.utils.DecimalFormatter
 import app.aaps.core.keys.UnitDoubleKey
 import app.aaps.core.keys.interfaces.Preferences
+import app.aaps.core.objects.extensions.displayText
+import app.aaps.core.objects.extensions.round
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -50,13 +58,27 @@ data class BgInfoUiState(
     val timeAgoText: String
 )
 
+/**
+ * UI state for COB display above graph
+ */
+@Immutable
+data class CobUiState(
+    val text: String = "",
+    val carbsReq: Int = 0
+)
+
 @Stable
 class GraphViewModel @Inject constructor(
     cache: OverviewDataCache,
     private val aapsLogger: AAPSLogger,
     preferences: Preferences,
     private val dateUtil: DateUtil,
-    private val rh: ResourceHelper
+    private val rh: ResourceHelper,
+    private val iobCobCalculator: IobCobCalculator,
+    private val decimalFormatter: DecimalFormatter,
+    private val loop: Loop,
+    private val config: Config,
+    private val persistenceLayer: PersistenceLayer
 ) : ViewModel() {
 
     // Static chart config - read once at initialization
@@ -98,6 +120,51 @@ class GraphViewModel @Inject constructor(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = BgInfoUiState(bgInfo = null, timeAgoText = "")
+    )
+
+    // =========================================================================
+    // IOB / COB current values (updated every 2.5 minutes)
+    // =========================================================================
+
+    private val iobCobTicker = flow {
+        while (true) {
+            emit(Unit)
+            delay(150_000L) // 2.5 minutes
+        }
+    }
+
+    val iobText: StateFlow<String> = iobCobTicker.combine(cache.iobGraphFlow) { _, _ ->
+        val bolusIob = iobCobCalculator.calculateIobFromBolus().round()
+        val basalIob = iobCobCalculator.calculateIobFromTempBasalsIncludingConvertedExtended().round()
+        rh.gs(app.aaps.core.ui.R.string.format_insulin_units, bolusIob.iob + basalIob.basaliob)
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = ""
+    )
+
+    val cobUiState: StateFlow<CobUiState> = iobCobTicker.combine(cache.cobGraphFlow) { _, _ ->
+        var cobText = iobCobCalculator.getCobInfo("GraphViewModel COB").displayText(rh, decimalFormatter)
+            ?: rh.gs(app.aaps.core.ui.R.string.value_unavailable_short)
+        var carbsReq = 0
+
+        val constraintsProcessed = loop.lastRun?.constraintsProcessed
+        val lastRun = loop.lastRun
+        if (config.APS && constraintsProcessed != null && lastRun != null) {
+            if (constraintsProcessed.carbsReq > 0) {
+                val lastCarbsTime = persistenceLayer.getNewestCarbs()?.timestamp ?: 0L
+                if (lastCarbsTime < lastRun.lastAPSRun) {
+                    cobText += "\n${constraintsProcessed.carbsReq} ${rh.gs(app.aaps.core.ui.R.string.required)}"
+                }
+                carbsReq = constraintsProcessed.carbsReq
+            }
+        }
+
+        CobUiState(text = cobText, carbsReq = carbsReq)
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = CobUiState()
     )
 
     // Derived time range from actual data (recalculates as series arrive)
