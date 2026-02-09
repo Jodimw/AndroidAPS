@@ -82,7 +82,7 @@
     <string name="btwatchdog_title">Giám sát BT</string>
     <string name="btwatchdog_summary">Tắt Bluetooth của điện thoại trong một giây nếu không thể kết nối với bơm. Điều này có thể hữu ích trên một số điện thoại khi ngăn xếp Bluetooth bị treo.</string>
     <string name="virtualpump_resultok">ĐỒNG Ý</string>
-    <string name="pump_time_updated">Đã cập nhật thời gian bơm insulin</string>
+    <string name="pump_time_updated">Đã cập nhật thời gian bơm</string>
     <string name="exit">Thoát</string>
     <string name="removerecord">Xóa bản ghi này</string>
     <string name="loopisdisabled">Vòng lặp bị vô hiệu hóa</string>
@@ -172,7 +172,7 @@
     <string name="canceling_tbr_failed">Hủy liều nền tạm thời thất bại</string>
     <string name="canceling_eb_failed">Hủy liều bolus kéo dài thất bại</string>
     <string name="virtualpump_uploadstatus_title">Tải trạng thái bơm lên NS hoặc Tidepool</string>
-    <string name="iob_label">Insulin đang hoạt động (IOB)</string>
+    <string name="iob_label">Insulin còn hoạt động (IOB)</string>
     <string name="loopstatus_targets">MỤC TIÊU:</string>
     <string name="loopstatus_OAPS_result">KẾT QUẢ OAPS:</string>
     <string name="extended_bolus_data_point_graph">%1$.2f U ( %2$.2f U/h )</string>
@@ -519,7 +519,7 @@
     <string name="unlock_settings">Mở khóa cài đặt</string>
     <!--    Pumps -->
     <string name="battery_label">Pin</string>
-    <string name="reservoir_label">Ngăn chứa insulin</string>
+    <string name="reservoir_label">Bình chứa insulin</string>
     <string name="last_connection_label">Kết nối lần cuối</string>
     <string name="last_bolus_label">Liều bolus gần nhất</string>
     <string name="base_basal_rate_label">Tỷ lệ liều nền cơ bản</string>
