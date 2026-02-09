@@ -43,7 +43,7 @@
     <string name="clear_log">Xóa nhật ký</string>
     <string name="full_sync">Đồng bộ toàn bộ</string>
     <string name="full_sync_comment">Đồng bộ toàn bộ? Quá trình này có thể mất nhiều giờ và cho đến khi hoàn tất, bạn sẽ không thấy dữ liệu mới trong NS.</string>
-    <string name="ns_sync_options">Synchronization</string>
+    <string name="ns_sync_options">Đồng bộ hóa</string>
     <string name="ns_upload_summary">Hồ sơ, bolus, carb và liều nền tạm thời được tải lên NS</string>
     <string name="ns_upload">Tải dữ liệu lên NS</string>
     <string name="ns_receive_profile_store">Nhận dữ liệu Hồ sơ đã lưu</string>
