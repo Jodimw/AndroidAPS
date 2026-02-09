@@ -49,14 +49,14 @@
     <string name="omnipod_common_overview_total_delivered">Tổng lượng đã tiêm</string>
     <string name="omnipod_common_overview_total_delivered_value">%1$.2f U</string>
     <string name="omnipod_common_overview_pod_unique_id">Mã số duy nhất</string>
-    <string name="omnipod_common_overview_lot_number">LOT Number</string>
+    <string name="omnipod_common_overview_lot_number">Số Lô</string>
     <string name="omnipod_common_overview_pod_sequence_number">Số thứ tự</string>
     <string name="omnipod_common_overview_pod_expiry_date">Pod hết hạn</string>
     <string name="omnipod_common_overview_last_connection">Kết nối lần cuối</string>
     <string name="omnipod_common_overview_last_bolus">Liều bolus mới nhất</string>
     <string name="omnipod_common_overview_temp_basal_rate">Tỷ lệ liều nền tạm thời</string>
     <string name="omnipod_common_overview_base_basal_rate">Tỷ lệ liều nền cơ bản</string>
-    <string name="omnipod_common_overview_reservoir">Ngăn chứa</string>
+    <string name="omnipod_common_overview_reservoir">Bình chứa</string>
     <string name="omnipod_common_overview_pod_active_alerts">Cảnh báo Pod đang bật</string>
     <string name="omnipod_common_overview_firmware_version">Phiên bản phần mềm</string>
     <string name="omnipod_common_overview_time_on_pod">Thời gian trên Pod</string>
