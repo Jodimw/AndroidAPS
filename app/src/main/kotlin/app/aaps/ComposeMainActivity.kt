@@ -6,8 +6,11 @@ import android.view.WindowManager
 import androidx.activity.compose.setContent
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
@@ -406,7 +409,13 @@ class ComposeMainActivity : DaggerAppCompatActivityWithResult() {
                         )
                     ) { backStackEntry ->
                         val profileIndex = backStackEntry.arguments?.getInt("profileIndex") ?: 0
-                        profileEditorViewModel.selectProfile(profileIndex)
+                        val initialized = rememberSaveable { mutableStateOf(false) }
+                        LaunchedEffect(Unit) {
+                            if (!initialized.value) {
+                                profileEditorViewModel.selectProfile(profileIndex)
+                                initialized.value = true
+                            }
+                        }
                         ProfileEditorScreen(
                             viewModel = profileEditorViewModel,
                             onBackClick = { navController.popBackStack() }

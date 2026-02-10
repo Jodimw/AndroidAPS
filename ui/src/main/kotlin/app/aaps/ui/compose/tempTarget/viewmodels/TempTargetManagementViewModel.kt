@@ -32,6 +32,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.util.UUID
 import javax.inject.Inject
+import javax.inject.Singleton
 import kotlin.math.abs
 import kotlin.math.roundToInt
 
@@ -39,6 +40,7 @@ import kotlin.math.roundToInt
  * ViewModel for TempTargetManagementScreen managing TT presets and activation.
  */
 @Stable
+@Singleton
 class TempTargetManagementViewModel @Inject constructor(
     private val persistenceLayer: PersistenceLayer,
     private val profileFunction: ProfileFunction,
@@ -124,6 +126,7 @@ class TempTargetManagementViewModel @Inject constructor(
                     it.copy(
                         activeTT = activeTT,
                         activePresetIndex = activePresetIndex,
+                        currentCardIndex = activePresetIndex ?: 0,
                         remainingTimeMs = remainingTime,
                         presets = presets,
                         selectedPreset = initialPreset,
@@ -148,6 +151,46 @@ class TempTargetManagementViewModel @Inject constructor(
     }
 
     /**
+     * Refresh runtime data (active TT, presets, preferences) without resetting editor fields.
+     * Called from ON_RESUME to handle rotation and background return without losing user edits.
+     */
+    fun refreshData() {
+        viewModelScope.launch {
+            try {
+                val presets = preferences.get(StringNonKey.TempTargetPresets).toTTPresets()
+                val now = dateUtil.now()
+                val activeTT = persistenceLayer.getTemporaryTargetActiveAt(now)
+
+                val remainingTime = activeTT?.let { tt ->
+                    val endTime = tt.timestamp + tt.duration
+                    if (endTime > now) endTime - now else 0L
+                }
+
+                val showNotes = preferences.get(BooleanKey.OverviewShowNotesInDialogs)
+
+                val activePresetIndex = activeTT?.let { tt ->
+                    presets.indexOfFirst { preset ->
+                        preset.reason == tt.reason &&
+                            abs(preset.targetValue - tt.lowTarget) < 0.01
+                    }.takeIf { it >= 0 }
+                }
+
+                uiState.update {
+                    it.copy(
+                        activeTT = activeTT,
+                        activePresetIndex = activePresetIndex,
+                        remainingTimeMs = remainingTime,
+                        presets = presets,
+                        showNotesField = showNotes
+                    )
+                }
+            } catch (e: Exception) {
+                aapsLogger.error(LTag.UI, "Failed to refresh temp target data", e)
+            }
+        }
+    }
+
+    /**
      * Subscribe to temp target change events
      */
     private fun observeTempTargetChanges() {
@@ -161,10 +204,22 @@ class TempTargetManagementViewModel @Inject constructor(
     }
 
     /**
-     * Select a preset by index and populate editor fields
+     * Update the current card index (pager position) in UI state.
+     * Used to preserve pager position across rotation.
+     */
+    fun updateCurrentCardIndex(index: Int) {
+        uiState.update { it.copy(currentCardIndex = index) }
+    }
+
+    /**
+     * Select a preset by index and populate editor fields.
+     * Skips if the same preset is already selected (e.g., after rotation).
      */
     fun selectPreset(index: Int) {
         val preset = uiState.value.presets.getOrNull(index)
+        // Skip if same preset is already selected (rotation re-fires LaunchedEffect)
+        if (preset != null && preset.id == uiState.value.selectedPreset?.id) return
+
         // Convert target from mg/dL (storage) to user units (display) with proper rounding
         val targetInUserUnits = preset?.targetValue?.let {
             roundForDisplay(profileUtil.fromMgdlToUnits(it, units), units)

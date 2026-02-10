@@ -83,12 +83,13 @@ fun TempTargetManagementScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val focusManager = LocalFocusManager.current
 
-    // Refresh data when screen resumes (handles preference changes)
+    // Refresh runtime data when screen resumes (handles preference changes, active TT updates)
+    // Uses refreshData() instead of loadData() to preserve editor fields during rotation
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_RESUME) {
-                viewModel.loadData()
+                viewModel.refreshData()
             }
         }
         lifecycleOwner.lifecycle.addObserver(observer)
@@ -251,10 +252,9 @@ fun TempTargetManagementScreen(
                         uiState.presets.size
                     }
 
-                    // Start on matching active preset page if available
-                    val initialPage = uiState.activePresetIndex ?: 0
+                    // Use saved card index from ViewModel (survives rotation via @Singleton)
                     val pagerState = rememberPagerState(
-                        initialPage = initialPage,
+                        initialPage = uiState.currentCardIndex.coerceIn(0, (cardCount - 1).coerceAtLeast(0)),
                         pageCount = { cardCount }
                     )
 
@@ -272,6 +272,7 @@ fun TempTargetManagementScreen(
                     // Update selected preset when pager changes
                     LaunchedEffect(pagerState.currentPage, pagerState.isScrollInProgress) {
                         if (!pagerState.isScrollInProgress) {
+                            viewModel.updateCurrentCardIndex(pagerState.currentPage)
                             val presetIndex = if (hasStandaloneActiveTT && pagerState.currentPage > 0) {
                                 pagerState.currentPage - 1
                             } else if (!hasStandaloneActiveTT) {
