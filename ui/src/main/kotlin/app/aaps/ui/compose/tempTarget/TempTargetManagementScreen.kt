@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
@@ -66,6 +67,7 @@ import app.aaps.ui.compose.tempTarget.viewmodels.TempTargetManagementViewModel
 import app.aaps.ui.compose.tempTarget.viewmodels.getDisplayName
 import java.util.Calendar
 import kotlin.math.absoluteValue
+import app.aaps.core.ui.compose.icons.TempTarget as TempTargetIcon
 
 /**
  * Screen for managing temporary target presets and activating TTs.
@@ -210,7 +212,18 @@ fun TempTargetManagementScreen(
         Scaffold(
             topBar = {
                 AapsTopAppBar(
-                    title = { Text(stringResource(app.aaps.core.ui.R.string.temporary_targets)) },
+                    title = {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = TempTargetIcon,
+                                contentDescription = null,
+                                tint = AapsTheme.elementColors.tempTarget,
+                                modifier = Modifier.size(24.dp)
+                            )
+                            Spacer(modifier = Modifier.padding(start = 8.dp))
+                            Text(stringResource(app.aaps.core.ui.R.string.temporary_targets))
+                        }
+                    },
                     navigationIcon = {
                         IconButton(onClick = onNavigateBack) {
                             Icon(

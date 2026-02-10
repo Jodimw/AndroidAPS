@@ -24,11 +24,8 @@ import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -37,7 +34,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -46,13 +42,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.lerp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-
 import app.aaps.core.ui.compose.AapsFab
 import app.aaps.core.ui.compose.AapsTheme
 import app.aaps.core.ui.compose.AapsTopAppBar
@@ -63,7 +55,6 @@ import app.aaps.ui.compose.components.ContentContainer
 import app.aaps.ui.compose.components.PageIndicatorDots
 import app.aaps.ui.compose.profileManagement.viewmodels.ProfileManagementViewModel
 import java.text.DecimalFormat
-import kotlinx.coroutines.delay
 import kotlin.math.absoluteValue
 
 /**
@@ -134,7 +125,18 @@ fun ProfileManagementScreen(
         Scaffold(
             topBar = {
                 AapsTopAppBar(
-                    title = { Text(stringResource(app.aaps.core.ui.R.string.profile_management)) },
+                    title = {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = ProfileSwitch,
+                                contentDescription = null,
+                                tint = AapsTheme.elementColors.profileSwitch,
+                                modifier = Modifier.size(24.dp)
+                            )
+                            Spacer(modifier = Modifier.padding(start = 8.dp))
+                            Text(stringResource(app.aaps.core.ui.R.string.profile_management))
+                        }
+                    },
                     navigationIcon = {
                         IconButton(onClick = onNavigateBack) {
                             Icon(

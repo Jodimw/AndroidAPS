@@ -129,7 +129,7 @@
     <string name="calibration">Calibration</string>
     <string name="alarminxmin">Run alarm in %1$d min</string>
     <string name="treatmentdeliveryerror">Bolus reported an error. Manually check real delivered insulin and carb amount</string>
-    <string name="bolus_reminder">Bolus reminder</string>
+    <string name="bolus_reminder">Remind for bolus when BG recovers</string>
     <string name="duration_label">Duration</string>
     <string name="shortgramm">g</string>
     <string name="pumpsuspended">Pump suspended</string>
@@ -279,6 +279,9 @@
     <string name="careportal_temporarytargetvalue">Temporary target value</string>
     <string name="careportal_temporarytargetcancel">Temporary target cancel</string>
     <string name="boluswizard">Bolus wizard</string>
+    <string name="treatment_insulin_desc">Deliver bolus manually</string>
+    <string name="treatment_carbs_desc">Record carbs without insulin</string>
+    <string name="treatment_calculator_desc">Calculate bolus</string>
     <string name="glucosetype_finger">Finger</string>
     <string name="glucosetype_sensor">Sensor</string>
     <string name="manual">Manual</string>

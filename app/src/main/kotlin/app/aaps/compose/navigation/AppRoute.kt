@@ -37,4 +37,6 @@ sealed class AppRoute(val route: String) {
 
         fun createRoute(preselect: Int) = "fill_dialog/$preselect"
     }
+
+    data object CarbsDialog : AppRoute("carbs_dialog")
 }

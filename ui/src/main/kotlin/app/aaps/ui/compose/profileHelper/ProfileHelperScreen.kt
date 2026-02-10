@@ -54,9 +54,11 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import app.aaps.core.objects.profile.ProfileSealed
+import app.aaps.core.ui.compose.AapsTheme
 import app.aaps.core.ui.compose.AapsTopAppBar
 import app.aaps.core.ui.compose.NumberInputRow
 import app.aaps.core.ui.compose.clearFocusOnTap
+import app.aaps.core.ui.compose.icons.ProfileSwitch
 import app.aaps.ui.R
 import app.aaps.ui.compose.profileManagement.ProfileCompareContent
 import app.aaps.ui.compose.profileManagement.buildBasalRows
@@ -140,7 +142,18 @@ fun ProfileHelperScreen(
     Scaffold(
         topBar = {
             AapsTopAppBar(
-                title = { Text(stringResource(R.string.nav_profile_helper)) },
+                title = {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = ProfileSwitch,
+                            contentDescription = null,
+                            tint = AapsTheme.elementColors.profileSwitch,
+                            modifier = Modifier.size(24.dp)
+                        )
+                        Spacer(modifier = Modifier.padding(start = 8.dp))
+                        Text(stringResource(R.string.nav_profile_helper))
+                    }
+                },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(app.aaps.core.ui.R.string.back))

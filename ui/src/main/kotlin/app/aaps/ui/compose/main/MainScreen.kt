@@ -10,7 +10,11 @@ import androidx.compose.material3.rememberDrawerState
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import app.aaps.core.data.plugin.PluginType
@@ -64,6 +68,7 @@ fun MainScreen(
     onQuestionClick: () -> Unit,
     onAnnouncementClick: () -> Unit,
     onSiteRotationClick: () -> Unit,
+    onCarbsClick: () -> Unit,
     onActionsError: (String, String) -> Unit,
     graphViewModel: GraphViewModel,
     modifier: Modifier = Modifier
@@ -71,6 +76,7 @@ fun MainScreen(
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val scope = rememberCoroutineScope()
+    var showTreatmentSheet by remember { mutableStateOf(false) }
 
     // Sync drawer state with ui state
     LaunchedEffect(uiState.isDrawerOpen) {
@@ -139,7 +145,8 @@ fun MainScreen(
             bottomBar = {
                 MainNavigationBar(
                     currentDestination = uiState.currentNavDestination,
-                    onDestinationSelected = onNavDestinationSelected
+                    onDestinationSelected = onNavDestinationSelected,
+                    onTreatmentClick = { showTreatmentSheet = true }
                 )
             },
             floatingActionButton = {
@@ -213,6 +220,14 @@ fun MainScreen(
                 onCategorySheetDismiss()
                 onPluginPreferencesClick(plugin)
             }
+        )
+    }
+
+    // Treatment bottom sheet
+    if (showTreatmentSheet) {
+        TreatmentBottomSheet(
+            onDismiss = { showTreatmentSheet = false },
+            onCarbsClick = onCarbsClick
         )
     }
 

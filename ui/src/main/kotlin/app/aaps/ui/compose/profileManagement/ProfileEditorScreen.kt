@@ -57,10 +57,12 @@ import app.aaps.core.graph.TargetBgProfileGraphCompose
 import app.aaps.core.interfaces.profile.ProfileErrorType
 import app.aaps.core.objects.profile.ProfileSealed
 import app.aaps.core.ui.R
+import app.aaps.core.ui.compose.AapsTheme
 import app.aaps.core.ui.compose.AapsTopAppBar
 import app.aaps.core.ui.compose.SliderWithButtons
 import app.aaps.core.ui.compose.ValueInputDialog
 import app.aaps.core.ui.compose.clearFocusOnTap
+import app.aaps.core.ui.compose.icons.ProfileSwitch
 import app.aaps.ui.compose.profileManagement.viewmodels.ProfileEditorViewModel
 import app.aaps.ui.compose.profileManagement.viewmodels.ProfileUiState
 import app.aaps.ui.compose.profileManagement.viewmodels.SingleProfileState
@@ -105,12 +107,23 @@ fun ProfileEditorScreen(
     Scaffold(
         topBar = {
             AapsTopAppBar(
-                title = { Text(stringResource(app.aaps.core.ui.R.string.localprofile)) },
+                title = {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = ProfileSwitch,
+                            contentDescription = null,
+                            tint = AapsTheme.elementColors.profileSwitch,
+                            modifier = Modifier.size(24.dp)
+                        )
+                        Spacer(modifier = Modifier.padding(start = 8.dp))
+                        Text(stringResource(R.string.localprofile))
+                    }
+                },
                 navigationIcon = {
                     IconButton(onClick = handleBack) {
                         Icon(
                             Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(app.aaps.core.ui.R.string.back)
+                            contentDescription = stringResource(R.string.back)
                         )
                     }
                 },
@@ -120,7 +133,7 @@ fun ProfileEditorScreen(
                         IconButton(onClick = { viewModel.resetProfile() }) {
                             Icon(
                                 Icons.Default.Refresh,
-                                contentDescription = stringResource(app.aaps.core.ui.R.string.reset)
+                                contentDescription = stringResource(R.string.reset)
                             )
                         }
                         // Save button
@@ -130,7 +143,7 @@ fun ProfileEditorScreen(
                         ) {
                             Icon(
                                 Icons.Default.Check,
-                                contentDescription = stringResource(app.aaps.core.ui.R.string.save),
+                                contentDescription = stringResource(R.string.save),
                                 tint = if (state.isValid) MaterialTheme.colorScheme.primary
                                 else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
                             )
@@ -150,7 +163,7 @@ fun ProfileEditorScreen(
                 contentAlignment = Alignment.Center
             ) {
                 FilledTonalButton(onClick = { /* Unlock handled by activity */ }) {
-                    Text(stringResource(app.aaps.core.ui.R.string.unlock_settings))
+                    Text(stringResource(R.string.unlock_settings))
                 }
             }
         } else {
@@ -193,7 +206,7 @@ fun ProfileEditorScreen(
                         modifier = Modifier.background(
                             if (icHasError) MaterialTheme.colorScheme.errorContainer else Color.Transparent
                         ),
-                        text = { Text(stringResource(app.aaps.core.ui.R.string.ic_short)) }
+                        text = { Text(stringResource(R.string.ic_short)) }
                     )
                     Tab(
                         selected = state.selectedTab == 2,
@@ -201,7 +214,7 @@ fun ProfileEditorScreen(
                         modifier = Modifier.background(
                             if (isfHasError) MaterialTheme.colorScheme.errorContainer else Color.Transparent
                         ),
-                        text = { Text(stringResource(app.aaps.core.ui.R.string.isf_short)) }
+                        text = { Text(stringResource(R.string.isf_short)) }
                     )
                     Tab(
                         selected = state.selectedTab == 3,
@@ -323,7 +336,7 @@ private fun ProfileNameHeader(
                     }) {
                         Icon(
                             Icons.Default.Close,
-                            contentDescription = stringResource(app.aaps.core.ui.R.string.cancel),
+                            contentDescription = stringResource(R.string.cancel),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
@@ -334,7 +347,7 @@ private fun ProfileNameHeader(
                     }) {
                         Icon(
                             Icons.Default.Check,
-                            contentDescription = stringResource(app.aaps.core.ui.R.string.ok),
+                            contentDescription = stringResource(R.string.ok),
                             tint = MaterialTheme.colorScheme.primary
                         )
                     }
@@ -427,7 +440,7 @@ private fun DiaContent(
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
-                text = stringResource(app.aaps.core.ui.R.string.dia_long_label),
+                text = stringResource(R.string.dia_long_label),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold
             )
@@ -440,7 +453,7 @@ private fun DiaContent(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = stringResource(app.aaps.core.ui.R.string.dia),
+                    text = stringResource(R.string.dia),
                     style = MaterialTheme.typography.bodyLarge
                 )
                 Text(
@@ -467,7 +480,7 @@ private fun DiaContent(
             currentValue = dia,
             valueRange = minDia..maxDia,
             step = 0.1,
-            label = stringResource(app.aaps.core.ui.R.string.dia),
+            label = stringResource(R.string.dia),
             unitLabel = "h",
             valueFormat = valueFormat,
             onValueConfirm = onDiaChange,
@@ -498,7 +511,7 @@ private fun IcContent(
             elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp)
         ) {
             TimeValueList(
-                title = stringResource(app.aaps.core.ui.R.string.ic_long_label),
+                title = stringResource(R.string.ic_long_label),
                 entries = profile.ic,
                 onEntryChange = { index, entry -> viewModel.updateIcEntry(index, entry) },
                 onAddEntry = { index -> viewModel.addIcEntry(index) },
@@ -507,7 +520,7 @@ private fun IcContent(
                 maxValue = state.icMax,
                 step = 0.1,
                 valueFormat = DecimalFormat("0.0"),
-                unitLabel = stringResource(app.aaps.core.ui.R.string.profile_carbs_per_unit),
+                unitLabel = stringResource(R.string.profile_carbs_per_unit),
                 modifier = Modifier.padding(16.dp)
             )
         }
@@ -555,7 +568,7 @@ private fun IsfContent(
             elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp)
         ) {
             TimeValueList(
-                title = stringResource(app.aaps.core.ui.R.string.isf_long_label),
+                title = stringResource(R.string.isf_long_label),
                 entries = profile.isf,
                 onEntryChange = { index, entry -> viewModel.updateIsfEntry(index, entry) },
                 onAddEntry = { index -> viewModel.addIsfEntry(index) },
@@ -564,7 +577,7 @@ private fun IsfContent(
                 maxValue = state.isfMax,
                 step = if (profile.mgdl) 1.0 else 0.1,
                 valueFormat = if (profile.mgdl) DecimalFormat("0") else DecimalFormat("0.0"),
-                unitLabel = "${state.units}/${stringResource(app.aaps.core.ui.R.string.insulin_unit_shortname)}",
+                unitLabel = "${state.units}/${stringResource(R.string.insulin_unit_shortname)}",
                 modifier = Modifier.padding(16.dp)
             )
         }
@@ -607,12 +620,12 @@ private fun BasalContent(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
-                        text = "${stringResource(app.aaps.core.ui.R.string.basal_long_label)} [${stringResource(app.aaps.core.ui.R.string.profile_ins_units_per_hour)}]",
+                        text = "${stringResource(R.string.basal_long_label)} [${stringResource(R.string.profile_ins_units_per_hour)}]",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.SemiBold
                     )
                     Text(
-                        text = "∑ ${DecimalFormat("0.00").format(viewModel.getBasalSum())} ${stringResource(app.aaps.core.ui.R.string.insulin_unit_shortname)}",
+                        text = "∑ ${DecimalFormat("0.00").format(viewModel.getBasalSum())} ${stringResource(R.string.insulin_unit_shortname)}",
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.primary
                     )
@@ -668,7 +681,7 @@ private fun TargetContent(
             elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp)
         ) {
             TargetValueList(
-                title = stringResource(app.aaps.core.ui.R.string.target_long_label),
+                title = stringResource(R.string.target_long_label),
                 lowEntries = profile.targetLow,
                 highEntries = profile.targetHigh,
                 onEntryChange = { index, low, high ->

@@ -72,7 +72,18 @@ fun RunningModeScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(state.currentModeText.ifEmpty { stringResource(app.aaps.core.ui.R.string.running_mode) }) },
+                title = {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            painter = painterResource(state.currentMode.toIconRes()),
+                            contentDescription = null,
+                            tint = state.currentMode.toColor(),
+                            modifier = Modifier.size(24.dp)
+                        )
+                        Spacer(modifier = Modifier.padding(start = 8.dp))
+                        Text(state.currentModeText.ifEmpty { stringResource(app.aaps.core.ui.R.string.running_mode) })
+                    }
+                },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(app.aaps.core.ui.R.string.back))
@@ -109,7 +120,9 @@ fun RunningModeScreen(
                     allowedModes = state.allowedNextModes,
                     onAction = { action ->
                         if (showOkCancel) pendingAction = action
-                        else { executeAction(viewModel, action); onNavigateBack() }
+                        else {
+                            executeAction(viewModel, action); onNavigateBack()
+                        }
                     }
                 )
             }
@@ -123,7 +136,9 @@ fun RunningModeScreen(
                     allowedModes = state.allowedNextModes,
                     onAction = { action ->
                         if (showOkCancel) pendingAction = action
-                        else { executeAction(viewModel, action); onNavigateBack() }
+                        else {
+                            executeAction(viewModel, action); onNavigateBack()
+                        }
                     }
                 )
             }
@@ -141,7 +156,9 @@ fun RunningModeScreen(
                     tempDurationStep30mAllowed = state.tempDurationStep30mAllowed,
                     onAction = { action ->
                         if (showOkCancel) pendingAction = action
-                        else { executeAction(viewModel, action); onNavigateBack() }
+                        else {
+                            executeAction(viewModel, action); onNavigateBack()
+                        }
                     }
                 )
             }
@@ -205,24 +222,32 @@ private fun LoopControlSection(
             horizontalArrangement = Arrangement.spacedBy(4.dp)
         ) {
             if (allowedModes.contains(RM.Mode.CLOSED_LOOP)) {
-                CompactButton(closedLoopText, RM.Mode.CLOSED_LOOP,
+                CompactButton(
+                    closedLoopText, RM.Mode.CLOSED_LOOP,
                     { onAction(PendingRunningModeAction(RM.Mode.CLOSED_LOOP, Action.CLOSED_LOOP_MODE, 0, closedLoopText)) },
-                    Modifier.weight(1f))
+                    Modifier.weight(1f)
+                )
             }
             if (allowedModes.contains(RM.Mode.CLOSED_LOOP_LGS)) {
-                CompactButton(lgsText, RM.Mode.CLOSED_LOOP_LGS,
+                CompactButton(
+                    lgsText, RM.Mode.CLOSED_LOOP_LGS,
                     { onAction(PendingRunningModeAction(RM.Mode.CLOSED_LOOP_LGS, Action.LGS_LOOP_MODE, 0, lgsText)) },
-                    Modifier.weight(1f))
+                    Modifier.weight(1f)
+                )
             }
             if (allowedModes.contains(RM.Mode.OPEN_LOOP)) {
-                CompactButton(openLoopText, RM.Mode.OPEN_LOOP,
+                CompactButton(
+                    openLoopText, RM.Mode.OPEN_LOOP,
                     { onAction(PendingRunningModeAction(RM.Mode.OPEN_LOOP, Action.OPEN_LOOP_MODE, 0, openLoopText)) },
-                    Modifier.weight(1f))
+                    Modifier.weight(1f)
+                )
             }
             if (allowedModes.contains(RM.Mode.DISABLED_LOOP)) {
-                CompactButton(disableLoopText, RM.Mode.DISABLED_LOOP,
+                CompactButton(
+                    disableLoopText, RM.Mode.DISABLED_LOOP,
                     { onAction(PendingRunningModeAction(RM.Mode.DISABLED_LOOP, Action.LOOP_DISABLED, Int.MAX_VALUE, disableLoopText)) },
-                    Modifier.weight(1f))
+                    Modifier.weight(1f)
+                )
             }
         }
     }
@@ -250,23 +275,32 @@ private fun SuspendSection(
     SectionCard(title = title) {
         if (isSuspended && allowedModes.contains(RM.Mode.RESUME)) {
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
-                CompactButton(resumeText, RM.Mode.RESUME,
+                CompactButton(
+                    resumeText, RM.Mode.RESUME,
                     { onAction(PendingRunningModeAction(RM.Mode.RESUME, Action.RESUME, 0, resumeText)) })
             }
         } else if (allowedModes.contains(RM.Mode.SUSPENDED_BY_USER)) {
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                CompactButton(duration1hText, RM.Mode.SUSPENDED_BY_USER,
+                CompactButton(
+                    duration1hText, RM.Mode.SUSPENDED_BY_USER,
                     { onAction(PendingRunningModeAction(RM.Mode.SUSPENDED_BY_USER, Action.SUSPEND, 60, suspend1hText)) },
-                    Modifier.weight(1f))
-                CompactButton(duration2hText, RM.Mode.SUSPENDED_BY_USER,
+                    Modifier.weight(1f)
+                )
+                CompactButton(
+                    duration2hText, RM.Mode.SUSPENDED_BY_USER,
                     { onAction(PendingRunningModeAction(RM.Mode.SUSPENDED_BY_USER, Action.SUSPEND, 120, suspend2hText)) },
-                    Modifier.weight(1f))
-                CompactButton(duration3hText, RM.Mode.SUSPENDED_BY_USER,
+                    Modifier.weight(1f)
+                )
+                CompactButton(
+                    duration3hText, RM.Mode.SUSPENDED_BY_USER,
                     { onAction(PendingRunningModeAction(RM.Mode.SUSPENDED_BY_USER, Action.SUSPEND, 180, suspend3hText)) },
-                    Modifier.weight(1f))
-                CompactButton(duration10hText, RM.Mode.SUSPENDED_BY_USER,
+                    Modifier.weight(1f)
+                )
+                CompactButton(
+                    duration10hText, RM.Mode.SUSPENDED_BY_USER,
                     { onAction(PendingRunningModeAction(RM.Mode.SUSPENDED_BY_USER, Action.SUSPEND, 600, suspend10hText)) },
-                    Modifier.weight(1f))
+                    Modifier.weight(1f)
+                )
             }
         }
     }
@@ -298,30 +332,41 @@ private fun PumpDisconnectSection(
     SectionCard(title = title) {
         if (isDisconnected && allowedModes.contains(RM.Mode.RESUME)) {
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
-                CompactButton(reconnectText, RM.Mode.RESUME,
+                CompactButton(
+                    reconnectText, RM.Mode.RESUME,
                     { onAction(PendingRunningModeAction(RM.Mode.RESUME, Action.RECONNECT, 0, reconnectText)) })
             }
         } else if (allowedModes.contains(RM.Mode.DISCONNECTED_PUMP)) {
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                 if (tempDurationStep15mAllowed) {
-                    CompactButton(duration15mText, RM.Mode.DISCONNECTED_PUMP,
+                    CompactButton(
+                        duration15mText, RM.Mode.DISCONNECTED_PUMP,
                         { onAction(PendingRunningModeAction(RM.Mode.DISCONNECTED_PUMP, Action.DISCONNECT, 15, disconnect15mText)) },
-                        Modifier.weight(1f))
+                        Modifier.weight(1f)
+                    )
                 }
                 if (tempDurationStep30mAllowed) {
-                    CompactButton(duration30mText, RM.Mode.DISCONNECTED_PUMP,
+                    CompactButton(
+                        duration30mText, RM.Mode.DISCONNECTED_PUMP,
                         { onAction(PendingRunningModeAction(RM.Mode.DISCONNECTED_PUMP, Action.DISCONNECT, 30, disconnect30mText)) },
-                        Modifier.weight(1f))
+                        Modifier.weight(1f)
+                    )
                 }
-                CompactButton(duration1hText, RM.Mode.DISCONNECTED_PUMP,
+                CompactButton(
+                    duration1hText, RM.Mode.DISCONNECTED_PUMP,
                     { onAction(PendingRunningModeAction(RM.Mode.DISCONNECTED_PUMP, Action.DISCONNECT, 60, disconnect1hText)) },
-                    Modifier.weight(1f))
-                CompactButton(duration2hText, RM.Mode.DISCONNECTED_PUMP,
+                    Modifier.weight(1f)
+                )
+                CompactButton(
+                    duration2hText, RM.Mode.DISCONNECTED_PUMP,
                     { onAction(PendingRunningModeAction(RM.Mode.DISCONNECTED_PUMP, Action.DISCONNECT, 120, disconnect2hText)) },
-                    Modifier.weight(1f))
-                CompactButton(duration3hText, RM.Mode.DISCONNECTED_PUMP,
+                    Modifier.weight(1f)
+                )
+                CompactButton(
+                    duration3hText, RM.Mode.DISCONNECTED_PUMP,
                     { onAction(PendingRunningModeAction(RM.Mode.DISCONNECTED_PUMP, Action.DISCONNECT, 180, disconnect3hText)) },
-                    Modifier.weight(1f))
+                    Modifier.weight(1f)
+                )
             }
         }
     }

@@ -46,6 +46,8 @@ import app.aaps.plugins.configuration.activities.SingleFragmentActivity
 import app.aaps.plugins.configuration.setupwizard.SetupWizardActivity
 import app.aaps.plugins.main.skins.SkinProvider
 import app.aaps.ui.compose.actions.viewmodels.ActionsViewModel
+import app.aaps.ui.compose.carbsDialog.CarbsDialogScreen
+import app.aaps.ui.compose.carbsDialog.CarbsDialogViewModel
 import app.aaps.ui.compose.careDialog.CareDialogScreen
 import app.aaps.ui.compose.careDialog.CareDialogViewModel
 import app.aaps.ui.compose.fillDialog.FillDialogScreen
@@ -105,6 +107,7 @@ class ComposeMainActivity : DaggerAppCompatActivityWithResult() {
     @Inject lateinit var runningModeManagementViewModel: RunningModeManagementViewModel
     @Inject lateinit var careDialogViewModel: CareDialogViewModel
     @Inject lateinit var fillDialogViewModel: FillDialogViewModel
+    @Inject lateinit var carbsDialogViewModel: CarbsDialogViewModel
 
     private val disposable = CompositeDisposable()
 
@@ -277,6 +280,13 @@ class ComposeMainActivity : DaggerAppCompatActivityWithResult() {
                             onSiteRotationClick = {
                                 uiInteraction.runSiteRotationDialog(supportFragmentManager)
                             },
+                            onCarbsClick = {
+                                protectionCheck.requestProtection(ProtectionCheck.Protection.BOLUS) { result ->
+                                    if (result == ProtectionResult.GRANTED) {
+                                        navController.navigate(AppRoute.CarbsDialog.route)
+                                    }
+                                }
+                            },
                             onActionsError = { comment, title ->
                                 uiInteraction.runAlarm(comment, title, app.aaps.core.ui.R.raw.boluserror)
                             },
@@ -354,6 +364,16 @@ class ComposeMainActivity : DaggerAppCompatActivityWithResult() {
                             onShowSiteRotationDialog = {
                                 uiInteraction.runSiteRotationDialog(supportFragmentManager)
                             },
+                            onShowDeliveryError = { comment ->
+                                uiInteraction.runAlarm(comment, rh.gs(app.aaps.core.ui.R.string.treatmentdeliveryerror), app.aaps.core.ui.R.raw.boluserror)
+                            }
+                        )
+                    }
+
+                    composable(route = AppRoute.CarbsDialog.route) {
+                        CarbsDialogScreen(
+                            viewModel = carbsDialogViewModel,
+                            onNavigateBack = { navController.popBackStack() },
                             onShowDeliveryError = { comment ->
                                 uiInteraction.runAlarm(comment, rh.gs(app.aaps.core.ui.R.string.treatmentdeliveryerror), app.aaps.core.ui.R.raw.boluserror)
                             }

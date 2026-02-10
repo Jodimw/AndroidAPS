@@ -36,6 +36,7 @@ import app.aaps.core.interfaces.resources.ResourceHelper
 import app.aaps.core.ui.R
 import kotlinx.coroutines.delay
 import java.text.DecimalFormat
+import kotlin.math.abs
 import kotlin.math.roundToInt
 import app.aaps.core.keys.R as KeysR
 
@@ -45,10 +46,12 @@ import app.aaps.core.keys.R as KeysR
  */
 @Composable
 fun formatMinutesAsDuration(minutes: Int): String {
-    return if (minutes >= 60) {
-        val hours = minutes / 60
-        val mins = minutes % 60
-        stringResource(R.string.format_hour_minute, hours, mins)
+    val abs = abs(minutes)
+    val sign = if (minutes < 0) "-" else ""
+    return if (abs >= 60) {
+        val hours = abs / 60
+        val mins = abs % 60
+        sign + stringResource(R.string.format_hour_minute, hours, mins)
     } else {
         stringResource(R.string.format_mins, minutes)
     }
@@ -59,10 +62,12 @@ fun formatMinutesAsDuration(minutes: Int): String {
  * Non-composable version using ResourceHelper.
  */
 fun formatMinutesAsDuration(minutes: Int, rh: ResourceHelper): String {
-    return if (minutes >= 60) {
-        val hours = minutes / 60
-        val mins = minutes % 60
-        rh.gs(R.string.format_hour_minute, hours, mins)
+    val abs = abs(minutes)
+    val sign = if (minutes < 0) "-" else ""
+    return if (abs >= 60) {
+        val hours = abs / 60
+        val mins = abs % 60
+        sign + rh.gs(R.string.format_hour_minute, hours, mins)
     } else {
         rh.gs(R.string.format_mins, minutes)
     }
@@ -174,8 +179,10 @@ fun SliderWithButtons(
     val currentPosition = valueToPosition(value)
     val currentValue = value.coerceIn(minValue, maxValue)
     val posForCurrent = valueToPosition(currentValue)
-    val posForCurrentPlusStep = valueToPosition(currentValue + step)
-    val dynamicStepPos = (posForCurrentPlusStep - posForCurrent)
+    val posForCurrentPlusStep = valueToPosition((currentValue + step).coerceAtMost(maxValue))
+    val posForCurrentMinusStep = valueToPosition((currentValue - step).coerceAtLeast(minValue))
+    val dynamicStepPosUp = (posForCurrentPlusStep - posForCurrent).coerceAtLeast(0.001f)
+    val dynamicStepPosDown = (posForCurrent - posForCurrentMinusStep).coerceAtLeast(0.001f)
 
     // Check if this is minutes input for special formatting
     val isMinutesUnit = unitLabelResId == KeysR.string.units_min
@@ -194,7 +201,7 @@ fun SliderWithButtons(
             // Minus button
             RepeatingIconButton(
                 onClick = {
-                    val newPos = (currentPosition - dynamicStepPos).coerceAtLeast(0f)
+                    val newPos = (currentPosition - dynamicStepPosDown).coerceAtLeast(0f)
                     val newValue = positionToValue(newPos)
                     val roundedValue = roundToStep(newValue, step).coerceIn(minValue, maxValue)
                     onValueChange(roundedValue)
@@ -228,7 +235,7 @@ fun SliderWithButtons(
             // Plus button
             RepeatingIconButton(
                 onClick = {
-                    val newPos = (currentPosition + dynamicStepPos).coerceAtMost(1f)
+                    val newPos = (currentPosition + dynamicStepPosUp).coerceAtMost(1f)
                     val newValue = positionToValue(newPos)
                     val roundedValue = roundToStep(newValue, step).coerceIn(minValue, maxValue)
                     onValueChange(roundedValue)

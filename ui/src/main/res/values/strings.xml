@@ -10,7 +10,7 @@
     <string name="time_offset">Time offset</string>
     <string name="remind_to_bolus_later">Remind to bolus later</string>
 
-    <string name="a11y_carb_reminder">set reminder</string>
+    <string name="a11y_carb_reminder">Set reminder to carbs time</string>
 
     <!--    Widget-->
     <string name="configure">Configure opacity</string>
