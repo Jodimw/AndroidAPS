@@ -244,16 +244,9 @@ class OverviewPlugin @Inject constructor(
                 key = "overview_buttons_settings",
                 titleResId = R.string.overview_buttons_selection,
                 items = listOf(
-                    BooleanKey.OverviewShowTreatmentButton,
-                    BooleanKey.OverviewShowWizardButton,
-                    BooleanKey.OverviewShowInsulinButton,
                     DoubleKey.OverviewInsulinButtonIncrement1,
                     DoubleKey.OverviewInsulinButtonIncrement2,
                     DoubleKey.OverviewInsulinButtonIncrement3,
-                    BooleanKey.OverviewShowCarbsButton,
-                    IntKey.OverviewCarbsButtonIncrement1,
-                    IntKey.OverviewCarbsButtonIncrement2,
-                    IntKey.OverviewCarbsButtonIncrement3,
                     BooleanKey.OverviewShowCgmButton,
                     BooleanKey.OverviewShowCalibrationButton
                 )
@@ -272,17 +265,6 @@ class OverviewPlugin @Inject constructor(
                     UnitDoubleKey.OverviewActivityTarget,
                     IntKey.OverviewHypoDuration,
                     UnitDoubleKey.OverviewHypoTarget
-                )
-            ),
-
-            // Fill settings subscreen
-            PreferenceSubScreenDef(
-                key = "prime_fill_settings",
-                titleResId = R.string.fill_bolus_title,
-                items = listOf(
-                    DoubleKey.ActionsFillButton1,
-                    DoubleKey.ActionsFillButton2,
-                    DoubleKey.ActionsFillButton3
                 )
             ),
 

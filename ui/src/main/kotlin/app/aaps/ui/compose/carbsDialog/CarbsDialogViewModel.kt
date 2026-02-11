@@ -12,6 +12,7 @@ import app.aaps.core.data.ue.Action
 import app.aaps.core.data.ue.Sources
 import app.aaps.core.data.ue.ValueWithUnit
 import app.aaps.core.interfaces.automation.Automation
+import app.aaps.core.interfaces.configuration.Config
 import app.aaps.core.interfaces.constraints.ConstraintsChecker
 import app.aaps.core.interfaces.db.PersistenceLayer
 import app.aaps.core.interfaces.iob.GlucoseStatusProvider
@@ -56,7 +57,8 @@ class CarbsDialogViewModel @Inject constructor(
     private val automation: Automation,
     private val commandQueue: CommandQueue,
     private val persistenceLayer: PersistenceLayer,
-    private val preferences: Preferences,
+    val preferences: Preferences,
+    val config: Config,
     private val decimalFormatter: DecimalFormatter,
     val rh: ResourceHelper,
     val dateUtil: DateUtil,
@@ -118,7 +120,8 @@ class CarbsDialogViewModel @Inject constructor(
                 eatingSoonTtDuration = preferences.get(IntKey.OverviewEatingSoonDuration),
                 activityTtTarget = preferences.get(UnitDoubleKey.OverviewActivityTarget),
                 activityTtDuration = preferences.get(IntKey.OverviewActivityDuration),
-                maxCarbsDurationHours = HardLimits.MAX_CARBS_DURATION_HOURS
+                maxCarbsDurationHours = HardLimits.MAX_CARBS_DURATION_HOURS,
+                simpleMode = preferences.get(BooleanKey.GeneralSimpleMode)
             )
         }
     }
@@ -144,6 +147,16 @@ class CarbsDialogViewModel @Inject constructor(
         }
 
         return true
+    }
+
+    fun refreshCarbsButtons() {
+        uiState.update {
+            it.copy(
+                carbsButtonIncrement1 = preferences.get(IntKey.OverviewCarbsButtonIncrement1),
+                carbsButtonIncrement2 = preferences.get(IntKey.OverviewCarbsButtonIncrement2),
+                carbsButtonIncrement3 = preferences.get(IntKey.OverviewCarbsButtonIncrement3)
+            )
+        }
     }
 
     fun updateCarbs(value: Int) {

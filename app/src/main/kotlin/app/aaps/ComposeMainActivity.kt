@@ -290,7 +290,9 @@ class ComposeMainActivity : DaggerAppCompatActivityWithResult() {
                             onActionsError = { comment, title ->
                                 uiInteraction.runAlarm(comment, title, app.aaps.core.ui.R.raw.boluserror)
                             },
-                            graphViewModel = graphViewModel
+                            graphViewModel = graphViewModel,
+                            preferences = mainViewModel.preferences,
+                            config = mainViewModel.config
                         )
                     }
 

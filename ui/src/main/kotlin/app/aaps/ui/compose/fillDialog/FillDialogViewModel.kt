@@ -9,6 +9,7 @@ import app.aaps.core.data.model.TE
 import app.aaps.core.data.ue.Action
 import app.aaps.core.data.ue.Sources
 import app.aaps.core.data.ue.ValueWithUnit
+import app.aaps.core.interfaces.configuration.Config
 import app.aaps.core.interfaces.constraints.ConstraintsChecker
 import app.aaps.core.interfaces.db.PersistenceLayer
 import app.aaps.core.interfaces.logging.AAPSLogger
@@ -44,7 +45,8 @@ class FillDialogViewModel @Inject constructor(
     private val activePlugin: ActivePlugin,
     private val uel: UserEntryLogger,
     private val persistenceLayer: PersistenceLayer,
-    private val preferences: Preferences,
+    val preferences: Preferences,
+    val config: Config,
     private val decimalFormatter: DecimalFormatter,
     val rh: ResourceHelper,
     val dateUtil: DateUtil,
@@ -86,7 +88,18 @@ class FillDialogViewModel @Inject constructor(
                 presetButton3 = preferences.get(DoubleKey.ActionsFillButton3),
                 insulinAfterConstraints = 0.0,
                 constraintApplied = false,
-                showNotesFromPreferences = preferences.get(BooleanKey.OverviewShowNotesInDialogs)
+                showNotesFromPreferences = preferences.get(BooleanKey.OverviewShowNotesInDialogs),
+                simpleMode = preferences.get(BooleanKey.GeneralSimpleMode)
+            )
+        }
+    }
+
+    fun refreshPresetButtons() {
+        uiState.update {
+            it.copy(
+                presetButton1 = preferences.get(DoubleKey.ActionsFillButton1),
+                presetButton2 = preferences.get(DoubleKey.ActionsFillButton2),
+                presetButton3 = preferences.get(DoubleKey.ActionsFillButton3)
             )
         }
     }

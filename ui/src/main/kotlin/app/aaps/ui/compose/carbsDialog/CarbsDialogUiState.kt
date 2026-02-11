@@ -32,7 +32,8 @@ data class CarbsDialogUiState(
     val eatingSoonTtDuration: Int = 0,
     val activityTtTarget: Double = 0.0,
     val activityTtDuration: Int = 0,
-    val maxCarbsDurationHours: Long = 10
+    val maxCarbsDurationHours: Long = 10,
+    val simpleMode: Boolean = true
 )
 
 val CarbsDialogUiState.eventTimeChanged: Boolean

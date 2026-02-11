@@ -32,8 +32,8 @@ import javax.inject.Inject
 class MainViewModel @Inject constructor(
     private val activePlugin: ActivePlugin,
     private val configBuilder: ConfigBuilder,
-    private val config: Config,
-    private val preferences: Preferences,
+    val config: Config,
+    val preferences: Preferences,
     private val fabricPrivacy: FabricPrivacy,
     private val iconsProvider: IconsProvider,
     private val rh: ResourceHelper,

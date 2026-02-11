@@ -71,6 +71,8 @@ fun MainScreen(
     onCarbsClick: () -> Unit,
     onActionsError: (String, String) -> Unit,
     graphViewModel: GraphViewModel,
+    preferences: app.aaps.core.keys.interfaces.Preferences,
+    config: app.aaps.core.interfaces.configuration.Config,
     modifier: Modifier = Modifier
 ) {
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
@@ -227,7 +229,10 @@ fun MainScreen(
     if (showTreatmentSheet) {
         TreatmentBottomSheet(
             onDismiss = { showTreatmentSheet = false },
-            onCarbsClick = onCarbsClick
+            onCarbsClick = onCarbsClick,
+            simpleMode = uiState.isSimpleMode,
+            preferences = preferences,
+            config = config
         )
     }
 

@@ -16,18 +16,22 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -41,6 +45,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import app.aaps.core.interfaces.configuration.Config
+import app.aaps.core.keys.IntKey
+import app.aaps.core.keys.interfaces.Preferences
 import app.aaps.core.ui.compose.AapsTheme
 import app.aaps.core.ui.compose.AapsTopAppBar
 import app.aaps.core.ui.compose.DatePickerModal
@@ -48,6 +55,9 @@ import app.aaps.core.ui.compose.OkCancelDialog
 import app.aaps.core.ui.compose.SliderWithButtons
 import app.aaps.core.ui.compose.TimePickerModal
 import app.aaps.core.ui.compose.clearFocusOnTap
+import app.aaps.core.ui.compose.preference.AdaptivePreferenceList
+import app.aaps.core.ui.compose.preference.PreferenceSubScreenDef
+import app.aaps.core.ui.compose.preference.ProvidePreferenceTheme
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.LocalTime
 import kotlinx.datetime.TimeZone
@@ -95,6 +105,7 @@ fun CarbsDialogScreen(
     var showNoAction by remember { mutableStateOf(false) }
     var showDatePicker by remember { mutableStateOf(false) }
     var showTimePicker by remember { mutableStateOf(false) }
+    var showButtonSettings by remember { mutableStateOf(false) }
 
     // Confirmation dialog
     if (showConfirmation) {
@@ -157,6 +168,18 @@ fun CarbsDialogScreen(
             initialHour = currentLdt.hour,
             initialMinute = currentLdt.minute,
             is24Hour = true
+        )
+    }
+
+    // Carbs button settings bottom sheet
+    if (showButtonSettings) {
+        CarbsButtonSettingsSheet(
+            preferences = viewModel.preferences,
+            config = viewModel.config,
+            onDismiss = {
+                showButtonSettings = false
+                viewModel.refreshCarbsButtons()
+            }
         )
     }
 
@@ -234,7 +257,8 @@ fun CarbsDialogScreen(
                 increment1 = uiState.carbsButtonIncrement1,
                 increment2 = uiState.carbsButtonIncrement2,
                 increment3 = uiState.carbsButtonIncrement3,
-                onAddCarbs = viewModel::addCarbs
+                onAddCarbs = viewModel::addCarbs,
+                onSettingsClick = if (uiState.simpleMode) null else {{ showButtonSettings = true }}
             )
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
 
@@ -422,18 +446,75 @@ private fun QuickAddButtons(
     increment1: Int,
     increment2: Int,
     increment3: Int,
-    onAddCarbs: (Int) -> Unit
+    onAddCarbs: (Int) -> Unit,
+    onSettingsClick: (() -> Unit)?
 ) {
     val increments = listOf(increment1, increment2, increment3).filter { it > 0 }
-    if (increments.isEmpty()) return
+    if (increments.isEmpty() && onSettingsClick == null) return
 
     Row(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally)
+        horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
+        verticalAlignment = Alignment.CenterVertically
     ) {
         increments.forEach { amount ->
             FilledTonalButton(onClick = { onAddCarbs(amount) }) {
                 Text("+$amount")
+            }
+        }
+        if (onSettingsClick != null) {
+            IconButton(
+                onClick = onSettingsClick,
+                modifier = Modifier.size(32.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Settings,
+                    contentDescription = stringResource(CoreUiR.string.settings),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+        }
+    }
+}
+
+private val carbsButtonSettingsDef = PreferenceSubScreenDef(
+    key = "carbs_button_settings",
+    titleResId = CoreUiR.string.settings,
+    items = listOf(
+        IntKey.OverviewCarbsButtonIncrement1,
+        IntKey.OverviewCarbsButtonIncrement2,
+        IntKey.OverviewCarbsButtonIncrement3
+    )
+)
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun CarbsButtonSettingsSheet(
+    preferences: Preferences,
+    config: Config,
+    onDismiss: () -> Unit
+) {
+    val sheetState = rememberModalBottomSheetState()
+
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = sheetState,
+        containerColor = MaterialTheme.colorScheme.surface
+    ) {
+        Column(modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 24.dp)) {
+            Text(
+                text = stringResource(carbsButtonSettingsDef.titleResId),
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(horizontal = 8.dp, vertical = 12.dp)
+            )
+            ProvidePreferenceTheme {
+                AdaptivePreferenceList(
+                    items = carbsButtonSettingsDef.items,
+                    preferences = preferences,
+                    config = config
+                )
             }
         }
     }

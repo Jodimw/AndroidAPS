@@ -31,5 +31,6 @@ data class FillDialogUiState(
     val constraintApplied: Boolean = false,
 
     // Config
-    val showNotesFromPreferences: Boolean = false
+    val showNotesFromPreferences: Boolean = false,
+    val simpleMode: Boolean = true
 )
