@@ -386,6 +386,8 @@ class DataHandlerMobile @Inject constructor(
                                    if (useAlarm && lastBolusWizard.carbs > 0 && carbTimeOffset > 0) {
                                        automation.scheduleTimeToEatReminder(T.mins(carbTimeOffset).secs().toInt())
                                    }
+                                   lastQuickWizardEntry?.markAsUsed()
+                                   sendQuickWizardToWear()
                                }
                            }
                            lastBolusWizard = null
@@ -1242,13 +1244,24 @@ class DataHandlerMobile @Inject constructor(
         }
     }
 
+    private fun sendQuickWizardToWear() {
+        rxBus.send(
+            EventMobileToWear(
+                EventData.QuickWizard(
+                    ArrayList(quickWizard.list().filter { it.forDevice(QuickWizardEntry.DEVICE_WATCH) }.map { it.toWear() })
+                )
+            )
+        )
+    }
+
     private fun QuickWizardEntry.toWear(): EventData.QuickWizard.QuickWizardEntry =
         EventData.QuickWizard.QuickWizardEntry(
             guid = guid(),
             buttonText = buttonText(),
             carbs = carbs(),
             validFrom = validFrom(),
-            validTo = validTo()
+            validTo = validTo(),
+            lastUsed = lastUsed()
         )
 
     fun resendData(from: String) {
@@ -1273,13 +1286,7 @@ class DataHandlerMobile @Inject constructor(
             )
         )
         // QuickWizard
-        rxBus.send(
-            EventMobileToWear(
-                EventData.QuickWizard(
-                    ArrayList(quickWizard.list().filter { it.forDevice(QuickWizardEntry.DEVICE_WATCH) }.map { it.toWear() })
-                )
-            )
-        )
+        sendQuickWizardToWear()
         //UserAction
         sendUserActions()
         // GraphData

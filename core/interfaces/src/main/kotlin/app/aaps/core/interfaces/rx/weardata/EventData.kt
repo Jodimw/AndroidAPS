@@ -394,7 +394,8 @@ sealed class EventData : Event() {
             val buttonText: String,
             val carbs: Int,
             val validFrom: Int,
-            val validTo: Int
+            val validTo: Int,
+            val lastUsed: Long = 0L
         ) : EventData()
     }
 

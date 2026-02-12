@@ -536,6 +536,7 @@ class BolusWizard @Inject constructor(
                                 ValueWithUnit.Minute(carbTime).takeIf { carbTime != 0 }
                             )
                         )
+                        quickWizardEntry?.markAsUsed()
                         commandQueue.bolus(this, object : Callback() {
                             override fun run() {
                                 if (!result.success) {

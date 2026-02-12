@@ -16,6 +16,7 @@ import app.aaps.core.keys.IntKey
 import app.aaps.core.keys.interfaces.Preferences
 import app.aaps.core.objects.extensions.valueToUnits
 import app.aaps.core.utils.JsonHelper.safeGetInt
+import app.aaps.core.utils.JsonHelper.safeGetLong
 import app.aaps.core.utils.JsonHelper.safeGetString
 import app.aaps.core.utils.MidnightUtils
 import kotlinx.coroutines.runBlocking
@@ -34,7 +35,8 @@ class QuickWizardEntry @Inject constructor(
     private val persistenceLayer: PersistenceLayer,
     private val dateUtil: DateUtil,
     private val glucoseStatusProvider: GlucoseStatusProvider,
-    private val bolusWizardProvider: Provider<BolusWizard>
+    private val bolusWizardProvider: Provider<BolusWizard>,
+    private val quickWizardProvider: Provider<QuickWizard>
 ) {
 
     // for mock
@@ -61,6 +63,7 @@ class QuickWizardEntry @Inject constructor(
         const val DEVICE_WATCH = 2
         const val DEFAULT = 0
         const val CUSTOM = 1
+        const val COOLDOWN_MILLIS = 3_600_000L // 1 hour
     }
 
     init {
@@ -108,7 +111,11 @@ class QuickWizardEntry @Inject constructor(
         return this
     }
 
-    fun isActive(): Boolean = time.secondsFromMidnight() >= validFrom() && time.secondsFromMidnight() <= validTo() && forDevice(DEVICE_PHONE)
+    fun isActive(): Boolean =
+        time.secondsFromMidnight() >= validFrom() &&
+            time.secondsFromMidnight() <= validTo() &&
+            forDevice(DEVICE_PHONE) &&
+            dateUtil.now() - lastUsed() > COOLDOWN_MILLIS
 
     fun doCalc(profile: Profile, profileName: String, lastBG: InMemoryGlucoseValue): BolusWizard {
         val tempTarget = runBlocking { persistenceLayer.getTemporaryTargetActiveAt(dateUtil.now()) }
@@ -219,4 +226,11 @@ class QuickWizardEntry @Inject constructor(
     fun carbTime(): Int = safeGetInt(storage, "carbTime")
 
     fun useAlarm(): Int = safeGetInt(storage, "useAlarm", NO)
+
+    fun lastUsed(): Long = safeGetLong(storage, "lastUsed")
+
+    fun markAsUsed() {
+        storage.put("lastUsed", dateUtil.now())
+        quickWizardProvider.get().save()
+    }
 }
