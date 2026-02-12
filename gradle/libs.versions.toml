@@ -23,6 +23,8 @@ navigationCompose = "2.9.7"
 lifecycleRuntimeKtx = "2.10.0"
 materialPullRefresh = "1.2.0"
 vico = "3.0.0-beta.3"
+uiToolingPreview = "1.10.2"
+uiTooling = "1.10.2"
 
 [plugins]
 android-library = { id = "com.android.library" }
@@ -193,4 +195,6 @@ androidx-compose-runtime-livedata = { group = "androidx.compose.runtime", name =
 com-patrykandpatrick-vico-core = { group = "com.patrykandpatrick.vico", name = "core", version.ref = "vico" }
 com-patrykandpatrick-vico-compose = { group = "com.patrykandpatrick.vico", name = "compose", version.ref = "vico" }
 com-patrykandpatrick-vico-compose-m3 = { group = "com.patrykandpatrick.vico", name = "compose-m3", version.ref = "vico" }
+androidx-compose-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-tooling-preview", version.ref = "uiToolingPreview" }
+androidx-compose-ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling", version.ref = "uiTooling" }
 
