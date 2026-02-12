@@ -44,7 +44,7 @@ class RxBusImpl @Inject constructor(
             .ofType(eventType)
 
     @Suppress("UNCHECKED_CAST")
-    override fun <T : Any> toFlow(eventType: Class<T>): Flow<T> =
+    override fun <T : Event> toFlow(eventType: Class<T>): Flow<T> =
         flowPublisher
             .filter { eventType.isInstance(it) }
             .map { it as T }

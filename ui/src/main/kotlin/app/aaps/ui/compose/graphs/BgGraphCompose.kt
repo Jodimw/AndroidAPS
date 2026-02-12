@@ -67,7 +67,7 @@ fun BgGraphCompose(
     val bgReadings by viewModel.bgReadingsFlow.collectAsState()
     val bucketedData by viewModel.bucketedDataFlow.collectAsState()
     val derivedTimeRange by viewModel.derivedTimeRange.collectAsState()
-    val chartConfig = viewModel.chartConfig
+    val chartConfig by viewModel.chartConfigFlow.collectAsState()
 
     // Use derived time range or fall back to default (last 24 hours)
     // With anchor series, we can render immediately even without data

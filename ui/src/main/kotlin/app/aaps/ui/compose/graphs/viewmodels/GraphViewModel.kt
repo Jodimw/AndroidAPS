@@ -26,7 +26,10 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import javax.inject.Inject
 
 /**
@@ -71,7 +74,7 @@ data class CobUiState(
 class GraphViewModel @Inject constructor(
     cache: OverviewDataCache,
     private val aapsLogger: AAPSLogger,
-    preferences: Preferences,
+    private val preferences: Preferences,
     private val dateUtil: DateUtil,
     private val rh: ResourceHelper,
     private val iobCobCalculator: IobCobCalculator,
@@ -81,11 +84,24 @@ class GraphViewModel @Inject constructor(
     private val persistenceLayer: PersistenceLayer
 ) : ViewModel() {
 
-    // Static chart config - read once at initialization
-    val chartConfig = ChartConfig(
-        highMark = preferences.get(UnitDoubleKey.OverviewHighMark),
-        lowMark = preferences.get(UnitDoubleKey.OverviewLowMark)
-    )
+    // Chart config - updates when high/low mark preferences change
+    val chartConfigFlow: StateFlow<ChartConfig>
+        field = MutableStateFlow(
+            ChartConfig(
+                highMark = preferences.get(UnitDoubleKey.OverviewHighMark),
+                lowMark = preferences.get(UnitDoubleKey.OverviewLowMark)
+            )
+        )
+
+    init {
+        // Update chart config when high/low mark preferences change
+        preferences.observe(UnitDoubleKey.OverviewHighMark)
+            .onEach { highMark -> chartConfigFlow.update { it.copy(highMark = highMark) } }
+            .launchIn(viewModelScope)
+        preferences.observe(UnitDoubleKey.OverviewLowMark)
+            .onEach { lowMark -> chartConfigFlow.update { it.copy(lowMark = lowMark) } }
+            .launchIn(viewModelScope)
+    }
 
     // Individual series flows - each can trigger independent recomposition
     val bgReadingsFlow: StateFlow<List<BgDataPoint>> = cache.bgReadingsFlow

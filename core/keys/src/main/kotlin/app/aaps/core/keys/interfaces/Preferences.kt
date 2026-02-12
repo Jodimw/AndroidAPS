@@ -285,6 +285,15 @@ interface Preferences {
      */
     fun put(key: UnitDoublePreferenceKey, value: Double)
 
+    /**
+     * Observe [Double] value changes for unit-aware preference.
+     * Emits when the preference value OR the display units change.
+     *
+     * @param key [UnitDoublePreferenceKey] enum
+     * @return [StateFlow] emitting current value in user's units
+     */
+    fun observe(key: UnitDoublePreferenceKey): StateFlow<Double>
+
     /* INT */
 
     /**

@@ -38,6 +38,7 @@ import app.aaps.core.interfaces.rx.bus.RxBus
 import app.aaps.core.interfaces.rx.events.EventBucketedDataCreated
 import app.aaps.core.interfaces.utils.DateUtil
 import app.aaps.core.interfaces.utils.TrendCalculator
+import app.aaps.core.keys.StringKey
 import app.aaps.core.keys.UnitDoubleKey
 import app.aaps.core.keys.interfaces.Preferences
 import app.aaps.core.objects.extensions.fromGv
@@ -189,6 +190,29 @@ class OverviewDataCacheImpl @Inject constructor(
         scope.launch {
             rxBus.toFlow(EventBucketedDataCreated::class.java).collect {
                 aapsLogger.debug(LTag.UI, "Bucketed data created, refreshing BgInfo for trend arrow")
+                updateBgInfoFromDatabase()
+            }
+        }
+
+        // Observe unit changes — affects BG value formatting and TT target range text
+        scope.launch {
+            preferences.observe(StringKey.GeneralUnits).collect {
+                aapsLogger.debug(LTag.UI, "Units changed, refreshing BgInfo and TempTarget")
+                updateBgInfoFromDatabase()
+                updateTempTargetFromDatabase()
+            }
+        }
+
+        // Observe high/low mark changes — affects BG range classification (circle color)
+        scope.launch {
+            preferences.observe(UnitDoubleKey.OverviewHighMark).collect {
+                aapsLogger.debug(LTag.UI, "High mark changed, refreshing BgInfo")
+                updateBgInfoFromDatabase()
+            }
+        }
+        scope.launch {
+            preferences.observe(UnitDoubleKey.OverviewLowMark).collect {
+                aapsLogger.debug(LTag.UI, "Low mark changed, refreshing BgInfo")
                 updateBgInfoFromDatabase()
             }
         }

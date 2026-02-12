@@ -129,6 +129,9 @@ class PreferencesImpl @Inject constructor(
         sp.putDouble(key.key, value)
     }
 
+    override fun observe(key: UnitDoublePreferenceKey): StateFlow<Double> =
+        MutableStateFlow(0.0) // Not used on wear
+
     override fun get(key: DoubleComposedNonPreferenceKey, vararg arguments: Any): Double =
         sp.getDouble(key.composeKey(*arguments), key.defaultValue)
 

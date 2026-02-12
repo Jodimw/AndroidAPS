@@ -88,6 +88,7 @@ class PreferencesImpl @Inject constructor(
     private val booleanFlows = ConcurrentHashMap<String, MutableStateFlow<Boolean>>()
     private val stringFlows = ConcurrentHashMap<String, MutableStateFlow<String>>()
     private val doubleFlows = ConcurrentHashMap<String, MutableStateFlow<Double>>()
+    private val unitDoubleFlows = ConcurrentHashMap<String, MutableStateFlow<Double>>()
     private val intFlows = ConcurrentHashMap<String, MutableStateFlow<Int>>()
     private val longFlows = ConcurrentHashMap<String, MutableStateFlow<Long>>()
 
@@ -173,7 +174,11 @@ class PreferencesImpl @Inject constructor(
 
     override fun put(key: UnitDoublePreferenceKey, value: Double) {
         sp.putDouble(key.key, value)
+        unitDoubleFlows[key.key]?.value = get(key)
     }
+
+    override fun observe(key: UnitDoublePreferenceKey): StateFlow<Double> =
+        unitDoubleFlows.getOrPut(key.key) { MutableStateFlow(get(key)) }
 
     override fun get(key: IntNonPreferenceKey): Int =
         sp.getInt(key.key, key.defaultValue)

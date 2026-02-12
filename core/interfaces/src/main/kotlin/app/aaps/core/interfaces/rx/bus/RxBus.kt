@@ -31,5 +31,5 @@ interface RxBus {
      * @param eventType The class of the event to listen for.
      * @return A [Flow] that emits events of the specified type.
      */
-    fun <T : Any> toFlow(eventType: Class<T>): Flow<T>
+    fun <T : Event> toFlow(eventType: Class<T>): Flow<T>
 }
