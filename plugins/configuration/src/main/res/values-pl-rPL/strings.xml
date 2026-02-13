@@ -48,6 +48,7 @@
     <string name="unattended_settings_export">Automatyczny Eksport Ustawień</string>
     <string name="unattended_settings_export_summary">Włączenie tej opcji spowoduje, że twoje hasło zostanie bezpieczne zapisane na telefonie</string>
     <string name="identification">Identyfikator (email, nick na FB lub Discordzie itp.)</string>
+    <!-- Provider-agnostic cloud export/import strings -->
     <string name="request">Żądanie</string>
     <string name="apsmode_title">Tryb APS</string>
     <string name="error_asking_for_permissions">Wystąpił błąd podczas żądania uprawnień</string>
@@ -166,4 +167,9 @@
     <string name="metadata_format_other">Nieznany format eksportu</string>
     <string name="reset_aps_results">Zresetuj wyniki APS</string>
     <string name="error_accessing_filesystem_select_aaps_directory_properly">Błąd dostępu do systemu plików. Wybierz prawidłowo katalog AAPS.</string>
+    <!-- Google Drive Storage -->
+    <!-- Import source selection dialog -->
+    <!-- Google Drive error messages (used by GoogleDriveManager) -->
+    <!-- Provider-agnostic cloud storage strings -->
+    <!-- Authorization status strings -->
 </resources>
