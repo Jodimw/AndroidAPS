@@ -48,6 +48,7 @@
     <string name="unattended_settings_export">Xuất cài đặt tự động</string>
     <string name="unattended_settings_export_summary">Bật tùy chọn này sẽ lưu mật khẩu của bạn một cách an toàn trên điện thoại</string>
     <string name="identification">Nhận dạng (email, Facebook hoặc Discord, v.v.)</string>
+    <!-- Provider-agnostic cloud export/import strings -->
     <string name="request">Yêu cầu</string>
     <string name="apsmode_title">Chế độ APS</string>
     <string name="error_asking_for_permissions">Lỗi khi yêu cầu cấp quyền</string>
@@ -166,4 +167,9 @@
     <string name="metadata_format_other">Định dạng xuất dữ liệu không xác định</string>
     <string name="reset_aps_results">Đặt lại kết quả APS</string>
     <string name="error_accessing_filesystem_select_aaps_directory_properly">Lỗi truy cập hệ thống tệp. Hãy chọn đúng thư mục AAPS.</string>
+    <!-- Google Drive Storage -->
+    <!-- Import source selection dialog -->
+    <!-- Google Drive error messages (used by GoogleDriveManager) -->
+    <!-- Provider-agnostic cloud storage strings -->
+    <!-- Authorization status strings -->
 </resources>
