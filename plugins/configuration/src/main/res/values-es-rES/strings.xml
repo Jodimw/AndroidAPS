@@ -48,6 +48,7 @@
     <string name="unattended_settings_export">Exportación de ajustes no atendida</string>
     <string name="unattended_settings_export_summary">Habilitar esto almacenará tu contraseña de forma segura en tu teléfono</string>
     <string name="identification">Identificación (correo electrónico, FB, nick de Discord, etc.)</string>
+    <!-- Provider-agnostic cloud export/import strings -->
     <string name="request">Solicitar</string>
     <string name="apsmode_title">Modo APS</string>
     <string name="error_asking_for_permissions">Error al solicitar los permisos</string>
@@ -166,4 +167,9 @@
     <string name="metadata_format_other">Formato de exportación desconocido</string>
     <string name="reset_aps_results">Restablecer resultados de APS</string>
     <string name="error_accessing_filesystem_select_aaps_directory_properly">Error al acceder al sistema de archivos. Selecciona el directorio de AAPS correctamente.</string>
+    <!-- Google Drive Storage -->
+    <!-- Import source selection dialog -->
+    <!-- Google Drive error messages (used by GoogleDriveManager) -->
+    <!-- Provider-agnostic cloud storage strings -->
+    <!-- Authorization status strings -->
 </resources>
