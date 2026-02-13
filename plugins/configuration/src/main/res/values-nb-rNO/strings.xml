@@ -49,6 +49,13 @@
     <string name="unattended_settings_export_summary">Aktivering av dette vil lagre ditt passord sikkert på din telefon</string>
     <string name="identification">Identifikasjon (e-post, Facebook eller Discord-nick osv.)</string>
     <!-- Provider-agnostic cloud export/import strings -->
+    <string name="exported_to_cloud">Innstillinger ble eksportert til skylagring</string>
+    <string name="export_to_cloud_failed">Kunne ikke eksportere til skylagring</string>
+    <string name="cloud_connection_failed">Tilkobling til skylagring mislyktes</string>
+    <string name="loading_from_cloud">Laster inn innstillinger fra skylagring, vennligst vent…</string>
+    <string name="cloud_folder_error">Kunne ikke laste mapper fra skylagring</string>
+    <string name="csv_uploaded_to_cloud">CSV med brukeroppføringer ble lastet opp til skylagring</string>
+    <string name="cloud_reauthorize_message">Tilkobling til skylagring mislyktes. Vil du godkjenne på nytt?</string>
     <string name="request">Forespørsel</string>
     <string name="apsmode_title">APS modus</string>
     <string name="error_asking_for_permissions">Feil under spørring etter tillatelser</string>
@@ -168,6 +175,18 @@
     <string name="reset_aps_results">Tilbakestill APS-resultater</string>
     <string name="error_accessing_filesystem_select_aaps_directory_properly">Feil ved tilgang til filsystem. Velg AAPS-mappe riktig.</string>
     <!-- Google Drive Storage -->
+    <string name="storage_local">Lokal lagring</string>
+    <string name="storage_google_drive">Google Drive</string>
+    <string name="select_storage_type">Velg lagringstype</string>
+    <string name="backup_to_google_drive">Sikkerhetskopier til Google Drive</string>
+    <string name="google_drive_connection_error">Feil ved tilkobling til Google Drive</string>
+    <string name="reauthorize">Godkjenn på nytt</string>
+    <string name="cloud_auth_success">Autentisering av skylagring vellykket</string>
+    <string name="cloud_auth_failed">Autentisering av skylagring mislyktes</string>
+    <string name="cloud_auth_error">Feil ved autentisering av skylagring: %1$s</string>
+    <string name="enable_cloud_export_title">Aktiver sky-eksport</string>
+    <string name="enable_cloud_export_message">Vil du aktivere eksport til skyen? Dette vil aktivere «Kun sky»-valget i Eksportinnstillinger.</string>
+    <string name="can_change_in_export_settings">Du kan endre dette senere i Eksportinnstillinger</string>
     <!-- Import source selection dialog -->
     <!-- Google Drive error messages (used by GoogleDriveManager) -->
     <!-- Provider-agnostic cloud storage strings -->
