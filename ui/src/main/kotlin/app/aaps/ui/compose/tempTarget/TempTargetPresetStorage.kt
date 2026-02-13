@@ -1,4 +1,4 @@
-package app.aaps.ui.compose.tempTarget.viewmodels
+package app.aaps.ui.compose.tempTarget
 
 import app.aaps.core.data.model.TT
 import app.aaps.core.data.model.TTPreset

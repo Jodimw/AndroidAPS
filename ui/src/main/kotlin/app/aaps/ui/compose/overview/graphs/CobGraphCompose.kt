@@ -1,4 +1,4 @@
-package app.aaps.ui.compose.graphs
+package app.aaps.ui.compose.overview.graphs
 
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -11,13 +11,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import app.aaps.core.graph.vico.AdaptiveStep
-import app.aaps.core.graph.vico.Square
 import app.aaps.core.ui.compose.AapsTheme
-import app.aaps.ui.compose.graphs.viewmodels.GraphViewModel
 import com.patrykandpatrick.vico.compose.cartesian.CartesianChartHost
 import com.patrykandpatrick.vico.compose.cartesian.VicoScrollState
 import com.patrykandpatrick.vico.compose.cartesian.VicoZoomState
@@ -29,15 +28,16 @@ import com.patrykandpatrick.vico.compose.cartesian.layer.LineCartesianLayer
 import com.patrykandpatrick.vico.compose.cartesian.layer.rememberLineCartesianLayer
 import com.patrykandpatrick.vico.compose.cartesian.rememberCartesianChart
 import com.patrykandpatrick.vico.compose.common.Fill
+import com.patrykandpatrick.vico.compose.common.component.ShapeComponent
 import com.patrykandpatrick.vico.compose.common.component.TextComponent
 import com.patrykandpatrick.vico.compose.common.component.rememberTextComponent
 
 /**
- * IOB (Insulin On Board) Graph using Vico.
+ * COB (Carbs On Board) Graph using Vico.
  *
  * Architecture:
- * - Collects iobGraphFlow independently
- * - Two blue lines: regular IOB + IOB predictions
+ * - Collects cobGraphFlow independently
+ * - Single orange line for COB values
  * - Uses same x-axis coordinate system as BG graph
  * - Same axis configuration as BG graph (Y-axis + X-axis with time labels)
  *
@@ -46,8 +46,8 @@ import com.patrykandpatrick.vico.compose.common.component.rememberTextComponent
  * - Uses invisible anchor series: 3 points [minX, minX+1, maxX] to establish xStep = 1 via GCD
  * - CRITICAL: With only 2 points [minX, maxX], xStep = (maxX-minX), causing vertical stacking
  * - With 3 points [minX, minX+1, maxX]: deltas [1, maxX-minX-1] → GCD = 1 → proper spacing
- * - Start anchor: At y=0 if IOB data starts later than time range (invisible in gradient)
- * - End anchor: Holds last IOB value (not drop to 0) - shows ongoing IOB status
+ * - Start anchor: At y=0 if COB data starts later than time range (invisible in gradient)
+ * - End anchor: Holds last COB value (not drop to 0) - shows ongoing COB status
  * - Graph is "open to the future" - extends horizontally at last value, not dropping prematurely
  * - This ensures perfect vertical alignment with BG graph when stacked
  *
@@ -56,20 +56,23 @@ import com.patrykandpatrick.vico.compose.common.component.rememberTextComponent
  * - User cannot manually scroll/zoom this graph - it follows BG graph
  *
  * Rendering:
- * - IOB line: Blue step line (Square PointConnector) - horizontal→vertical staircase
- * - Predictions: Blue step line (Square PointConnector) - same style as regular IOB
- * - Gradient fill from semi-transparent blue to transparent
- * - No failover regions (IOB doesn't have failover points like COB)
+ * - COB line: Orange adaptive line (AdaptiveStep PointConnector)
+ * - Steep changes (>45° angle): Step connector (horizontal→vertical, staircase effect)
+ * - Gradual changes (≤45° angle): Straight line connector (smooth)
+ * - Uses fast ratio calculation (|dy/dx| > 1.0) instead of trigonometry
+ * - Gradient fill from semi-transparent orange to transparent
+ * - Failover regions: Semi-transparent yellow/amber shaded areas (XRangeDecoration)
+ *   Consecutive failover points (within 10 minutes) are grouped into ranges
  */
 @Composable
-fun IobGraphCompose(
+fun CobGraphCompose(
     viewModel: GraphViewModel,
     scrollState: VicoScrollState,
     zoomState: VicoZoomState,
     modifier: Modifier = Modifier
 ) {
     // Collect flows independently
-    val iobGraphData by viewModel.iobGraphFlow.collectAsState()
+    val cobGraphData by viewModel.cobGraphFlow.collectAsState()
     val derivedTimeRange by viewModel.derivedTimeRange.collectAsState()
 
     // Use derived time range or fall back to default (last 24 hours)
@@ -80,11 +83,11 @@ fun IobGraphCompose(
         dayAgo to now
     }
 
-    // Single model producer for IOB lines
+    // Single model producer for COB line
     val modelProducer = remember { CartesianChartModelProducer() }
 
     // Colors from theme
-    val iobColor = AapsTheme.generalColors.activeInsulinText
+    val cobColor = AapsTheme.generalColors.cobPrediction
 
     // Calculate x-axis range (must match BG graph for alignment)
     val minX = 0.0
@@ -93,18 +96,18 @@ fun IobGraphCompose(
     }
 
     // Track which series are currently included (for matching LineProvider)
-    val hasIobDataState = remember { mutableStateOf(false) }
-//    val hasPredictionsDataState = remember { mutableStateOf(false) }
+    val hasCobDataState = remember { mutableStateOf(false) }
+    val hasFailoverDataState = remember { mutableStateOf(false) }
 
-    // LaunchedEffect for IOB series - only runs when iobGraphData or time range changes significantly
+    // LaunchedEffect for COB series - only runs when cobGraphData or time range changes significantly
     // Use remember to cache and only update when time range changes by more than 1 minute
     val stableTimeRange = remember(minTimestamp / 60000, maxTimestamp / 60000) {
         minTimestamp to maxTimestamp
     }
 
-    LaunchedEffect(iobGraphData, stableTimeRange) {
-        val iobPoints = iobGraphData.iob
-        iobGraphData.predictions
+    LaunchedEffect(cobGraphData, stableTimeRange) {
+        val cobPoints = cobGraphData.cob
+        val failoverPoints = cobGraphData.failOverPoints
 
         modelProducer.runTransaction {
             lineSeries {
@@ -115,11 +118,12 @@ fun IobGraphCompose(
                 val (anchorX, anchorY) = createInvisibleAnchorSeries(minX, maxX)
                 series(anchorX, anchorY)
 
-                var hasIobData = false
+                var hasCobData = false
+                var hasFailoverData = false
 
-                // IOB data series (only if data exists after filtering)
-                if (iobPoints.isNotEmpty()) {
-                    val dataPoints = iobPoints
+                // COB data series (only if data exists after filtering)
+                if (cobPoints.isNotEmpty()) {
+                    val dataPoints = cobPoints
                         .map { timestampToX(it.timestamp, minTimestamp) to it.value }
                     val filteredPoints = filterToRange(dataPoints, minX, maxX)
 
@@ -128,29 +132,28 @@ fun IobGraphCompose(
                             x = filteredPoints.map { it.first },
                             y = filteredPoints.map { it.second }
                         )
-                        hasIobData = true
+                        hasCobData = true
                     }
                 }
 
-                // Predictions series (only if data exists after filtering)
-                /*
-                                if (predictionPoints.isNotEmpty()) {
-                                    val dataPoints = predictionPoints
-                                        .map { timestampToX(it.timestamp, minTimestamp) to it.value }
-                                    val filteredPoints = filterToRange(dataPoints, minX, maxX)
+                // Failover points series (for testing - shows as dots)
+                if (failoverPoints.isNotEmpty()) {
+                    val dataPoints = failoverPoints
+                        .map { timestampToX(it.timestamp, minTimestamp) to it.cobValue }
+                    val filteredPoints = filterToRange(dataPoints, minX, maxX)
 
-                                    if (filteredPoints.isNotEmpty()) {
-                                        series(
-                                            x = filteredPoints.map { it.first },
-                                            y = filteredPoints.map { it.second }
-                                        )
-                                        hasPredictionsData = true
-                                    }
-                                }
-                */
+                    if (filteredPoints.isNotEmpty()) {
+                        series(
+                            x = filteredPoints.map { it.first },
+                            y = filteredPoints.map { it.second }
+                        )
+                        hasFailoverData = true
+                    }
+                }
+
                 // Update state
-                hasIobDataState.value = hasIobData
-//                hasPredictionsDataState.value = hasPredictionsData
+                hasCobDataState.value = hasCobData
+                hasFailoverDataState.value = hasFailoverData
             }
         }
     }
@@ -159,46 +162,53 @@ fun IobGraphCompose(
     val timeFormatter = rememberTimeFormatter(minTimestamp)
     val bottomAxisItemPlacer = rememberBottomAxisItemPlacer(minTimestamp)
 
-    // Line style for IOB: solid blue line with square step connector
-    val iobLine = remember(iobColor) {
+    // Line style for COB: solid orange line with adaptive step connector
+    val cobLine = remember(cobColor) {
         LineCartesianLayer.Line(
-            fill = LineCartesianLayer.LineFill.single(Fill(iobColor)),
+            fill = LineCartesianLayer.LineFill.single(Fill(cobColor)),
             areaFill = LineCartesianLayer.AreaFill.single(
                 Fill(
                     Brush.verticalGradient(
                         listOf(
-                            iobColor.copy(alpha = 1f),
+                            cobColor.copy(alpha = 1f),
                             Color.Transparent
                         )
                     )
                 )
             ),
-            pointConnector = AdaptiveStep
+            pointConnector = AdaptiveStep  // Adaptive: step for steep angles (>45°), line for gradual
         )
     }
 
-    // Line style for predictions: same as IOB but without gradient fill
-    val predictionsLine = remember(iobColor) {
-        LineCartesianLayer.Line(
-            fill = LineCartesianLayer.LineFill.single(Fill(iobColor)),
-            areaFill = null,  // No gradient for predictions
-            pointConnector = Square  // Fixed step: horizontal→vertical staircase
-        )
-    }
-
-    // Invisible line for anchor series (always added, corresponds to first series)
+    // Invisible line for anchor series (always added, corresponds to last series)
     val invisibleLine = remember { createInvisibleDots() }
 
+    // Failover dots style - same color as COB line, dots only, no line
+    val failoverDotsLine = remember(cobColor) {
+        LineCartesianLayer.Line(
+            fill = LineCartesianLayer.LineFill.single(Fill(Color.Transparent)),
+            areaFill = null,
+            pointProvider = LineCartesianLayer.PointProvider.single(
+                LineCartesianLayer.Point(
+                    component = ShapeComponent(
+                        fill = Fill(cobColor),
+                        shape = CircleShape
+                    ),
+                    size = 6.dp
+                )
+            )
+        )
+    }
+
     // Build lines list dynamically - MUST match series order exactly
-    // Series order: anchor FIRST, then IOB data, then predictions
-    val hasIobData by hasIobDataState
-//    val hasPredictionsData by hasPredictionsDataState
-//    val lines = remember(hasIobData, hasPredictionsData, iobLine, predictionsLine, invisibleLine) {
-    val lines = remember(hasIobData, iobLine, predictionsLine, invisibleLine) {
+    // Series order: anchor FIRST, then COB data, then failover dots
+    val hasCobData by hasCobDataState
+    val hasFailoverData by hasFailoverDataState
+    val lines = remember(hasCobData, hasFailoverData, cobLine, failoverDotsLine, invisibleLine) {
         buildList {
             add(invisibleLine)                          // Series 1: Anchor (always first)
-            if (hasIobData) add(iobLine)               // Series 2: IOB data (if exists)
-//            if (hasPredictionsData) add(predictionsLine) // Series 3: Predictions (if exists)
+            if (hasCobData) add(cobLine)               // Series 2: COB data (if exists)
+            if (hasFailoverData) add(failoverDotsLine) // Series 3: Failover dots (if exists)
         }
     }
 

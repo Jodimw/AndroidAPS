@@ -1,4 +1,4 @@
-package app.aaps.ui.compose.main
+package app.aaps.ui.compose.overview.manage
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable

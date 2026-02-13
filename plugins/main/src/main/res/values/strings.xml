@@ -197,7 +197,6 @@
     <string name="prefs_range_title">Range for visualization</string>
     <string name="overview_show_notes_field_in_dialogs_title">Show notes field in treatment dialogs</string>
     <string name="run_question">Run %s?</string>
-    <string name="copy_existing_values">Copy NS settings (if exists)?</string>
 
     <!--    OverviewMenu-->
     <string name="overview_show_predictions">Predictions</string>

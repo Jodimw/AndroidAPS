@@ -1,4 +1,4 @@
-package app.aaps.ui.compose.graphs
+package app.aaps.ui.compose.overview
 
 import app.aaps.core.data.iob.InMemoryGlucoseValue
 import app.aaps.core.data.model.EPS
@@ -46,6 +46,7 @@ import app.aaps.core.objects.profile.ProfileSealed
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -171,7 +172,7 @@ class OverviewDataCacheImpl @Inject constructor(
         scope.launch {
             persistenceLayer.observeChanges(EPS::class.java).collect {
                 aapsLogger.debug(LTag.UI, "EPS change detected, updating Profile state")
-                kotlinx.coroutines.delay(500)
+                delay(500)
                 updateProfileFromDatabase()
                 // TT display depends on profile being loaded (for default target)
                 updateTempTargetFromDatabase()
@@ -225,7 +226,7 @@ class OverviewDataCacheImpl @Inject constructor(
     private suspend fun updateBgInfoFromDatabase() {
         // Use bucketed (smoothed) data like legacy, with raw DB fallback
         val lastBg = iobCobCalculator.ads.bucketedData?.firstOrNull()
-        val lastGv = lastBg ?: persistenceLayer.getLastGlucoseValue()?.let { InMemoryGlucoseValue.fromGv(it) }
+        val lastGv = lastBg ?: persistenceLayer.getLastGlucoseValue()?.let { InMemoryGlucoseValue.Companion.fromGv(it) }
         if (lastGv == null) {
             _bgInfoFlow.value = null
             return

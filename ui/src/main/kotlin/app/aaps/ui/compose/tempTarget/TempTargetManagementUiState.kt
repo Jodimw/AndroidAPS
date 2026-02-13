@@ -1,4 +1,4 @@
-package app.aaps.ui.compose.tempTarget.viewmodels
+package app.aaps.ui.compose.tempTarget
 import androidx.compose.runtime.Immutable
 
 import app.aaps.core.data.model.TT

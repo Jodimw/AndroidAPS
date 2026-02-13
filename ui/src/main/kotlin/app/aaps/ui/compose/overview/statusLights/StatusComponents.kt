@@ -1,4 +1,4 @@
-package app.aaps.ui.compose.actions
+package app.aaps.ui.compose.overview.statusLights
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -23,7 +23,9 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import app.aaps.core.ui.R
 import app.aaps.core.ui.compose.statusLevelToColor
+import app.aaps.ui.compose.overview.statusLights.StatusItem
 
 /**
  * Status rows content — sensor/insulin/cannula/battery with optional action buttons.
@@ -40,8 +42,8 @@ internal fun StatusSectionContent(
     onInsulinChangeClick: (() -> Unit)? = null,
     onBatteryChangeClick: (() -> Unit)? = null
 ) {
-    val addLabel = stringResource(app.aaps.core.ui.R.string.add)
-    val fillLabel = stringResource(app.aaps.core.ui.R.string.prime_fill)
+    val addLabel = stringResource(R.string.add)
+    val fillLabel = stringResource(R.string.prime_fill)
 
     cannulaStatus?.let {
         StatusRow(item = it, actionLabel = fillLabel, onActionClick = onFillClick)
@@ -67,7 +69,7 @@ internal fun StatusSectionContent(
 }
 
 @Composable
-internal fun StatusRow(
+private fun StatusRow(
     item: StatusItem,
     actionLabel: String? = null,
     onActionClick: (() -> Unit)? = null
@@ -128,7 +130,7 @@ internal fun StatusRow(
 }
 
 @Composable
-internal fun StatusValueWithProgress(
+private fun StatusValueWithProgress(
     value: String,
     valueColor: Color,
     progress: Float,

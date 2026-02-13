@@ -22,15 +22,24 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -44,12 +53,19 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import app.aaps.core.data.model.RM
+import app.aaps.core.interfaces.configuration.Config
+import app.aaps.core.keys.IntKey
+import app.aaps.core.keys.interfaces.Preferences
+import app.aaps.core.ui.compose.preference.AdaptivePreferenceList
+import app.aaps.core.ui.compose.preference.PreferenceSubScreenDef
+import app.aaps.core.ui.compose.preference.ProvidePreferenceTheme
 import app.aaps.core.ui.compose.statusLevelToColor
-import app.aaps.ui.compose.actions.StatusItem
-import app.aaps.ui.compose.actions.StatusSectionContent
-import app.aaps.ui.compose.actions.viewmodels.ActionsViewModel
-import app.aaps.ui.compose.graphs.viewmodels.GraphViewModel
+import app.aaps.ui.compose.overview.manage.ManageViewModel
+import app.aaps.ui.compose.overview.graphs.GraphViewModel
 import app.aaps.ui.compose.main.TempTargetChipState
+import app.aaps.ui.compose.overview.statusLights.StatusViewModel
+import app.aaps.ui.compose.overview.statusLights.StatusItem
+import app.aaps.ui.compose.overview.statusLights.StatusSectionContent
 
 @Composable
 fun OverviewScreen(
@@ -64,7 +80,8 @@ fun OverviewScreen(
     runningModeText: String,
     runningModeProgress: Float,
     graphViewModel: GraphViewModel,
-    actionsViewModel: ActionsViewModel,
+    manageViewModel: ManageViewModel,
+    statusViewModel: StatusViewModel,
     onProfileManagementClick: () -> Unit,
     onTempTargetClick: () -> Unit,
     onRunningModeClick: () -> Unit,
@@ -73,11 +90,13 @@ fun OverviewScreen(
     onInsulinChangeClick: () -> Unit,
     onBatteryChangeClick: () -> Unit,
     paddingValues: PaddingValues,
+    preferences: Preferences,
+    config: Config,
     modifier: Modifier = Modifier
 ) {
     // Collect BG info state from ViewModel
     val bgInfoState by graphViewModel.bgInfoState.collectAsState()
-    val actionsState by actionsViewModel.uiState.collectAsState()
+    val statusState by statusViewModel.uiState.collectAsState()
 
     Column(
         modifier = modifier
@@ -138,16 +157,19 @@ fun OverviewScreen(
 
         // Status section with expand/collapse
         OverviewStatusSection(
-            sensorStatus = actionsState.sensorStatus,
-            insulinStatus = actionsState.insulinStatus,
-            cannulaStatus = actionsState.cannulaStatus,
-            batteryStatus = actionsState.batteryStatus,
-            showFill = actionsState.showFill,
-            showPumpBatteryChange = actionsState.showPumpBatteryChange,
+            sensorStatus = statusState.sensorStatus,
+            insulinStatus = statusState.insulinStatus,
+            cannulaStatus = statusState.cannulaStatus,
+            batteryStatus = statusState.batteryStatus,
+            showFill = statusState.showFill,
+            showPumpBatteryChange = statusState.showPumpBatteryChange,
             onSensorInsertClick = onSensorInsertClick,
             onFillClick = onFillClick,
             onInsulinChangeClick = onInsulinChangeClick,
-            onBatteryChangeClick = onBatteryChangeClick
+            onBatteryChangeClick = onBatteryChangeClick,
+            preferences = preferences,
+            config = config,
+            onCopyFromNightscout = { manageViewModel.copyStatusLightsFromNightscout() }
         )
 
         // Graph content - New Compose/Vico graphs
@@ -155,6 +177,7 @@ fun OverviewScreen(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun OverviewStatusSection(
     sensorStatus: StatusItem?,
@@ -166,12 +189,17 @@ private fun OverviewStatusSection(
     onSensorInsertClick: () -> Unit,
     onFillClick: () -> Unit,
     onInsulinChangeClick: () -> Unit,
-    onBatteryChangeClick: () -> Unit
+    onBatteryChangeClick: () -> Unit,
+    preferences: Preferences,
+    config: Config,
+    onCopyFromNightscout: () -> Unit
 ) {
     val items = listOfNotNull(cannulaStatus, insulinStatus, sensorStatus, batteryStatus)
     if (items.isEmpty()) return
 
     var expanded by rememberSaveable { mutableStateOf(false) }
+    var showSettingsSheet by rememberSaveable { mutableStateOf(false) }
+    val sheetState = rememberModalBottomSheetState()
 
     ElevatedCard(
         modifier = Modifier
@@ -188,22 +216,45 @@ private fun OverviewStatusSection(
         ) {
             // Header row — clickable to toggle
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { expanded = !expanded },
+                modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 if (expanded) {
+                    // Status title with clickable area for collapse
                     Text(
                         text = stringResource(app.aaps.core.ui.R.string.status),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.onSurface
+                        color = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier
+                            .weight(1f)
+                            .clickable { expanded = false }
                     )
-                    Spacer(modifier = Modifier.weight(1f))
+                    // Settings icon
+                    IconButton(
+                        onClick = { showSettingsSheet = true },
+                        modifier = Modifier.size(32.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Settings,
+                            contentDescription = stringResource(app.aaps.core.ui.R.string.settings),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                    // Collapse icon
+                    Icon(
+                        imageVector = Icons.Filled.ExpandLess,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.clickable { expanded = false }
+                    )
                 } else {
+                    // Collapsed: compact status items
                     FlowRow(
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier
+                            .weight(1f)
+                            .clickable { expanded = true },
                         horizontalArrangement = Arrangement.SpaceEvenly,
                         verticalArrangement = Arrangement.spacedBy(2.dp)
                     ) {
@@ -211,13 +262,14 @@ private fun OverviewStatusSection(
                             CompactStatusItem(item = item)
                         }
                     }
+                    // Expand icon
+                    Icon(
+                        imageVector = Icons.Filled.ExpandMore,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.clickable { expanded = true }
+                    )
                 }
-
-                Icon(
-                    imageVector = if (expanded) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                )
             }
 
             // Expanded: full status rows with action buttons
@@ -240,6 +292,128 @@ private fun OverviewStatusSection(
                 }
             }
         }
+    }
+
+    // Settings bottom sheet
+    if (showSettingsSheet) {
+        StatusLightsSettingsBottomSheet(
+            onDismiss = { showSettingsSheet = false },
+            preferences = preferences,
+            config = config,
+            onCopyFromNightscout = onCopyFromNightscout,
+            sheetState = sheetState
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun StatusLightsSettingsBottomSheet(
+    onDismiss: () -> Unit,
+    preferences: Preferences,
+    config: Config,
+    onCopyFromNightscout: () -> Unit,
+    sheetState: androidx.compose.material3.SheetState
+) {
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = sheetState,
+        containerColor = MaterialTheme.colorScheme.surface
+    ) {
+        StatusLightsSettingsContent(
+            preferences = preferences,
+            config = config,
+            onCopyFromNightscout = onCopyFromNightscout
+        )
+    }
+}
+
+@Composable
+private fun StatusLightsSettingsContent(
+    preferences: Preferences,
+    config: Config,
+    onCopyFromNightscout: () -> Unit
+) {
+    var showCopyDialog by remember { mutableStateOf(false) }
+
+    val statusLightsSettingsDef = PreferenceSubScreenDef(
+        key = "statuslights_overview_advanced",
+        titleResId = app.aaps.core.ui.R.string.statuslights,
+        items = listOf(
+            IntKey.OverviewCageWarning,
+            IntKey.OverviewCageCritical,
+            IntKey.OverviewIageWarning,
+            IntKey.OverviewIageCritical,
+            IntKey.OverviewSageWarning,
+            IntKey.OverviewSageCritical,
+            IntKey.OverviewSbatWarning,
+            IntKey.OverviewSbatCritical,
+            IntKey.OverviewResWarning,
+            IntKey.OverviewResCritical,
+            IntKey.OverviewBattWarning,
+            IntKey.OverviewBattCritical,
+            IntKey.OverviewBageWarning,
+            IntKey.OverviewBageCritical,
+        )
+    )
+
+    Column(
+        modifier = Modifier
+            .verticalScroll(rememberScrollState())
+            .padding(bottom = 24.dp)
+    ) {
+        // Header
+        Text(
+            text = stringResource(app.aaps.core.ui.R.string.statuslights),
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(horizontal = 24.dp, vertical = 12.dp)
+        )
+
+        // Settings list
+        ProvidePreferenceTheme {
+            AdaptivePreferenceList(
+                items = statusLightsSettingsDef.items,
+                preferences = preferences,
+                config = config
+            )
+        }
+
+        // "Copy from Nightscout" button
+        FilledTonalButton(
+            onClick = { showCopyDialog = true },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp)
+        ) {
+            Text(text = stringResource(app.aaps.core.ui.R.string.copy_existing_values))
+        }
+    }
+
+    // Confirmation dialog
+    if (showCopyDialog) {
+        AlertDialog(
+            onDismissRequest = { showCopyDialog = false },
+            title = { Text(stringResource(app.aaps.core.ui.R.string.statuslights)) },
+            text = { Text(stringResource(app.aaps.core.ui.R.string.copy_existing_values)) },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        onCopyFromNightscout()
+                        showCopyDialog = false
+                    }
+                ) {
+                    Text(stringResource(app.aaps.core.ui.R.string.ok))
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { showCopyDialog = false }
+                ) {
+                    Text(stringResource(app.aaps.core.ui.R.string.cancel))
+                }
+            }
+        )
     }
 }
 

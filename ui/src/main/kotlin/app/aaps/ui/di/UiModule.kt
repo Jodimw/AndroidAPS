@@ -6,7 +6,7 @@ import app.aaps.ui.activities.ErrorActivity
 import app.aaps.ui.activities.ProfileViewerActivity
 import app.aaps.ui.activities.QuickWizardListActivity
 import app.aaps.ui.activities.TDDStatsActivity
-import app.aaps.ui.compose.graphs.OverviewDataCacheImpl
+import app.aaps.ui.compose.overview.OverviewDataCacheImpl
 import app.aaps.ui.dialogs.BolusProgressDialog
 import app.aaps.ui.dialogs.CalibrationDialog
 import app.aaps.ui.dialogs.CarbsDialog

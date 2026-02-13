@@ -1,7 +1,7 @@
-package app.aaps.ui.compose.graphs
+package app.aaps.ui.compose.overview.graphs
 
-import androidx.compose.runtime.Immutable
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.runtime.Immutable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import app.aaps.core.interfaces.overview.graph.BgDataPoint

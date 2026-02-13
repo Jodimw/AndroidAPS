@@ -64,7 +64,7 @@ import app.aaps.receivers.ChargingStateReceiver
 import app.aaps.receivers.KeepAliveWorker
 import app.aaps.receivers.TimeDateOrTZChangeReceiver
 import app.aaps.ui.activityMonitor.ActivityMonitor
-import app.aaps.ui.compose.tempTarget.viewmodels.toJson
+import app.aaps.ui.compose.tempTarget.toJson
 import app.aaps.ui.widget.Widget
 import app.aaps.utils.configureLeakCanary
 import com.google.firebase.Firebase

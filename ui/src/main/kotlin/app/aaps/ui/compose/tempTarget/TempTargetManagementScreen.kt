@@ -63,8 +63,6 @@ import app.aaps.core.ui.compose.formatMinutesAsDuration
 import app.aaps.ui.R
 import app.aaps.ui.compose.components.ContentContainer
 import app.aaps.ui.compose.components.PageIndicatorDots
-import app.aaps.ui.compose.tempTarget.viewmodels.TempTargetManagementViewModel
-import app.aaps.ui.compose.tempTarget.viewmodels.getDisplayName
 import java.util.Calendar
 import kotlin.math.absoluteValue
 import app.aaps.core.ui.compose.icons.TempTarget as TempTargetIcon
@@ -480,7 +478,7 @@ fun TempTargetManagementScreen(
  */
 private fun buildActivationMessage(
     viewModel: TempTargetManagementViewModel,
-    uiState: app.aaps.ui.compose.tempTarget.viewmodels.TempTargetManagementUiState
+    uiState: TempTargetManagementUiState
 ): String {
     return buildString {
         append(viewModel.rh.gs(app.aaps.core.ui.R.string.temporary_target))

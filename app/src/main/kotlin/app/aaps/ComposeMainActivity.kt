@@ -49,7 +49,9 @@ import app.aaps.plugins.configuration.activities.DaggerAppCompatActivityWithResu
 import app.aaps.plugins.configuration.activities.SingleFragmentActivity
 import app.aaps.plugins.configuration.setupwizard.SetupWizardActivity
 import app.aaps.plugins.main.skins.SkinProvider
-import app.aaps.ui.compose.actions.viewmodels.ActionsViewModel
+import app.aaps.ui.compose.overview.manage.ManageViewModel
+import app.aaps.ui.compose.overview.statusLights.StatusViewModel
+import app.aaps.ui.compose.overview.treatments.TreatmentViewModel
 import app.aaps.ui.compose.carbsDialog.CarbsDialogScreen
 import app.aaps.ui.compose.carbsDialog.CarbsDialogViewModel
 import app.aaps.ui.compose.insulinDialog.InsulinDialogScreen
@@ -61,7 +63,7 @@ import app.aaps.ui.compose.careDialog.CareDialogViewModel
 import app.aaps.ui.compose.fillDialog.FillDialogScreen
 import app.aaps.ui.compose.fillDialog.FillDialogViewModel
 import app.aaps.ui.compose.fillDialog.FillPreselect
-import app.aaps.ui.compose.graphs.viewmodels.GraphViewModel
+import app.aaps.ui.compose.overview.graphs.GraphViewModel
 import app.aaps.ui.compose.main.MainMenuItem
 import app.aaps.ui.compose.main.MainScreen
 import app.aaps.ui.compose.main.MainViewModel
@@ -78,7 +80,7 @@ import app.aaps.ui.compose.runningMode.RunningModeScreen
 import app.aaps.ui.compose.stats.StatsScreen
 import app.aaps.ui.compose.stats.viewmodels.StatsViewModel
 import app.aaps.ui.compose.tempTarget.TempTargetManagementScreen
-import app.aaps.ui.compose.tempTarget.viewmodels.TempTargetManagementViewModel
+import app.aaps.ui.compose.tempTarget.TempTargetManagementViewModel
 import app.aaps.ui.compose.quickWizard.QuickWizardManagementScreen
 import app.aaps.ui.compose.quickWizard.viewmodels.QuickWizardManagementViewModel
 import app.aaps.ui.compose.treatments.TreatmentsScreen
@@ -108,7 +110,9 @@ class ComposeMainActivity : DaggerAppCompatActivityWithResult() {
 
     // ViewModels
     @Inject lateinit var mainViewModel: MainViewModel
-    @Inject lateinit var actionsViewModel: ActionsViewModel
+    @Inject lateinit var manageViewModel: ManageViewModel
+    @Inject lateinit var statusViewModel: StatusViewModel
+    @Inject lateinit var treatmentViewModel: TreatmentViewModel
     @Inject lateinit var graphViewModel: GraphViewModel
     @Inject lateinit var treatmentsViewModel: TreatmentsViewModel
     @Inject lateinit var tempTargetManagementViewModel: TempTargetManagementViewModel
@@ -170,7 +174,9 @@ class ComposeMainActivity : DaggerAppCompatActivityWithResult() {
                             aboutDialogData = if (state.showAboutDialog) {
                                 mainViewModel.buildAboutDialogData(getString(R.string.app_name))
                             } else null,
-                            actionsViewModel = actionsViewModel,
+                            manageViewModel = manageViewModel,
+                            statusViewModel = statusViewModel,
+                            treatmentViewModel = treatmentViewModel,
                             onMenuClick = { mainViewModel.openDrawer() },
                             onProfileManagementClick = {
                                 protectionCheck.requestProtection(ProtectionCheck.Protection.PREFERENCES) { result ->
@@ -317,7 +323,6 @@ class ComposeMainActivity : DaggerAppCompatActivityWithResult() {
                                     }
                                 }
                             },
-                            quickWizardItems = state.quickWizardItems,
                             onQuickWizardClick = { guid ->
                                 protectionCheck.requestProtection(ProtectionCheck.Protection.BOLUS) { result ->
                                     if (result == ProtectionResult.GRANTED) {
@@ -332,9 +337,6 @@ class ComposeMainActivity : DaggerAppCompatActivityWithResult() {
                             onCalibrationClick = if (xDripSource.isEnabled()) {
                                 { uiInteraction.runCalibrationDialog(supportFragmentManager) }
                             } else null,
-                            showCgmButton = xDripSource.isEnabled() || dexcomBoyda.isEnabled(),
-                            showCalibrationButton = xDripSource.isEnabled() && iobCobCalculator.ads.actualBg() != null,
-                            isDexcomSource = dexcomBoyda.isEnabled(),
                             onActionsError = { comment, title ->
                                 uiInteraction.runAlarm(comment, title, app.aaps.core.ui.R.raw.boluserror)
                             },
@@ -585,7 +587,7 @@ class ComposeMainActivity : DaggerAppCompatActivityWithResult() {
     override fun onResume() {
         super.onResume()
         // Profile and TempTarget state are now updated reactively via OverviewDataCache flows
-        actionsViewModel.refreshState()
+        manageViewModel.refreshState()
     }
 
     override fun onDestroy() {

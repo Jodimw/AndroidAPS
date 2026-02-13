@@ -1,6 +1,5 @@
 package app.aaps.ui.compose.main
 
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -21,11 +20,14 @@ import androidx.compose.ui.res.painterResource
 import app.aaps.core.data.plugin.PluginType
 import app.aaps.core.interfaces.plugin.PluginBase
 import app.aaps.core.ui.compose.AapsFab
-import app.aaps.ui.compose.actions.viewmodels.ActionsViewModel
+import app.aaps.ui.compose.overview.manage.ManageViewModel
 import app.aaps.ui.compose.alertDialogs.AboutAlertDialog
 import app.aaps.ui.compose.alertDialogs.AboutDialogData
-import app.aaps.ui.compose.graphs.viewmodels.GraphViewModel
+import app.aaps.ui.compose.overview.graphs.GraphViewModel
 import app.aaps.ui.compose.overview.OverviewScreen
+import app.aaps.ui.compose.overview.statusLights.StatusViewModel
+import app.aaps.ui.compose.overview.manage.ManageBottomSheet
+import app.aaps.ui.compose.overview.treatments.TreatmentBottomSheet
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -35,7 +37,9 @@ fun MainScreen(
     versionName: String,
     appIcon: Int,
     aboutDialogData: AboutDialogData?,
-    actionsViewModel: ActionsViewModel,
+    manageViewModel: ManageViewModel,
+    statusViewModel: StatusViewModel,
+    treatmentViewModel: app.aaps.ui.compose.overview.treatments.TreatmentViewModel,
     onMenuClick: () -> Unit,
     onProfileManagementClick: () -> Unit,
     onPreferencesClick: () -> Unit,
@@ -73,11 +77,7 @@ fun MainScreen(
     onTreatmentClick: () -> Unit,
     onCgmClick: (() -> Unit)?,
     onCalibrationClick: (() -> Unit)?,
-    quickWizardItems: List<QuickWizardItem> = emptyList(),
     onQuickWizardClick: ((String) -> Unit)? = null,
-    showCgmButton: Boolean,
-    showCalibrationButton: Boolean,
-    isDexcomSource: Boolean,
     onActionsError: (String, String) -> Unit,
     graphViewModel: GraphViewModel,
     preferences: app.aaps.core.keys.interfaces.Preferences,
@@ -157,10 +157,13 @@ fun MainScreen(
             bottomBar = {
                 MainNavigationBar(
                     onManageClick = {
-                        actionsViewModel.refreshState()
+                        manageViewModel.refreshState()
                         showManageSheet = true
                     },
-                    onTreatmentClick = { showTreatmentSheet = true },
+                    onTreatmentClick = {
+                        treatmentViewModel.refreshState()
+                        showTreatmentSheet = true
+                    },
                     quickWizardCount = uiState.quickWizardItems.size
                 )
             },
@@ -180,7 +183,8 @@ fun MainScreen(
                 runningModeText = uiState.runningModeText,
                 runningModeProgress = uiState.runningModeProgress,
                 graphViewModel = graphViewModel,
-                actionsViewModel = actionsViewModel,
+                manageViewModel = manageViewModel,
+                statusViewModel = statusViewModel,
                 onProfileManagementClick = onProfileManagementClick,
                 onTempTargetClick = onTempTargetClick,
                 onRunningModeClick = onRunningModeClick,
@@ -188,7 +192,9 @@ fun MainScreen(
                 onFillClick = onFillClick,
                 onInsulinChangeClick = onInsulinChangeClick,
                 onBatteryChangeClick = onBatteryChangeClick,
-                paddingValues = paddingValues
+                paddingValues = paddingValues,
+                preferences = preferences,
+                config = config
             )
         }
     }
@@ -215,19 +221,24 @@ fun MainScreen(
 
     // Treatment bottom sheet
     if (showTreatmentSheet) {
+        val treatmentState by treatmentViewModel.uiState.collectAsState()
         TreatmentBottomSheet(
             onDismiss = { showTreatmentSheet = false },
+            showCgm = treatmentState.showCgm,
+            showCalibration = treatmentState.showCalibration,
+            showTreatment = treatmentState.showTreatment,
+            showInsulin = treatmentState.showInsulin,
+            showCarbs = treatmentState.showCarbs,
+            showCalculator = treatmentState.showCalculator,
+            isDexcomSource = treatmentState.isDexcomSource,
+            showSettingsIcon = treatmentState.showSettingsIcon,
+            quickWizardItems = treatmentState.quickWizardItems,
             onCarbsClick = onCarbsClick,
             onInsulinClick = onInsulinClick,
             onTreatmentClick = onTreatmentClick,
             onCgmClick = onCgmClick,
             onCalibrationClick = onCalibrationClick,
-            quickWizardItems = quickWizardItems,
             onQuickWizardClick = onQuickWizardClick,
-            showCgmButton = showCgmButton,
-            showCalibrationButton = showCalibrationButton,
-            isDexcomSource = isDexcomSource,
-            simpleMode = uiState.isSimpleMode,
             preferences = preferences,
             config = config
         )
@@ -235,23 +246,23 @@ fun MainScreen(
 
     // Manage bottom sheet
     if (showManageSheet) {
-        val actionsState by actionsViewModel.uiState.collectAsState()
+        val manageState by manageViewModel.uiState.collectAsState()
         ManageBottomSheet(
             onDismiss = { showManageSheet = false },
-            showTempTarget = actionsState.showTempTarget,
-            showTempBasal = actionsState.showTempBasal,
-            showCancelTempBasal = actionsState.showCancelTempBasal,
-            showExtendedBolus = actionsState.showExtendedBolus,
-            showCancelExtendedBolus = actionsState.showCancelExtendedBolus,
-            showTddStats = actionsState.showTddStats,
-            cancelTempBasalText = actionsState.cancelTempBasalText,
-            cancelExtendedBolusText = actionsState.cancelExtendedBolusText,
-            customActions = actionsState.customActions,
+            showTempTarget = manageState.showTempTarget,
+            showTempBasal = manageState.showTempBasal,
+            showCancelTempBasal = manageState.showCancelTempBasal,
+            showExtendedBolus = manageState.showExtendedBolus,
+            showCancelExtendedBolus = manageState.showCancelExtendedBolus,
+            showTddStats = manageState.showTddStats,
+            cancelTempBasalText = manageState.cancelTempBasalText,
+            cancelExtendedBolusText = manageState.cancelExtendedBolusText,
+            customActions = manageState.customActions,
             onProfileManagementClick = onProfileManagementClick,
             onTempTargetClick = onTempTargetClick,
             onTempBasalClick = onTempBasalClick,
             onCancelTempBasalClick = {
-                actionsViewModel.cancelTempBasal { success, comment ->
+                manageViewModel.cancelTempBasal { success, comment ->
                     if (!success) {
                         onActionsError(comment, "Temp basal delivery error")
                     }
@@ -259,7 +270,7 @@ fun MainScreen(
             },
             onExtendedBolusClick = onExtendedBolusClick,
             onCancelExtendedBolusClick = {
-                actionsViewModel.cancelExtendedBolus { success, comment ->
+                manageViewModel.cancelExtendedBolus { success, comment ->
                     if (!success) {
                         onActionsError(comment, "Extended bolus delivery error")
                     }
@@ -273,7 +284,7 @@ fun MainScreen(
             onSiteRotationClick = onSiteRotationClick,
             onTddStatsClick = onTddStatsClick,
             onQuickWizardClick = onQuickWizardManagementClick,
-            onCustomActionClick = { actionsViewModel.executeCustomAction(it.customActionType) }
+            onCustomActionClick = { manageViewModel.executeCustomAction(it.customActionType) }
         )
     }
 

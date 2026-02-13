@@ -1,4 +1,4 @@
-package app.aaps.ui.compose.graphs
+package app.aaps.ui.compose.overview.graphs
 
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -17,7 +17,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import app.aaps.core.interfaces.overview.graph.BgDataPoint
 import app.aaps.core.ui.compose.AapsTheme
-import app.aaps.ui.compose.graphs.viewmodels.GraphViewModel
+import app.aaps.ui.compose.overview.graphs.BucketedPointProvider
 import com.patrykandpatrick.vico.compose.cartesian.CartesianChartHost
 import com.patrykandpatrick.vico.compose.cartesian.VicoScrollState
 import com.patrykandpatrick.vico.compose.cartesian.VicoZoomState

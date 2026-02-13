@@ -1,4 +1,4 @@
-package app.aaps.ui.compose.graphs
+package app.aaps.ui.compose.overview.graphs
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -15,6 +15,7 @@ import kotlinx.datetime.toLocalDateTime
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 
 /**
@@ -96,7 +97,7 @@ fun rememberTimeFormatter(minTimestamp: Long): CartesianValueFormatter {
  * @param minTimestamp The reference timestamp for calculating hour alignment
  * @return HorizontalAxis.ItemPlacer with 60-minute spacing aligned to whole hours
  */
-@OptIn(kotlin.time.ExperimentalTime::class)
+@OptIn(ExperimentalTime::class)
 @Composable
 fun rememberBottomAxisItemPlacer(minTimestamp: Long): HorizontalAxis.ItemPlacer {
     return remember(minTimestamp) {

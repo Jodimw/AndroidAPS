@@ -1,4 +1,4 @@
-package app.aaps.ui.compose.main
+package app.aaps.ui.compose.overview.treatments
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -52,6 +52,7 @@ import app.aaps.core.ui.compose.icons.XDrip
 import app.aaps.core.ui.compose.preference.AdaptivePreferenceList
 import app.aaps.core.ui.compose.preference.PreferenceSubScreenDef
 import app.aaps.core.ui.compose.preference.ProvidePreferenceTheme
+import app.aaps.ui.compose.main.QuickWizardItem
 import app.aaps.core.ui.R as CoreUiR
 import app.aaps.core.objects.R as ObjectsR
 
@@ -72,18 +73,26 @@ private val treatmentButtonSettingsDef = PreferenceSubScreenDef(
 @Composable
 fun TreatmentBottomSheet(
     onDismiss: () -> Unit,
+    // Visibility flags
+    showCgm: Boolean,
+    showCalibration: Boolean,
+    showTreatment: Boolean,
+    showInsulin: Boolean,
+    showCarbs: Boolean,
+    showCalculator: Boolean,
+    isDexcomSource: Boolean,
+    showSettingsIcon: Boolean,
+    // QuickWizard
+    quickWizardItems: List<QuickWizardItem>,
+    // Callbacks
     onCarbsClick: () -> Unit,
     onInsulinClick: (() -> Unit)? = null,
     onTreatmentClick: (() -> Unit)? = null,
     onCgmClick: (() -> Unit)? = null,
     onCalibrationClick: (() -> Unit)? = null,
     onCalculatorClick: (() -> Unit)? = null,
-    quickWizardItems: List<QuickWizardItem> = emptyList(),
     onQuickWizardClick: ((String) -> Unit)? = null,
-    showCgmButton: Boolean = false,
-    showCalibrationButton: Boolean = false,
-    isDexcomSource: Boolean = false,
-    simpleMode: Boolean = false,
+    // For settings screen
     preferences: Preferences? = null,
     config: Config? = null
 ) {
@@ -112,14 +121,14 @@ fun TreatmentBottomSheet(
                 onCalculatorClick = onCalculatorClick,
                 quickWizardItems = quickWizardItems,
                 onQuickWizardClick = onQuickWizardClick,
-                showCgm = showCgmButton && preferences?.get(BooleanKey.OverviewShowCgmButton) ?: false,
-                showCalibration = showCalibrationButton && preferences?.get(BooleanKey.OverviewShowCalibrationButton) ?: false,
-                showTreatment = preferences?.get(BooleanKey.OverviewShowTreatmentButton) ?: true,
-                showInsulin = preferences?.get(BooleanKey.OverviewShowInsulinButton) ?: true,
-                showCarbs = preferences?.get(BooleanKey.OverviewShowCarbsButton) ?: true,
-                showCalculator = preferences?.get(BooleanKey.OverviewShowWizardButton) ?: true,
+                showCgm = showCgm,
+                showCalibration = showCalibration,
+                showTreatment = showTreatment,
+                showInsulin = showInsulin,
+                showCarbs = showCarbs,
+                showCalculator = showCalculator,
                 isDexcomSource = isDexcomSource,
-                showSettingsIcon = !simpleMode && preferences != null && config != null,
+                showSettingsIcon = showSettingsIcon,
                 onSettingsClick = { showSettings = true }
             )
         }
@@ -217,7 +226,7 @@ private fun TreatmentSelectionContent(
                 colors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.surface),
                 modifier = if (itemEnabled) Modifier.clickable {
                     onDismiss()
-                    onQuickWizardClick!!(item.guid)
+                    onQuickWizardClick(item.guid)
                 } else Modifier
             )
         }
@@ -251,7 +260,7 @@ private fun TreatmentSelectionContent(
                 colors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.surface),
                 modifier = if (cgmEnabled) Modifier.clickable {
                     onDismiss()
-                    onCgmClick!!()
+                    onCgmClick()
                 } else Modifier
             )
         }
@@ -279,7 +288,7 @@ private fun TreatmentSelectionContent(
                 colors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.surface),
                 modifier = if (calibrationEnabled) Modifier.clickable {
                     onDismiss()
-                    onCalibrationClick!!()
+                    onCalibrationClick()
                 } else Modifier
             )
         }
@@ -314,7 +323,7 @@ private fun TreatmentSelectionContent(
                 colors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.surface),
                 modifier = if (treatmentEnabled) Modifier.clickable {
                     onDismiss()
-                    onTreatmentClick!!()
+                    onTreatmentClick()
                 } else Modifier
             )
         }
@@ -349,7 +358,7 @@ private fun TreatmentSelectionContent(
                 colors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.surface),
                 modifier = if (insulinEnabled) Modifier.clickable {
                     onDismiss()
-                    onInsulinClick!!()
+                    onInsulinClick()
                 } else Modifier
             )
         }
@@ -415,7 +424,7 @@ private fun TreatmentSelectionContent(
                 colors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.surface),
                 modifier = if (calculatorEnabled) Modifier.clickable {
                     onDismiss()
-                    onCalculatorClick!!()
+                    onCalculatorClick()
                 } else Modifier
             )
         }

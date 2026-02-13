@@ -250,35 +250,6 @@ class OverviewPlugin @Inject constructor(
             ),
 
             BooleanKey.OverviewShowNotesInDialogs,
-
-            // Status lights subscreen
-            PreferenceSubScreenDef(
-                key = "statuslights_overview_advanced",
-                titleResId = app.aaps.core.ui.R.string.statuslights,
-                items = listOf(
-                    BooleanKey.OverviewShowStatusLights,
-                    IntKey.OverviewCageWarning,
-                    IntKey.OverviewCageCritical,
-                    IntKey.OverviewIageWarning,
-                    IntKey.OverviewIageCritical,
-                    IntKey.OverviewSageWarning,
-                    IntKey.OverviewSageCritical,
-                    IntKey.OverviewSbatWarning,
-                    IntKey.OverviewSbatCritical,
-                    IntKey.OverviewResWarning,
-                    IntKey.OverviewResCritical,
-                    IntKey.OverviewBattWarning,
-                    IntKey.OverviewBattCritical,
-                    IntKey.OverviewBageWarning,
-                    IntKey.OverviewBageCritical,
-                    OverviewIntentKey.CopyStatusLightsFromNS.withDialog(
-                        titleResId = app.aaps.core.ui.R.string.statuslights,
-                        messageResId = R.string.copy_existing_values,
-                        onConfirm = { this@OverviewPlugin.applyStatusLightsFromNsExec() }
-                    )
-                )
-            ),
-
             IntKey.OverviewBolusPercentage,
             IntKey.OverviewResetBolusPercentageTime,
             BooleanKey.OverviewUseBolusAdvisor,
@@ -398,7 +369,6 @@ class OverviewPlugin @Inject constructor(
                 activePlugin.activePump
                 key = "statuslights_overview_advanced"
                 title = rh.gs(app.aaps.core.ui.R.string.statuslights)
-                addPreference(AdaptiveSwitchPreference(ctx = context, booleanKey = BooleanKey.OverviewShowStatusLights, title = app.aaps.core.keys.R.string.pref_title_show_status_lights))
                 addPreference(AdaptiveIntPreference(ctx = context, intKey = IntKey.OverviewCageWarning, title = app.aaps.core.keys.R.string.pref_title_cage_warning))
                 addPreference(AdaptiveIntPreference(ctx = context, intKey = IntKey.OverviewCageCritical, title = app.aaps.core.keys.R.string.pref_title_cage_critical))
                 addPreference(AdaptiveIntPreference(ctx = context, intKey = IntKey.OverviewIageWarning, title = app.aaps.core.keys.R.string.pref_title_iage_warning))
@@ -456,7 +426,7 @@ class OverviewPlugin @Inject constructor(
     }
 
     override fun applyStatusLightsFromNs(context: Context?) {
-        if (context != null) uiInteraction.showOkCancelDialog(context = context, title = app.aaps.core.ui.R.string.statuslights, message = R.string.copy_existing_values, ok = { applyStatusLightsFromNsExec() })
+        if (context != null) uiInteraction.showOkCancelDialog(context = context, title = app.aaps.core.ui.R.string.statuslights, message = app.aaps.core.ui.R.string.copy_existing_values, ok = { applyStatusLightsFromNsExec() })
         else applyStatusLightsFromNsExec()
     }
 

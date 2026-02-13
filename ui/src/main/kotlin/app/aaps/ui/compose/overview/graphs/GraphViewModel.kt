@@ -1,4 +1,4 @@
-package app.aaps.ui.compose.graphs.viewmodels
+package app.aaps.ui.compose.overview.graphs
 
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.Immutable
@@ -20,6 +20,7 @@ import app.aaps.core.keys.UnitDoubleKey
 import app.aaps.core.keys.interfaces.Preferences
 import app.aaps.core.objects.extensions.displayText
 import app.aaps.core.objects.extensions.round
+import app.aaps.core.ui.R
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -152,7 +153,7 @@ class GraphViewModel @Inject constructor(
     val iobText: StateFlow<String> = iobCobTicker.combine(cache.iobGraphFlow) { _, _ ->
         val bolusIob = iobCobCalculator.calculateIobFromBolus().round()
         val basalIob = iobCobCalculator.calculateIobFromTempBasalsIncludingConvertedExtended().round()
-        rh.gs(app.aaps.core.ui.R.string.format_insulin_units, bolusIob.iob + basalIob.basaliob)
+        rh.gs(R.string.format_insulin_units, bolusIob.iob + basalIob.basaliob)
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
@@ -161,7 +162,7 @@ class GraphViewModel @Inject constructor(
 
     val cobUiState: StateFlow<CobUiState> = iobCobTicker.combine(cache.cobGraphFlow) { _, _ ->
         var cobText = iobCobCalculator.getCobInfo("GraphViewModel COB").displayText(rh, decimalFormatter)
-            ?: rh.gs(app.aaps.core.ui.R.string.value_unavailable_short)
+            ?: rh.gs(R.string.value_unavailable_short)
         var carbsReq = 0
 
         val constraintsProcessed = loop.lastRun?.constraintsProcessed
@@ -170,7 +171,7 @@ class GraphViewModel @Inject constructor(
             if (constraintsProcessed.carbsReq > 0) {
                 val lastCarbsTime = persistenceLayer.getNewestCarbs()?.timestamp ?: 0L
                 if (lastCarbsTime < lastRun.lastAPSRun) {
-                    cobText += "\n${constraintsProcessed.carbsReq} ${rh.gs(app.aaps.core.ui.R.string.required)}"
+                    cobText += "\n${constraintsProcessed.carbsReq} ${rh.gs(R.string.required)}"
                 }
                 carbsReq = constraintsProcessed.carbsReq
             }

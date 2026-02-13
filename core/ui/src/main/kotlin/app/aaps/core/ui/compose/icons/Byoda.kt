@@ -54,7 +54,7 @@ val Byoda: ImageVector by lazy {
 
 @Preview(showBackground = true)
 @Composable
-private fun byodaPreview() {
+private fun ByodaPreview() {
     Icon(
         imageVector = Byoda,
         contentDescription = null,
