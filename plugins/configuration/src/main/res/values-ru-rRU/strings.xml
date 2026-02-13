@@ -48,6 +48,7 @@
     <string name="unattended_settings_export">Автоматический экспорт настроек</string>
     <string name="unattended_settings_export_summary">Включение данного параметра безопасно сохранит ваш пароль на этом телефоне</string>
     <string name="identification">Идентификация (электронная почта, ник в Facebook или Discord и т. п)</string>
+    <!-- Provider-agnostic cloud export/import strings -->
     <string name="request">Запрос</string>
     <string name="apsmode_title">Режим APS</string>
     <string name="error_asking_for_permissions">Ошибка при запросе разрешения</string>
@@ -166,4 +167,9 @@
     <string name="metadata_format_other">Неизвестный формат экспорта</string>
     <string name="reset_aps_results">Сбросить результаты APS</string>
     <string name="error_accessing_filesystem_select_aaps_directory_properly">Ошибка доступа к файловой системе. Выберите каталог AAPS правильно.</string>
+    <!-- Google Drive Storage -->
+    <!-- Import source selection dialog -->
+    <!-- Google Drive error messages (used by GoogleDriveManager) -->
+    <!-- Provider-agnostic cloud storage strings -->
+    <!-- Authorization status strings -->
 </resources>
