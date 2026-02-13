@@ -177,7 +177,7 @@ class WizardResultFragment : Fragment() {
         // New IOB = Total Insulin - Current IOB (because IOB is subtracted in wizard)
         // Only calculate if IOB was actually used (totalIob is not NaN means it was included)
         val newIob = if (!totalIob.isNaN()) {
-            totalInsulin - totalIob
+            totalInsulin - totalIob // totalIob is negative so this is addition
         } else {
             null  // Don't show New IOB if IOB wasn't used in calculation
         }
