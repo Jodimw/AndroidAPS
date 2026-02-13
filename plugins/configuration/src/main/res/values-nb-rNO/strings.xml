@@ -48,6 +48,7 @@
     <string name="unattended_settings_export">Uovervåket eksport av innstillinger</string>
     <string name="unattended_settings_export_summary">Aktivering av dette vil lagre ditt passord sikkert på din telefon</string>
     <string name="identification">Identifikasjon (e-post, Facebook eller Discord-nick osv.)</string>
+    <!-- Provider-agnostic cloud export/import strings -->
     <string name="request">Forespørsel</string>
     <string name="apsmode_title">APS modus</string>
     <string name="error_asking_for_permissions">Feil under spørring etter tillatelser</string>
@@ -166,4 +167,9 @@
     <string name="metadata_format_other">Ukjent eksportformat</string>
     <string name="reset_aps_results">Tilbakestill APS-resultater</string>
     <string name="error_accessing_filesystem_select_aaps_directory_properly">Feil ved tilgang til filsystem. Velg AAPS-mappe riktig.</string>
+    <!-- Google Drive Storage -->
+    <!-- Import source selection dialog -->
+    <!-- Google Drive error messages (used by GoogleDriveManager) -->
+    <!-- Provider-agnostic cloud storage strings -->
+    <!-- Authorization status strings -->
 </resources>
