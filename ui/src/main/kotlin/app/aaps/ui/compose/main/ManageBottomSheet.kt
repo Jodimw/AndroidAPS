@@ -6,7 +6,9 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -59,6 +61,7 @@ fun ManageBottomSheet(
     onAnnouncementClick: () -> Unit,
     onSiteRotationClick: () -> Unit,
     onTddStatsClick: () -> Unit,
+    onQuickWizardClick: () -> Unit,
     onCustomActionClick: (CustomAction) -> Unit
 ) {
     val sheetState = rememberModalBottomSheetState()
@@ -68,9 +71,13 @@ fun ManageBottomSheet(
         sheetState = sheetState,
         containerColor = MaterialTheme.colorScheme.surface
     ) {
-        Column(modifier = Modifier.padding(bottom = 24.dp)) {
-            // Section: Actions
-            SectionHeader(stringResource(CoreUiR.string.actions))
+        Column(
+            modifier = Modifier
+                .verticalScroll(rememberScrollState())
+                .padding(bottom = 24.dp)
+        ) {
+            // Section: Manage
+            SectionHeader(stringResource(CoreUiR.string.manage))
 
             // Profile Management
             ManageItem(
@@ -93,6 +100,15 @@ fun ManageBottomSheet(
                     onClick = onTempTargetClick
                 )
             }
+
+            ManageItem(
+                text = stringResource(CoreUiR.string.quickwizard_managemnt),
+                description = stringResource(CoreUiR.string.manage_quickwizard_desc),
+                iconPainter = painterResource(ObjectsR.drawable.ic_quick_wizard),
+                color = AapsTheme.elementColors.carbs,
+                onDismiss = onDismiss,
+                onClick = onQuickWizardClick
+            )
 
             // Temp Basal or Cancel Temp Basal
             if (showCancelTempBasal) {

@@ -17,11 +17,10 @@ datastorePreferences = "1.2.0"
 annotation = "1.9.1"
 
 # Compose
-activityCompose = "1.12.3"
-composeBom = "2026.01.01"
+activityCompose = "1.12.4"
+composeBom = "2026.02.00"
 navigationCompose = "2.9.7"
 lifecycleRuntimeKtx = "2.10.0"
-materialPullRefresh = "1.2.0"
 vico = "3.0.0-beta.3"
 uiToolingPreview = "1.10.2"
 uiTooling = "1.10.2"
@@ -33,7 +32,6 @@ moduleDependencyGraph = { id = "com.savvasdalkitsis.module-dependency-graph", ve
 ksp = { id = "com.google.devtools.ksp", version = "2.3.5" }
 android-test = { id = "com.android.test", version.ref = "gradlePlugin" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
-kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 
 [libraries]
@@ -93,7 +91,7 @@ kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-cor
 kotlinx-datetime = { group = "org.jetbrains.kotlinx", name = "kotlinx-datetime", version = "0.7.1" }
 
 
-androidx-activity = { group = "androidx.activity", name = "activity-ktx", version = "1.12.3" }
+androidx-activity = { group = "androidx.activity", name = "activity-ktx", version = "1.12.4" }
 androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version = "1.7.1" }
 androidx-biometric = { group = "androidx.biometric", name = "biometric", version = "1.1.0" }
 androidx-browser = { group = "androidx.browser", name = "browser", version = "1.9.0" }

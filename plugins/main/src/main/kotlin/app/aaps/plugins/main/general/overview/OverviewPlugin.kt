@@ -239,8 +239,6 @@ class OverviewPlugin @Inject constructor(
         items = listOf(
             BooleanKey.OverviewKeepScreenOn,
 
-            OverviewIntentKey.QuickWizardSettings.withActivity(uiInteraction.quickWizardListActivity),
-
             // Range settings subscreen
             PreferenceSubScreenDef(
                 key = "range_settings",

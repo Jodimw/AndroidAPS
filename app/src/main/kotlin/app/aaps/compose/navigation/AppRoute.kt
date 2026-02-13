@@ -19,6 +19,7 @@ sealed class AppRoute(val route: String) {
 
     data object Treatments : AppRoute("treatments")
     data object TempTargetManagement : AppRoute("temp_target_management")
+    data object QuickWizardManagement : AppRoute("quick_wizard_management")
     data object Stats : AppRoute("stats")
     data object ProfileHelper : AppRoute("profile_helper")
     data object Preferences : AppRoute("preferences")

@@ -61,6 +61,7 @@ fun MainScreen(
     onExtendedBolusClick: () -> Unit,
     onHistoryBrowserClick: () -> Unit,
     onTddStatsClick: () -> Unit,
+    onQuickWizardManagementClick: () -> Unit,
     onBgCheckClick: () -> Unit,
     onNoteClick: () -> Unit,
     onExerciseClick: () -> Unit,
@@ -271,6 +272,7 @@ fun MainScreen(
             onAnnouncementClick = onAnnouncementClick,
             onSiteRotationClick = onSiteRotationClick,
             onTddStatsClick = onTddStatsClick,
+            onQuickWizardClick = onQuickWizardManagementClick,
             onCustomActionClick = { actionsViewModel.executeCustomAction(it.customActionType) }
         )
     }

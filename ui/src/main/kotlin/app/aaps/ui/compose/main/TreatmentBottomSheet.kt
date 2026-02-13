@@ -8,7 +8,9 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
@@ -145,7 +147,11 @@ private fun TreatmentSelectionContent(
     showSettingsIcon: Boolean,
     onSettingsClick: () -> Unit
 ) {
-    Column(modifier = Modifier.padding(bottom = 24.dp)) {
+    Column(
+        modifier = Modifier
+            .verticalScroll(rememberScrollState())
+            .padding(bottom = 24.dp)
+    ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -422,7 +428,11 @@ private fun TreatmentSettingsContent(
     config: Config,
     onBack: () -> Unit
 ) {
-    Column(modifier = Modifier.padding(bottom = 24.dp)) {
+    Column(
+        modifier = Modifier
+            .verticalScroll(rememberScrollState())
+            .padding(bottom = 24.dp)
+    ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()

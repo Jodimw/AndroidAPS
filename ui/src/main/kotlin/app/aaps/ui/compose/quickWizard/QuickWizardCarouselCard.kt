@@ -1,0 +1,148 @@
+package app.aaps.ui.compose.quickWizard
+
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import app.aaps.core.interfaces.utils.DateUtil
+import app.aaps.core.objects.wizard.QuickWizardEntry
+import app.aaps.core.ui.compose.AapsTheme
+import app.aaps.core.ui.R as CoreR
+
+/**
+ * Carousel card displaying a QuickWizard entry.
+ * Shows button text, carbs (with eCarbs if enabled), and valid time range.
+ *
+ * @param entry The QuickWizard entry to display
+ * @param isSelected Whether this card is currently selected
+ * @param dateUtil For time formatting
+ * @param modifier Modifier for the card
+ */
+@Composable
+fun QuickWizardCarouselCard(
+    entry: QuickWizardEntry,
+    isSelected: Boolean,
+    dateUtil: DateUtil,
+    modifier: Modifier = Modifier
+) {
+    // Card colors
+    val containerColor = if (isSelected) {
+        MaterialTheme.colorScheme.secondaryContainer
+    } else {
+        MaterialTheme.colorScheme.surfaceVariant
+    }
+
+    val contentColor = if (isSelected) {
+        MaterialTheme.colorScheme.onSecondaryContainer
+    } else {
+        MaterialTheme.colorScheme.onSurfaceVariant
+    }
+
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = containerColor,
+            contentColor = contentColor
+        ),
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = if (isSelected) 4.dp else 2.dp
+        )
+    ) {
+        Box(
+            modifier = Modifier.fillMaxSize()
+        ) {
+            // Icon in top left corner
+            Icon(
+                painter = painterResource(app.aaps.core.objects.R.drawable.ic_quick_wizard),
+                contentDescription = null,
+                tint = AapsTheme.elementColors.carbs,
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .padding(16.dp)
+                    .size(28.dp)
+            )
+
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+            // Button Text (main title)
+            Text(
+                text = entry.buttonText().ifEmpty { stringResource(CoreR.string.manage) },
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Carbs display
+            val carbsText = buildCarbsText(entry)
+            Text(
+                text = carbsText,
+                style = MaterialTheme.typography.titleLarge,
+                textAlign = TextAlign.Center,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Time range
+            val fromTime = dateUtil.timeString(dateUtil.secondsOfTheDayToMillisecondsOfHoursAndMinutes(entry.validFrom()))
+            val toTime = dateUtil.timeString(dateUtil.secondsOfTheDayToMillisecondsOfHoursAndMinutes(entry.validTo()))
+            Text(
+                text = "$fromTime - $toTime",
+                style = MaterialTheme.typography.bodyMedium,
+                color = contentColor.copy(alpha = 0.7f),
+                textAlign = TextAlign.Center
+            )
+            }
+        }
+    }
+}
+
+/**
+ * Build carbs display text with eCarbs info if enabled
+ */
+private fun buildCarbsText(entry: QuickWizardEntry): String {
+    val carbs = entry.carbs()
+
+    return if (entry.useEcarbs() == QuickWizardEntry.YES) {
+        val carbs2 = entry.carbs2()
+        val duration = entry.duration()
+        val time = entry.time()
+        "${carbs}g + ${carbs2}g / ${duration}h → ${time}min"
+    } else {
+        "${carbs}g"
+    }
+}

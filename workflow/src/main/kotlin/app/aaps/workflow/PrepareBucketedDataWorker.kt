@@ -51,7 +51,7 @@ class PrepareBucketedDataWorker(
     override suspend fun doWorkAndLog(): Result {
 
         // MIGRATION: KEEP - Data retrieval logic
-        val data = dataWorkerStorage.pickupObject(inputData.getLong(DataWorkerStorage.STORE_KEY, -1)) as PrepareBucketedData?
+        val data = dataWorkerStorage.pickupObject(inputData.getLong(DataWorkerStorage.STORE_KEY, -1)) as? PrepareBucketedData?
             ?: return Result.failure(workDataOf("Error" to "missing input data"))
 
         // MIGRATION: DELETE - Get time range from old OverviewData

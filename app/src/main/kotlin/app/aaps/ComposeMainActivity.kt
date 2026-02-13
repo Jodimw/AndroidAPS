@@ -79,6 +79,8 @@ import app.aaps.ui.compose.stats.StatsScreen
 import app.aaps.ui.compose.stats.viewmodels.StatsViewModel
 import app.aaps.ui.compose.tempTarget.TempTargetManagementScreen
 import app.aaps.ui.compose.tempTarget.viewmodels.TempTargetManagementViewModel
+import app.aaps.ui.compose.quickWizard.QuickWizardManagementScreen
+import app.aaps.ui.compose.quickWizard.viewmodels.QuickWizardManagementViewModel
 import app.aaps.ui.compose.treatments.TreatmentsScreen
 import app.aaps.ui.compose.treatments.viewmodels.TreatmentsViewModel
 import io.reactivex.rxjava3.disposables.CompositeDisposable
@@ -110,6 +112,7 @@ class ComposeMainActivity : DaggerAppCompatActivityWithResult() {
     @Inject lateinit var graphViewModel: GraphViewModel
     @Inject lateinit var treatmentsViewModel: TreatmentsViewModel
     @Inject lateinit var tempTargetManagementViewModel: TempTargetManagementViewModel
+    @Inject lateinit var quickWizardManagementViewModel: QuickWizardManagementViewModel
     @Inject lateinit var statsViewModel: StatsViewModel
     @Inject lateinit var profileHelperViewModel: ProfileHelperViewModel
     @Inject lateinit var profileEditorViewModel: ProfileEditorViewModel
@@ -268,6 +271,13 @@ class ComposeMainActivity : DaggerAppCompatActivityWithResult() {
                             onTddStatsClick = {
                                 startActivity(Intent(this@ComposeMainActivity, uiInteraction.tddStatsActivity))
                             },
+                            onQuickWizardManagementClick = {
+                                protectionCheck.requestProtection(ProtectionCheck.Protection.BOLUS) { result ->
+                                    if (result == ProtectionResult.GRANTED) {
+                                        navController.navigate(AppRoute.QuickWizardManagement.route)
+                                    }
+                                }
+                            },
                             onBgCheckClick = {
                                 navController.navigate(AppRoute.CareDialog.createRoute(UiInteraction.EventType.BGCHECK.ordinal))
                             },
@@ -356,6 +366,20 @@ class ComposeMainActivity : DaggerAppCompatActivityWithResult() {
                         TempTargetManagementScreen(
                             viewModel = tempTargetManagementViewModel,
                             onNavigateBack = { navController.popBackStack() }
+                        )
+                    }
+
+                    composable(AppRoute.QuickWizardManagement.route) {
+                        QuickWizardManagementScreen(
+                            viewModel = quickWizardManagementViewModel,
+                            onNavigateBack = { navController.popBackStack() },
+                            onExecuteClick = { guid ->
+                                protectionCheck.requestProtection(ProtectionCheck.Protection.BOLUS) { result ->
+                                    if (result == ProtectionResult.GRANTED) {
+                                        mainViewModel.executeQuickWizard(this@ComposeMainActivity, guid)
+                                    }
+                                }
+                            }
                         )
                     }
 
