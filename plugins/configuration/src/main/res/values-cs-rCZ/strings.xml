@@ -168,6 +168,7 @@
     <string name="reset_aps_results">Resetovat výsledky APS</string>
     <string name="error_accessing_filesystem_select_aaps_directory_properly">Chyba při přístupu k souborům. Vyberte adresář AAPS.</string>
     <!-- Google Drive Storage -->
+    <string name="cloud_auth_success">Ověření cloudového úložiště proběhlo úspěšně</string>
     <!-- Import source selection dialog -->
     <!-- Google Drive error messages (used by GoogleDriveManager) -->
     <!-- Provider-agnostic cloud storage strings -->
