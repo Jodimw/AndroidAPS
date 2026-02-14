@@ -219,7 +219,46 @@
     <string name="load_more_with_count">Tải thêm %1$d (đã tải %2$d)</string>
     <string name="loading">Đang tải…</string>
     <string name="loading_progress">Đang tải %1$d của %2$d…</string>
+    <string name="loading_file_progress">Đang tải %1$s (%2$d/%3$d)…</string>
+    <string name="logs_uploaded_to_cloud">Đã tải nhật ký lên đám mây thành công</string>
+    <string name="logs_upload_failed">Tải nhật ký lên đám mây thất bại</string>
+    <string name="logs_upload_error">Đã xảy ra lỗi khi tải nhật ký lên lưu trữ đám mây</string>
+    <string name="csv_upload_failed">Tải dữ liệu CSV lên đám mây thất bại</string>
+    <string name="csv_upload_error">Đã xảy ra lỗi khi tải CSV lên đám mây</string>
+    <string name="export_options_updated">Đã cập nhật tùy chọn Xuất dữ liệu</string>
+    <string name="no_settings_files_found">Không có tệp cài đặt trên đám mây</string>
+    <string name="clear_action">Xóa Cài Đặt</string>
+    <string name="clear_cloud_settings">Xóa Cài Đặt Đám mây</string>
+    <string name="clear_cloud_settings_message">Sẽ chuyển sang lưu trữ cục bộ và xóa xác thực. Tiếp tục?</string>
+    <string name="uploading_to_cloud">Đang tải lên Đám mây...</string>
+    <string name="cloud_directory_path">Thư mục Đám mây: %1$s</string>
+    <string name="warning_wrong_directory_selected">Đã chọn sai thư mục</string>
+    <string name="warning_wrong_directory_message">Bạn đã chọn thư mục con “%1$s” thay vì thư mục gốc của AAPS. Vui lòng chọn thư mục AAPS cấp cha. Ứng dụng sẽ tự động tạo và quản lý các thư mục con.</string>
     <!-- Google Drive error messages (used by GoogleDriveManager) -->
+    <string name="google_drive_token_refresh_failed">Không thể làm mới mã truy cập Google Drive</string>
+    <string name="google_drive_token_refresh_error">Không thể làm mới mã truy cập Google Drive: %1$s</string>
+    <string name="google_drive_connection_test_failed">Kiểm tra kết nối Google Drive thất bại</string>
+    <string name="google_drive_connect_error">Không thể kết nối tới Google Drive: %1$s</string>
+    <string name="google_drive_list_folders_failed">Không thể liệt kê các thư mục Google Drive</string>
+    <string name="google_drive_list_folders_error">Lỗi khi liệt kê thư mục: %1$s</string>
+    <string name="google_drive_upload_no_id">Đã tải lên nhưng không nhận được ID</string>
+    <string name="google_drive_upload_verify_failed">Xác minh tải lên thất bại</string>
+    <string name="google_drive_upload_failed">Tải lên thất bại: %1$s</string>
+    <string name="google_drive_upload_error">Lỗi khi tải tệp lên: %1$s</string>
+    <string name="google_drive_folder_access_error">Không thể tạo hoặc truy cập thư mục đích: %1$s</string>
+    <string name="google_drive_list_settings_failed">Không thể liệt kê các tệp cài đặt</string>
+    <string name="google_drive_list_settings_error">Lỗi khi liệt kê tệp cài đặt: %1$s</string>
+    <string name="google_drive_download_failed">Không thể tải tệp xuống</string>
+    <string name="google_drive_download_error">Lỗi khi tải tệp xuống: %1$s</string>
     <!-- Provider-agnostic cloud storage strings -->
+    <string name="cloud_authorization_title">Xác thực %1$s</string>
+    <string name="cloud_authorization_message">Trang xác thực %1$s đã được mở trong trình duyệt của bạn.\n\nVui lòng hoàn tất việc xác thực, sau đó quay lại ứng dụng này.\n\nHộp thoại này sẽ tự động đóng khi quá trình xác thực hoàn tất.</string>
+    <string name="cloud_auth_start_failed">Không thể bắt đầu quá trình xác thực</string>
+    <string name="cloud_auth_cancelled">Đã hủy xác thực</string>
+    <string name="cloud_auth_timeout">Xác thực đã hết hạn, vui lòng thử lại</string>
+    <string name="cloud_token_expired_or_invalid">Quyền xác thực lưu trữ đám mây đã hết hạn hoặc không hợp lệ. Vui lòng xác thực lại.</string>
     <!-- Authorization status strings -->
+    <string name="authorization_status">Trạng thái xác thực</string>
+    <string name="google_drive_authorized">Đã xác thực Google Drive</string>
+    <string name="google_drive_reauth_required">Vui lòng xóa cài đặt và xác thực lại Google Drive</string>
 </resources>
