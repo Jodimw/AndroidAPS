@@ -232,6 +232,8 @@
     <string name="clear_cloud_settings_message">這將切換到本機儲存並清除授權。是否繼續？</string>
     <string name="uploading_to_cloud">正在上傳到雲端…</string>
     <string name="cloud_directory_path">雲端目錄：%1$s</string>
+    <string name="warning_wrong_directory_selected">目錄選擇錯誤</string>
+    <string name="warning_wrong_directory_message">你選的是「%1$s」這個子目錄，而不是 AAPS 的根目錄。請改選上一層的 AAPS 目錄。App 會自動建立並管理子目錄。</string>
     <!-- Google Drive error messages (used by GoogleDriveManager) -->
     <string name="google_drive_token_refresh_failed">無法重新整理 Google Drive 存取權杖</string>
     <string name="google_drive_token_refresh_error">無法重新整理 Google Drive 存取權杖：%1$s</string>
