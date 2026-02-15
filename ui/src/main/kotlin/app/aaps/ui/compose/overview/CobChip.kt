@@ -1,0 +1,99 @@
+package app.aaps.ui.compose.overview
+
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import app.aaps.core.ui.compose.AapsTheme
+import app.aaps.core.ui.compose.icons.Carbs
+import app.aaps.ui.compose.overview.graphs.CobUiState
+
+@Composable
+internal fun CobChip(
+    state: CobUiState,
+    modifier: Modifier = Modifier
+) {
+    val alphaModifier = if (state.carbsReq > 0) {
+        val infiniteTransition = rememberInfiniteTransition(label = "cobBlink")
+        val alpha by infiniteTransition.animateFloat(
+            initialValue = 1f,
+            targetValue = 0.2f,
+            animationSpec = infiniteRepeatable(
+                animation = tween(durationMillis = 800),
+                repeatMode = RepeatMode.Reverse
+            ),
+            label = "cobAlpha"
+        )
+        Modifier.alpha(alpha)
+    } else {
+        Modifier
+    }
+
+    val hasValue = state.cobValue != 0.0
+    Surface(
+        shape = RoundedCornerShape(8.dp),
+        color = if (hasValue) AapsTheme.elementColors.carbs.copy(alpha = 0.2f) else Color.Transparent,
+        modifier = modifier
+            .height(35.dp)
+            .then(alphaModifier)
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+        ) {
+            Icon(
+                imageVector = Carbs,
+                contentDescription = null,
+                tint = AapsTheme.elementColors.carbs,
+                modifier = Modifier.size(24.dp)
+            )
+            Text(
+                text = state.text,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(start = 8.dp)
+            )
+        }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun CobChipPreview() {
+    MaterialTheme {
+        CobChip(state = CobUiState(text = "24g", cobValue = 24.0))
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun CobChipZeroPreview() {
+    MaterialTheme {
+        CobChip(state = CobUiState(text = "0g", cobValue = 0.0))
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun CobChipBlinkingPreview() {
+    MaterialTheme {
+        CobChip(state = CobUiState(text = "12g\n45 required", carbsReq = 45, cobValue = 12.0))
+    }
+}

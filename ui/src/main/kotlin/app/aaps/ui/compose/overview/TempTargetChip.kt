@@ -18,6 +18,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import app.aaps.core.ui.compose.AapsTheme
 import app.aaps.ui.R
@@ -100,4 +101,32 @@ private fun String?.toIconRes(): Int = when (this) {
     "Activity"    -> R.drawable.ic_target_activity
     "Hypo"        -> R.drawable.ic_target_hypo
     else          -> app.aaps.core.ui.R.drawable.ic_crosstarget // Custom, Automation, Wear, null
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun TempTargetChipActivePreview() {
+    MaterialTheme {
+        TempTargetChip(
+            targetText = "5.5 - 5.5 (30 min)",
+            state = TempTargetChipState.Active,
+            progress = 0.5f,
+            reason = "Eating Soon",
+            onClick = {}
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun TempTargetChipNonePreview() {
+    MaterialTheme {
+        TempTargetChip(
+            targetText = "5.0 - 7.0",
+            state = TempTargetChipState.None,
+            progress = 0f,
+            reason = null,
+            onClick = {}
+        )
+    }
 }

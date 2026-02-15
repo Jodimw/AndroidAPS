@@ -63,12 +63,22 @@ data class BgInfoUiState(
 )
 
 /**
- * UI state for COB display above graph
+ * UI state for IOB display
+ */
+@Immutable
+data class IobUiState(
+    val text: String = "",
+    val iobTotal: Double = 0.0
+)
+
+/**
+ * UI state for COB display
  */
 @Immutable
 data class CobUiState(
     val text: String = "",
-    val carbsReq: Int = 0
+    val carbsReq: Int = 0,
+    val cobValue: Double = 0.0
 )
 
 @Stable
@@ -150,18 +160,23 @@ class GraphViewModel @Inject constructor(
         }
     }
 
-    val iobText: StateFlow<String> = iobCobTicker.combine(cache.iobGraphFlow) { _, _ ->
+    val iobUiState: StateFlow<IobUiState> = iobCobTicker.combine(cache.iobGraphFlow) { _, _ ->
         val bolusIob = iobCobCalculator.calculateIobFromBolus().round()
         val basalIob = iobCobCalculator.calculateIobFromTempBasalsIncludingConvertedExtended().round()
-        rh.gs(R.string.format_insulin_units, bolusIob.iob + basalIob.basaliob)
+        val total = bolusIob.iob + basalIob.basaliob
+        IobUiState(
+            text = rh.gs(R.string.format_insulin_units, total),
+            iobTotal = total
+        )
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
-        initialValue = ""
+        initialValue = IobUiState()
     )
 
     val cobUiState: StateFlow<CobUiState> = iobCobTicker.combine(cache.cobGraphFlow) { _, _ ->
-        var cobText = iobCobCalculator.getCobInfo("GraphViewModel COB").displayText(rh, decimalFormatter)
+        val cobInfo = iobCobCalculator.getCobInfo("GraphViewModel COB")
+        var cobText = cobInfo.displayText(rh, decimalFormatter)
             ?: rh.gs(R.string.value_unavailable_short)
         var carbsReq = 0
 
@@ -177,7 +192,7 @@ class GraphViewModel @Inject constructor(
             }
         }
 
-        CobUiState(text = cobText, carbsReq = carbsReq)
+        CobUiState(text = cobText, carbsReq = carbsReq, cobValue = cobInfo.displayCob ?: 0.0)
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),

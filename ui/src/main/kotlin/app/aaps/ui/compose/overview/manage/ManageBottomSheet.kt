@@ -25,6 +25,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import app.aaps.core.interfaces.pump.actions.CustomAction
 import app.aaps.core.ui.compose.AapsTheme
@@ -71,170 +72,227 @@ fun ManageBottomSheet(
         sheetState = sheetState,
         containerColor = MaterialTheme.colorScheme.surface
     ) {
-        Column(
-            modifier = Modifier
-                .verticalScroll(rememberScrollState())
-                .padding(bottom = 24.dp)
-        ) {
-            // Section: Manage
-            SectionHeader(stringResource(CoreUiR.string.manage))
+        ManageBottomSheetContent(
+            showTempTarget = showTempTarget,
+            showTempBasal = showTempBasal,
+            showCancelTempBasal = showCancelTempBasal,
+            showExtendedBolus = showExtendedBolus,
+            showCancelExtendedBolus = showCancelExtendedBolus,
+            showTddStats = showTddStats,
+            cancelTempBasalText = cancelTempBasalText,
+            cancelExtendedBolusText = cancelExtendedBolusText,
+            customActions = customActions,
+            onDismiss = onDismiss,
+            onProfileManagementClick = onProfileManagementClick,
+            onTempTargetClick = onTempTargetClick,
+            onTempBasalClick = onTempBasalClick,
+            onCancelTempBasalClick = onCancelTempBasalClick,
+            onExtendedBolusClick = onExtendedBolusClick,
+            onCancelExtendedBolusClick = onCancelExtendedBolusClick,
+            onBgCheckClick = onBgCheckClick,
+            onNoteClick = onNoteClick,
+            onExerciseClick = onExerciseClick,
+            onQuestionClick = onQuestionClick,
+            onAnnouncementClick = onAnnouncementClick,
+            onSiteRotationClick = onSiteRotationClick,
+            onTddStatsClick = onTddStatsClick,
+            onQuickWizardClick = onQuickWizardClick,
+            onCustomActionClick = onCustomActionClick
+        )
+    }
+}
 
-            // Profile Management
+@Composable
+internal fun ManageBottomSheetContent(
+    showTempTarget: Boolean,
+    showTempBasal: Boolean,
+    showCancelTempBasal: Boolean,
+    showExtendedBolus: Boolean,
+    showCancelExtendedBolus: Boolean,
+    showTddStats: Boolean,
+    cancelTempBasalText: String,
+    cancelExtendedBolusText: String,
+    customActions: List<CustomAction>,
+    onDismiss: () -> Unit = {},
+    onProfileManagementClick: () -> Unit = {},
+    onTempTargetClick: () -> Unit = {},
+    onTempBasalClick: () -> Unit = {},
+    onCancelTempBasalClick: () -> Unit = {},
+    onExtendedBolusClick: () -> Unit = {},
+    onCancelExtendedBolusClick: () -> Unit = {},
+    onBgCheckClick: () -> Unit = {},
+    onNoteClick: () -> Unit = {},
+    onExerciseClick: () -> Unit = {},
+    onQuestionClick: () -> Unit = {},
+    onAnnouncementClick: () -> Unit = {},
+    onSiteRotationClick: () -> Unit = {},
+    onTddStatsClick: () -> Unit = {},
+    onQuickWizardClick: () -> Unit = {},
+    onCustomActionClick: (CustomAction) -> Unit = {}
+) {
+    Column(
+        modifier = Modifier
+            .verticalScroll(rememberScrollState())
+            .padding(bottom = 24.dp)
+    ) {
+        // Section: Manage
+        SectionHeader(stringResource(CoreUiR.string.manage))
+
+        // Profile Management
+        ManageItem(
+            text = stringResource(CoreUiR.string.profile_management),
+            description = stringResource(CoreUiR.string.manage_profile_desc),
+            iconPainter = painterResource(CoreUiR.drawable.ic_actions_profileswitch),
+            color = AapsTheme.elementColors.profileSwitch,
+            onDismiss = onDismiss,
+            onClick = onProfileManagementClick
+        )
+
+        // Temp Target
+        if (showTempTarget) {
             ManageItem(
-                text = stringResource(CoreUiR.string.profile_management),
-                description = stringResource(CoreUiR.string.manage_profile_desc),
-                iconPainter = painterResource(CoreUiR.drawable.ic_actions_profileswitch),
-                color = AapsTheme.elementColors.profileSwitch,
+                text = stringResource(CoreUiR.string.temp_target_management),
+                description = stringResource(CoreUiR.string.manage_temp_target_desc),
+                iconPainter = painterResource(ObjectsR.drawable.ic_temptarget_high),
+                color = AapsTheme.elementColors.tempTarget,
                 onDismiss = onDismiss,
-                onClick = onProfileManagementClick
+                onClick = onTempTargetClick
             )
+        }
 
-            // Temp Target
-            if (showTempTarget) {
-                ManageItem(
-                    text = stringResource(CoreUiR.string.temp_target_management),
-                    description = stringResource(CoreUiR.string.manage_temp_target_desc),
-                    iconPainter = painterResource(ObjectsR.drawable.ic_temptarget_high),
-                    color = AapsTheme.elementColors.tempTarget,
-                    onDismiss = onDismiss,
-                    onClick = onTempTargetClick
-                )
-            }
+        ManageItem(
+            text = stringResource(CoreUiR.string.quickwizard_managemnt),
+            description = stringResource(CoreUiR.string.manage_quickwizard_desc),
+            iconPainter = painterResource(ObjectsR.drawable.ic_quick_wizard),
+            color = AapsTheme.elementColors.carbs,
+            onDismiss = onDismiss,
+            onClick = onQuickWizardClick
+        )
 
+        // Temp Basal or Cancel Temp Basal
+        if (showCancelTempBasal) {
             ManageItem(
-                text = stringResource(CoreUiR.string.quickwizard_managemnt),
-                description = stringResource(CoreUiR.string.manage_quickwizard_desc),
-                iconPainter = painterResource(ObjectsR.drawable.ic_quick_wizard),
-                color = AapsTheme.elementColors.carbs,
+                text = cancelTempBasalText,
+                description = null,
+                iconPainter = painterResource(CoreUiR.drawable.ic_cancel_basal),
+                color = AapsTheme.elementColors.tempBasal,
                 onDismiss = onDismiss,
-                onClick = onQuickWizardClick
+                onClick = onCancelTempBasalClick
             )
-
-            // Temp Basal or Cancel Temp Basal
-            if (showCancelTempBasal) {
-                ManageItem(
-                    text = cancelTempBasalText,
-                    description = null,
-                    iconPainter = painterResource(CoreUiR.drawable.ic_cancel_basal),
-                    color = AapsTheme.elementColors.tempBasal,
-                    onDismiss = onDismiss,
-                    onClick = onCancelTempBasalClick
-                )
-            } else if (showTempBasal) {
-                ManageItem(
-                    text = stringResource(CoreUiR.string.tempbasal_button),
-                    description = stringResource(CoreUiR.string.manage_temp_basal_desc),
-                    iconPainter = painterResource(ObjectsR.drawable.ic_actions_start_temp_basal),
-                    color = AapsTheme.elementColors.tempBasal,
-                    onDismiss = onDismiss,
-                    onClick = onTempBasalClick
-                )
-            }
-
-            // Extended Bolus or Cancel Extended Bolus
-            if (showCancelExtendedBolus) {
-                ManageItem(
-                    text = cancelExtendedBolusText,
-                    description = null,
-                    iconPainter = painterResource(CoreUiR.drawable.ic_actions_cancel_extended_bolus),
-                    color = AapsTheme.elementColors.extendedBolus,
-                    onDismiss = onDismiss,
-                    onClick = onCancelExtendedBolusClick
-                )
-            } else if (showExtendedBolus) {
-                ManageItem(
-                    text = stringResource(CoreUiR.string.extended_bolus_button),
-                    description = stringResource(CoreUiR.string.manage_extended_bolus_desc),
-                    iconPainter = painterResource(ObjectsR.drawable.ic_actions_start_extended_bolus),
-                    color = AapsTheme.elementColors.extendedBolus,
-                    onDismiss = onDismiss,
-                    onClick = onExtendedBolusClick
-                )
-            }
-
-            // Section: Careportal
-            HorizontalDivider(modifier = Modifier.padding(start = 56.dp))
-            SectionHeader(stringResource(CoreUiR.string.careportal))
-
+        } else if (showTempBasal) {
             ManageItem(
-                text = stringResource(CoreUiR.string.careportal_bgcheck),
-                iconPainter = painterResource(ObjectsR.drawable.ic_cp_bgcheck),
-                color = AapsTheme.elementColors.bgCheck,
+                text = stringResource(CoreUiR.string.tempbasal_button),
+                description = stringResource(CoreUiR.string.manage_temp_basal_desc),
+                iconPainter = painterResource(ObjectsR.drawable.ic_actions_start_temp_basal),
+                color = AapsTheme.elementColors.tempBasal,
                 onDismiss = onDismiss,
-                onClick = onBgCheckClick,
-                coloredText = false
+                onClick = onTempBasalClick
             )
-            ManageItem(
-                text = stringResource(CoreUiR.string.careportal_note),
-                iconPainter = painterResource(ObjectsR.drawable.ic_cp_note),
-                color = AapsTheme.elementColors.careportal,
-                onDismiss = onDismiss,
-                onClick = onNoteClick,
-                coloredText = false
-            )
-            ManageItem(
-                text = stringResource(CoreUiR.string.careportal_exercise),
-                iconPainter = painterResource(ObjectsR.drawable.ic_cp_exercise),
-                color = AapsTheme.elementColors.exercise,
-                onDismiss = onDismiss,
-                onClick = onExerciseClick,
-                coloredText = false
-            )
-            ManageItem(
-                text = stringResource(CoreUiR.string.careportal_question),
-                iconPainter = painterResource(ObjectsR.drawable.ic_cp_question),
-                color = AapsTheme.elementColors.careportal,
-                onDismiss = onDismiss,
-                onClick = onQuestionClick,
-                coloredText = false
-            )
-            ManageItem(
-                text = stringResource(CoreUiR.string.careportal_announcement),
-                iconPainter = painterResource(ObjectsR.drawable.ic_cp_announcement),
-                color = AapsTheme.elementColors.announcement,
-                onDismiss = onDismiss,
-                onClick = onAnnouncementClick,
-                coloredText = false
-            )
+        }
 
-            // Section: Tools
-            HorizontalDivider(modifier = Modifier.padding(start = 56.dp))
-            SectionHeader(stringResource(CoreUiR.string.tools))
-
-            val toolsColor = MaterialTheme.colorScheme.primary
+        // Extended Bolus or Cancel Extended Bolus
+        if (showCancelExtendedBolus) {
             ManageItem(
-                text = stringResource(CoreUiR.string.site_rotation),
-                description = stringResource(CoreUiR.string.manage_site_rotation_desc),
-                iconPainter = painterResource(CoreUiR.drawable.ic_site_rotation),
+                text = cancelExtendedBolusText,
+                description = null,
+                iconPainter = painterResource(CoreUiR.drawable.ic_actions_cancel_extended_bolus),
+                color = AapsTheme.elementColors.extendedBolus,
+                onDismiss = onDismiss,
+                onClick = onCancelExtendedBolusClick
+            )
+        } else if (showExtendedBolus) {
+            ManageItem(
+                text = stringResource(CoreUiR.string.extended_bolus_button),
+                description = stringResource(CoreUiR.string.manage_extended_bolus_desc),
+                iconPainter = painterResource(ObjectsR.drawable.ic_actions_start_extended_bolus),
+                color = AapsTheme.elementColors.extendedBolus,
+                onDismiss = onDismiss,
+                onClick = onExtendedBolusClick
+            )
+        }
+
+        // Section: Careportal
+        HorizontalDivider(modifier = Modifier.padding(start = 56.dp))
+        SectionHeader(stringResource(CoreUiR.string.careportal))
+
+        ManageItem(
+            text = stringResource(CoreUiR.string.careportal_bgcheck),
+            iconPainter = painterResource(ObjectsR.drawable.ic_cp_bgcheck),
+            color = AapsTheme.elementColors.bgCheck,
+            onDismiss = onDismiss,
+            onClick = onBgCheckClick,
+            coloredText = false
+        )
+        ManageItem(
+            text = stringResource(CoreUiR.string.careportal_note),
+            iconPainter = painterResource(ObjectsR.drawable.ic_cp_note),
+            color = AapsTheme.elementColors.careportal,
+            onDismiss = onDismiss,
+            onClick = onNoteClick,
+            coloredText = false
+        )
+        ManageItem(
+            text = stringResource(CoreUiR.string.careportal_exercise),
+            iconPainter = painterResource(ObjectsR.drawable.ic_cp_exercise),
+            color = AapsTheme.elementColors.exercise,
+            onDismiss = onDismiss,
+            onClick = onExerciseClick,
+            coloredText = false
+        )
+        ManageItem(
+            text = stringResource(CoreUiR.string.careportal_question),
+            iconPainter = painterResource(ObjectsR.drawable.ic_cp_question),
+            color = AapsTheme.elementColors.careportal,
+            onDismiss = onDismiss,
+            onClick = onQuestionClick,
+            coloredText = false
+        )
+        ManageItem(
+            text = stringResource(CoreUiR.string.careportal_announcement),
+            iconPainter = painterResource(ObjectsR.drawable.ic_cp_announcement),
+            color = AapsTheme.elementColors.announcement,
+            onDismiss = onDismiss,
+            onClick = onAnnouncementClick,
+            coloredText = false
+        )
+
+        // Section: Tools
+        HorizontalDivider(modifier = Modifier.padding(start = 56.dp))
+        SectionHeader(stringResource(CoreUiR.string.tools))
+
+        val toolsColor = MaterialTheme.colorScheme.primary
+        ManageItem(
+            text = stringResource(CoreUiR.string.site_rotation),
+            description = stringResource(CoreUiR.string.manage_site_rotation_desc),
+            iconPainter = painterResource(CoreUiR.drawable.ic_site_rotation),
+            color = toolsColor,
+            onDismiss = onDismiss,
+            onClick = onSiteRotationClick
+        )
+        if (showTddStats) {
+            ManageItem(
+                text = stringResource(CoreUiR.string.tdd_short),
+                iconPainter = painterResource(ObjectsR.drawable.ic_cp_stats),
                 color = toolsColor,
                 onDismiss = onDismiss,
-                onClick = onSiteRotationClick
+                onClick = onTddStatsClick
             )
-            if (showTddStats) {
+        }
+
+        // Section: Pump actions (only if non-empty)
+        if (customActions.isNotEmpty()) {
+            HorizontalDivider(modifier = Modifier.padding(start = 56.dp))
+            SectionHeader(stringResource(CoreUiR.string.pump_actions))
+
+            val pumpColor = AapsTheme.elementColors.pump
+            customActions.forEach { action ->
                 ManageItem(
-                    text = stringResource(CoreUiR.string.tdd_short),
-                    iconPainter = painterResource(ObjectsR.drawable.ic_cp_stats),
-                    color = toolsColor,
+                    text = stringResource(action.name),
+                    iconPainter = painterResource(action.iconResourceId),
+                    color = pumpColor,
                     onDismiss = onDismiss,
-                    onClick = onTddStatsClick
+                    onClick = { onCustomActionClick(action) }
                 )
-            }
-
-            // Section: Pump actions (only if non-empty)
-            if (customActions.isNotEmpty()) {
-                HorizontalDivider(modifier = Modifier.padding(start = 56.dp))
-                SectionHeader(stringResource(CoreUiR.string.pump_actions))
-
-                val pumpColor = AapsTheme.elementColors.pump
-                customActions.forEach { action ->
-                    ManageItem(
-                        text = stringResource(action.name),
-                        iconPainter = painterResource(action.iconResourceId),
-                        color = pumpColor,
-                        onDismiss = onDismiss,
-                        onClick = { onCustomActionClick(action) }
-                    )
-                }
             }
         }
     }
@@ -298,6 +356,24 @@ private fun TonalIcon(
             contentDescription = null,
             tint = color,
             modifier = Modifier.size(24.dp)
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun ManageBottomSheetContentPreview() {
+    MaterialTheme {
+        ManageBottomSheetContent(
+            showTempTarget = true,
+            showTempBasal = true,
+            showCancelTempBasal = false,
+            showExtendedBolus = true,
+            showCancelExtendedBolus = false,
+            showTddStats = true,
+            cancelTempBasalText = "",
+            cancelExtendedBolusText = "",
+            customActions = emptyList()
         )
     }
 }

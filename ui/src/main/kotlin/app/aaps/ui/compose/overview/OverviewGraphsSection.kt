@@ -1,17 +1,9 @@
 package app.aaps.ui.compose.overview
 
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.ui.Alignment
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -21,10 +13,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import app.aaps.ui.compose.overview.graphs.CobUiState
 import app.aaps.ui.compose.overview.graphs.BgGraphCompose
 import app.aaps.ui.compose.overview.graphs.CobGraphCompose
 import app.aaps.ui.compose.overview.graphs.DEFAULT_GRAPH_ZOOM_MINUTES
@@ -135,65 +124,19 @@ fun OverviewGraphsSection(
         )
 
         // IOB Graph - non-interactive, synced from BG graph
-        Column(
-            verticalArrangement = Arrangement.spacedBy(2.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
+        IobGraphCompose(
+            viewModel = graphViewModel,
+            scrollState = iobScrollState,
+            zoomState = iobZoomState,
             modifier = Modifier.fillMaxWidth()
-        ) {
-            val iobText by graphViewModel.iobText.collectAsState()
-            Text(
-                text = "${stringResource(app.aaps.core.ui.R.string.iob)}: $iobText",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            IobGraphCompose(
-                viewModel = graphViewModel,
-                scrollState = iobScrollState,
-                zoomState = iobZoomState,
-                modifier = Modifier.fillMaxWidth()
-            )
-        }
+        )
 
         // COB Graph - non-interactive, synced from BG graph
-        Column(
-            verticalArrangement = Arrangement.spacedBy(2.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
+        CobGraphCompose(
+            viewModel = graphViewModel,
+            scrollState = cobScrollState,
+            zoomState = cobZoomState,
             modifier = Modifier.fillMaxWidth()
-        ) {
-            val cobUiState by graphViewModel.cobUiState.collectAsState()
-            CobLabel(cobUiState)
-            CobGraphCompose(
-                viewModel = graphViewModel,
-                scrollState = cobScrollState,
-                zoomState = cobZoomState,
-                modifier = Modifier.fillMaxWidth()
-            )
-        }
-    }
-}
-
-@Composable
-private fun CobLabel(state: CobUiState) {
-    val alphaModifier = if (state.carbsReq > 0) {
-        val infiniteTransition = rememberInfiniteTransition(label = "cobBlink")
-        val alpha by infiniteTransition.animateFloat(
-            initialValue = 1f,
-            targetValue = 0.2f,
-            animationSpec = infiniteRepeatable(
-                animation = tween(durationMillis = 800),
-                repeatMode = RepeatMode.Reverse
-            ),
-            label = "cobAlpha"
         )
-        Modifier.alpha(alpha)
-    } else {
-        Modifier
     }
-
-    Text(
-        text = "${stringResource(app.aaps.core.ui.R.string.cob)}: ${state.text}",
-        style = MaterialTheme.typography.bodySmall,
-        color = MaterialTheme.colorScheme.onSurface,
-        modifier = alphaModifier
-    )
 }

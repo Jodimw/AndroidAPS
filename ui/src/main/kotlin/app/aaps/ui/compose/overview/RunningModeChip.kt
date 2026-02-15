@@ -18,6 +18,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import app.aaps.core.data.model.RM
 import app.aaps.core.ui.compose.AapsTheme
@@ -111,4 +112,28 @@ internal fun RM.Mode.toIconRes(): Int = when (this) {
     RM.Mode.SUSPENDED_BY_DST  -> app.aaps.core.ui.R.drawable.ic_loop_paused
 
     RM.Mode.RESUME            -> app.aaps.core.objects.R.drawable.ic_loop_closed
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun RunningModeChipClosedLoopPreview() {
+    MaterialTheme {
+        RunningModeChip(
+            mode = RM.Mode.CLOSED_LOOP,
+            text = "Closed Loop",
+            progress = 0f
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun RunningModeChipSuspendedPreview() {
+    MaterialTheme {
+        RunningModeChip(
+            mode = RM.Mode.SUSPENDED_BY_USER,
+            text = "Suspended (30 min)",
+            progress = 0.4f
+        )
+    }
 }

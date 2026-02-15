@@ -111,24 +111,49 @@ fun BasalProfileGraphCompose(
     CartesianChartHost(
         chart = rememberCartesianChart(
             rememberLineCartesianLayer(
-                lineProvider = LineCartesianLayer.LineProvider.series(
-                    LineCartesianLayer.Line(
-                        fill = remember { LineCartesianLayer.LineFill.single(Fill(profile1Color)) },
-                        areaFill = remember {
-                            LineCartesianLayer.AreaFill.single(
-                                Fill(
-                                    Brush.verticalGradient(
-                                        listOf(
-                                            profile1Color.copy(alpha = 0.3f),
-                                            Color.Transparent
+                lineProvider = if (profile2 != null) {
+                    LineCartesianLayer.LineProvider.series(
+                        LineCartesianLayer.Line(
+                            fill = remember { LineCartesianLayer.LineFill.single(Fill(profile2Color)) },
+                            pointConnector = Square
+                        ),
+                        LineCartesianLayer.Line(
+                            fill = remember { LineCartesianLayer.LineFill.single(Fill(profile1Color)) },
+                            areaFill = remember {
+                                LineCartesianLayer.AreaFill.single(
+                                    Fill(
+                                        Brush.verticalGradient(
+                                            listOf(
+                                                profile1Color.copy(alpha = 0.3f),
+                                                Color.Transparent
+                                            )
                                         )
                                     )
                                 )
-                            )
-                        },
-                        pointConnector = Square
+                            },
+                            pointConnector = Square
+                        )
                     )
-                )
+                } else {
+                    LineCartesianLayer.LineProvider.series(
+                        LineCartesianLayer.Line(
+                            fill = remember { LineCartesianLayer.LineFill.single(Fill(profile1Color)) },
+                            areaFill = remember {
+                                LineCartesianLayer.AreaFill.single(
+                                    Fill(
+                                        Brush.verticalGradient(
+                                            listOf(
+                                                profile1Color.copy(alpha = 0.3f),
+                                                Color.Transparent
+                                            )
+                                        )
+                                    )
+                                )
+                            },
+                            pointConnector = Square
+                        )
+                    )
+                }
             ),
             startAxis = VerticalAxis.rememberStart(),
             bottomAxis = HorizontalAxis.rememberBottom(),

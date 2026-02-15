@@ -153,6 +153,13 @@ fun OverviewScreen(
                         onClick = onTempTargetClick
                     )
                 }
+                // IOB + COB chips row
+                val iobUiState by graphViewModel.iobUiState.collectAsState()
+                val cobUiState by graphViewModel.cobUiState.collectAsState()
+                IobCobChipsRow(
+                    iobUiState = iobUiState,
+                    cobUiState = cobUiState
+                )
             }
         }
 

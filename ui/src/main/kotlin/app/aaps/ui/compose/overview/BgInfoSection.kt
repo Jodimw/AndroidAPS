@@ -19,6 +19,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import app.aaps.core.data.model.TrendArrow
@@ -40,7 +41,7 @@ fun BgInfoSection(
     bgInfo: BgInfoData?,
     timeAgoText: String,
     modifier: Modifier = Modifier,
-    size: Dp = 100.dp
+    size: Dp = 126.dp
 ) {
     if (bgInfo == null) {
         // Show placeholder when no data
@@ -109,13 +110,14 @@ fun BgInfoSection(
         // Center content: delta on top, BG value, time ago below
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.padding(bottom = 4.dp),
             verticalArrangement = Arrangement.spacedBy((-2).dp, Alignment.CenterVertically)
         ) {
             // Delta on top
             bgInfo.deltaText?.let { delta ->
                 Text(
                     text = delta,
-                    style = MaterialTheme.typography.bodySmall.copy(lineHeight = 14.sp),
+                    style = MaterialTheme.typography.bodySmall.copy(fontSize = 17.sp, lineHeight = 19.sp, fontWeight = FontWeight.Bold),
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
@@ -124,9 +126,9 @@ fun BgInfoSection(
             Text(
                 text = bgInfo.bgText,
                 style = MaterialTheme.typography.displayMedium.copy(
-                    fontSize = 34.sp,
+                    fontSize = 50.sp,
                     fontWeight = FontWeight.Bold,
-                    lineHeight = 36.sp
+                    lineHeight = 52.sp
                 ),
                 color = bgColor,
                 textDecoration = if (bgInfo.isOutdated) TextDecoration.LineThrough else TextDecoration.None
@@ -135,7 +137,7 @@ fun BgInfoSection(
             // Time ago below
             Text(
                 text = timeAgoText,
-                style = MaterialTheme.typography.bodySmall.copy(lineHeight = 14.sp),
+                style = MaterialTheme.typography.bodySmall.copy(fontSize = 17.sp, lineHeight = 19.sp, fontWeight = FontWeight.Bold),
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
@@ -184,5 +186,91 @@ private fun TrendArrow.toArcIndicator(): ArcIndicator? {
         TrendArrow.DOUBLE_DOWN     -> ArcIndicator(centerAngle = 90f, sweepAngle = sweepAngle, markCount = 2)
         TrendArrow.TRIPLE_UP       -> ArcIndicator(centerAngle = -90f, sweepAngle = sweepAngle, markCount = 3)
         TrendArrow.TRIPLE_DOWN     -> ArcIndicator(centerAngle = 90f, sweepAngle = sweepAngle, markCount = 3)
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun BgInfoSectionInRangePreview() {
+    MaterialTheme {
+        BgInfoSection(
+            bgInfo = BgInfoData(
+                bgValue = 120.0,
+                bgText = "120",
+                bgRange = BgRange.IN_RANGE,
+                isOutdated = false,
+                timestamp = System.currentTimeMillis(),
+                trendArrow = TrendArrow.FLAT,
+                trendDescription = "Flat",
+                delta = 2.0,
+                deltaText = "+2",
+                shortAvgDelta = 1.5,
+                shortAvgDeltaText = "+1.5",
+                longAvgDelta = 1.0,
+                longAvgDeltaText = "+1.0"
+            ),
+            timeAgoText = "2 min"
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun BgInfoSectionHighPreview() {
+    MaterialTheme {
+        BgInfoSection(
+            bgInfo = BgInfoData(
+                bgValue = 220.0,
+                bgText = "220",
+                bgRange = BgRange.HIGH,
+                isOutdated = false,
+                timestamp = System.currentTimeMillis(),
+                trendArrow = TrendArrow.SINGLE_UP,
+                trendDescription = "Rising",
+                delta = 15.0,
+                deltaText = "+15",
+                shortAvgDelta = 12.0,
+                shortAvgDeltaText = "+12",
+                longAvgDelta = 10.0,
+                longAvgDeltaText = "+10"
+            ),
+            timeAgoText = "1 min"
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun BgInfoSectionLowPreview() {
+    MaterialTheme {
+        BgInfoSection(
+            bgInfo = BgInfoData(
+                bgValue = 65.0,
+                bgText = "65",
+                bgRange = BgRange.LOW,
+                isOutdated = false,
+                timestamp = System.currentTimeMillis(),
+                trendArrow = TrendArrow.SINGLE_DOWN,
+                trendDescription = "Falling",
+                delta = -10.0,
+                deltaText = "-10",
+                shortAvgDelta = -8.0,
+                shortAvgDeltaText = "-8",
+                longAvgDelta = -6.0,
+                longAvgDeltaText = "-6"
+            ),
+            timeAgoText = "3 min"
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun BgInfoSectionNullPreview() {
+    MaterialTheme {
+        BgInfoSection(
+            bgInfo = null,
+            timeAgoText = ""
+        )
     }
 }
