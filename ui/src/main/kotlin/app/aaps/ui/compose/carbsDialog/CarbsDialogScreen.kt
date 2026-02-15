@@ -73,6 +73,7 @@ import app.aaps.core.ui.compose.icons.Carbs as CarbsIcon
 @Composable
 fun CarbsDialogScreen(
     viewModel: CarbsDialogViewModel,
+    carbsButtonsDef: PreferenceSubScreenDef,
     onNavigateBack: () -> Unit,
     onShowDeliveryError: (String) -> Unit
 ) {
@@ -187,6 +188,7 @@ fun CarbsDialogScreen(
     // Carbs button settings bottom sheet
     if (showButtonSettings) {
         CarbsButtonSettingsSheet(
+            settingsDef = carbsButtonsDef,
             preferences = viewModel.preferences,
             config = viewModel.config,
             onDismiss = {
@@ -491,19 +493,10 @@ private fun QuickAddButtons(
     }
 }
 
-private val carbsButtonSettingsDef = PreferenceSubScreenDef(
-    key = "carbs_button_settings",
-    titleResId = CoreUiR.string.settings,
-    items = listOf(
-        IntKey.OverviewCarbsButtonIncrement1,
-        IntKey.OverviewCarbsButtonIncrement2,
-        IntKey.OverviewCarbsButtonIncrement3
-    )
-)
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun CarbsButtonSettingsSheet(
+    settingsDef: PreferenceSubScreenDef,
     preferences: Preferences,
     config: Config,
     onDismiss: () -> Unit
@@ -517,14 +510,14 @@ private fun CarbsButtonSettingsSheet(
     ) {
         Column(modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 24.dp)) {
             Text(
-                text = stringResource(carbsButtonSettingsDef.titleResId),
+                text = stringResource(settingsDef.titleResId),
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 12.dp)
             )
             ProvidePreferenceTheme {
                 AdaptivePreferenceList(
-                    items = carbsButtonSettingsDef.items,
+                    items = settingsDef.items,
                     preferences = preferences,
                     config = config
                 )

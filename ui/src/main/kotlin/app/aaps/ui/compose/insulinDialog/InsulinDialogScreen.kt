@@ -71,6 +71,7 @@ import app.aaps.core.ui.R as CoreUiR
 @Composable
 fun InsulinDialogScreen(
     viewModel: InsulinDialogViewModel,
+    insulinButtonsDef: PreferenceSubScreenDef,
     onNavigateBack: () -> Unit,
     onShowDeliveryError: (String) -> Unit
 ) {
@@ -185,6 +186,7 @@ fun InsulinDialogScreen(
     // Insulin button settings bottom sheet
     if (showButtonSettings) {
         InsulinButtonSettingsSheet(
+            settingsDef = insulinButtonsDef,
             preferences = viewModel.preferences,
             config = viewModel.config,
             onDismiss = {
@@ -402,19 +404,10 @@ private fun InsulinQuickAddButtons(
     }
 }
 
-private val insulinButtonSettingsDef = PreferenceSubScreenDef(
-    key = "insulin_button_settings",
-    titleResId = CoreUiR.string.settings,
-    items = listOf(
-        DoubleKey.OverviewInsulinButtonIncrement1,
-        DoubleKey.OverviewInsulinButtonIncrement2,
-        DoubleKey.OverviewInsulinButtonIncrement3
-    )
-)
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun InsulinButtonSettingsSheet(
+    settingsDef: PreferenceSubScreenDef,
     preferences: Preferences,
     config: Config,
     onDismiss: () -> Unit
@@ -428,14 +421,14 @@ private fun InsulinButtonSettingsSheet(
     ) {
         Column(modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 24.dp)) {
             Text(
-                text = stringResource(insulinButtonSettingsDef.titleResId),
+                text = stringResource(settingsDef.titleResId),
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 12.dp)
             )
             ProvidePreferenceTheme {
                 AdaptivePreferenceList(
-                    items = insulinButtonSettingsDef.items,
+                    items = settingsDef.items,
                     preferences = preferences,
                     config = config
                 )

@@ -28,6 +28,17 @@ sealed class AppRoute(val route: String) {
         fun createRoute(pluginKey: String) = "plugin_preferences/$pluginKey"
     }
 
+    data object PreferenceScreen : AppRoute("preference_screen/{screenKey}?highlight={highlightKey}") {
+
+        fun createRoute(screenKey: String, highlightKey: String? = null): String {
+            return if (highlightKey != null) {
+                "preference_screen/$screenKey?highlight=$highlightKey"
+            } else {
+                "preference_screen/$screenKey"
+            }
+        }
+    }
+
     data object RunningMode : AppRoute("running_mode")
     data object CareDialog : AppRoute("care_dialog/{eventTypeOrdinal}") {
 

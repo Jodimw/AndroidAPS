@@ -287,4 +287,10 @@ class PreferencesImpl @Inject constructor(
             }
         return false
     }
+
+    override fun getAllPreferenceKeys(): List<PreferenceKey> =
+        prefsList
+            .filter { PreferenceKey::class.java.isAssignableFrom(it) }
+            .flatMap { it.enumConstants!!.asIterable() }
+            .filterIsInstance<PreferenceKey>()
 }

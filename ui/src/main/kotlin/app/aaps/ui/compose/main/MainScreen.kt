@@ -1,5 +1,8 @@
 package app.aaps.ui.compose.main
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -28,6 +31,9 @@ import app.aaps.ui.compose.overview.OverviewScreen
 import app.aaps.ui.compose.overview.statusLights.StatusViewModel
 import app.aaps.ui.compose.overview.manage.ManageBottomSheet
 import app.aaps.ui.compose.overview.treatments.TreatmentBottomSheet
+import app.aaps.ui.search.SearchIndexEntry
+import app.aaps.ui.search.SearchResults
+import app.aaps.ui.search.SearchUiState
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -40,6 +46,13 @@ fun MainScreen(
     manageViewModel: ManageViewModel,
     statusViewModel: StatusViewModel,
     treatmentViewModel: app.aaps.ui.compose.overview.treatments.TreatmentViewModel,
+    // Search
+    searchUiState: SearchUiState,
+    onSearchQueryChange: (String) -> Unit,
+    onSearchClear: () -> Unit,
+    onSearchActiveChange: (Boolean) -> Unit,
+    onSearchResultClick: (SearchIndexEntry) -> Unit,
+    // Menu/navigation
     onMenuClick: () -> Unit,
     onProfileManagementClick: () -> Unit,
     onPreferencesClick: () -> Unit,
@@ -80,6 +93,8 @@ fun MainScreen(
     onQuickWizardClick: ((String) -> Unit)? = null,
     onActionsError: (String, String) -> Unit,
     graphViewModel: GraphViewModel,
+    statusLightsDef: app.aaps.core.ui.compose.preference.PreferenceSubScreenDef,
+    treatmentButtonsDef: app.aaps.core.ui.compose.preference.PreferenceSubScreenDef,
     preferences: app.aaps.core.keys.interfaces.Preferences,
     config: app.aaps.core.interfaces.configuration.Config,
     modifier: Modifier = Modifier
@@ -145,13 +160,17 @@ fun MainScreen(
         Scaffold(
             topBar = {
                 MainTopBar(
+                    searchUiState = searchUiState,
                     onMenuClick = {
                         scope.launch {
                             drawerState.open()
                             onMenuClick()
                         }
                     },
-                    onPreferencesClick = onPreferencesClick
+                    onPreferencesClick = onPreferencesClick,
+                    onSearchQueryChange = onSearchQueryChange,
+                    onSearchClear = onSearchClear,
+                    onSearchActiveChange = onSearchActiveChange
                 )
             },
             bottomBar = {
@@ -171,31 +190,46 @@ fun MainScreen(
                 SwitchUiFab(onClick = onSwitchToClassicUi)
             }
         ) { paddingValues ->
-            OverviewScreen(
-                profileName = uiState.profileName,
-                isProfileModified = uiState.isProfileModified,
-                profileProgress = uiState.profileProgress,
-                tempTargetText = uiState.tempTargetText,
-                tempTargetState = uiState.tempTargetState,
-                tempTargetProgress = uiState.tempTargetProgress,
-                tempTargetReason = uiState.tempTargetReason,
-                runningMode = uiState.runningMode,
-                runningModeText = uiState.runningModeText,
-                runningModeProgress = uiState.runningModeProgress,
-                graphViewModel = graphViewModel,
-                manageViewModel = manageViewModel,
-                statusViewModel = statusViewModel,
-                onProfileManagementClick = onProfileManagementClick,
-                onTempTargetClick = onTempTargetClick,
-                onRunningModeClick = onRunningModeClick,
-                onSensorInsertClick = onSensorInsertClick,
-                onFillClick = onFillClick,
-                onInsulinChangeClick = onInsulinChangeClick,
-                onBatteryChangeClick = onBatteryChangeClick,
-                paddingValues = paddingValues,
-                preferences = preferences,
-                config = config
-            )
+            Box(modifier = Modifier.fillMaxSize()) {
+                OverviewScreen(
+                    profileName = uiState.profileName,
+                    isProfileModified = uiState.isProfileModified,
+                    profileProgress = uiState.profileProgress,
+                    tempTargetText = uiState.tempTargetText,
+                    tempTargetState = uiState.tempTargetState,
+                    tempTargetProgress = uiState.tempTargetProgress,
+                    tempTargetReason = uiState.tempTargetReason,
+                    runningMode = uiState.runningMode,
+                    runningModeText = uiState.runningModeText,
+                    runningModeProgress = uiState.runningModeProgress,
+                    graphViewModel = graphViewModel,
+                    manageViewModel = manageViewModel,
+                    statusViewModel = statusViewModel,
+                    statusLightsDef = statusLightsDef,
+                    onProfileManagementClick = onProfileManagementClick,
+                    onTempTargetClick = onTempTargetClick,
+                    onRunningModeClick = onRunningModeClick,
+                    onSensorInsertClick = onSensorInsertClick,
+                    onFillClick = onFillClick,
+                    onInsulinChangeClick = onInsulinChangeClick,
+                    onBatteryChangeClick = onBatteryChangeClick,
+                    paddingValues = paddingValues,
+                    preferences = preferences,
+                    config = config
+                )
+
+                // Search results overlay
+                if (searchUiState.isSearchActive) {
+                    SearchResults(
+                        results = searchUiState.results,
+                        isSearching = searchUiState.isSearching,
+                        onResultClick = onSearchResultClick,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(paddingValues)
+                    )
+                }
+            }
         }
     }
 
@@ -239,6 +273,7 @@ fun MainScreen(
             onCgmClick = onCgmClick,
             onCalibrationClick = onCalibrationClick,
             onQuickWizardClick = onQuickWizardClick,
+            treatmentButtonsDef = treatmentButtonsDef,
             preferences = preferences,
             config = config
         )

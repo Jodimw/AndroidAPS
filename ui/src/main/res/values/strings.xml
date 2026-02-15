@@ -23,6 +23,7 @@
     <string name="do_you_want_reset_stats">Do you want to reset activity stats?</string>
     <string name="do_you_want_recalculate_tdd_stats">Do you want to recalculate TDD stats?</string>
     <string name="statistics">Statistics</string>
+    <string name="statistics_desc">View statistics and reports</string>
     <string name="calculation_in_progress">Calculation in progress</string>
     <string name="invalid_age">Invalid age entry</string>
     <string name="invalid_weight">Invalid weight entry</string>
@@ -148,6 +149,7 @@
     <string name="selected_profile">Selected:</string>
     <string name="comparation">Comparation</string>
     <string name="nav_profile_helper">Profile helper</string>
+    <string name="nav_profile_helper_desc">Build your profile based on weight or TDD</string>
     <string name="motol_default_profile">Default profile</string>
     <string name="current_profile">Current profile</string>
     <string name="available_profile">Available profile</string>

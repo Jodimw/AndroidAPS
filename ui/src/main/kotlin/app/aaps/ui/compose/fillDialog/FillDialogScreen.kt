@@ -69,6 +69,7 @@ import app.aaps.core.ui.R as CoreUiR
 fun FillDialogScreen(
     viewModel: FillDialogViewModel,
     preselect: FillPreselect = FillPreselect.NONE,
+    fillButtonsDef: PreferenceSubScreenDef,
     onNavigateBack: () -> Unit,
     onShowSiteRotationDialog: (Long) -> Unit,
     onShowDeliveryError: (String) -> Unit
@@ -176,6 +177,7 @@ fun FillDialogScreen(
     // Preset button settings bottom sheet
     if (showButtonSettings) {
         FillButtonSettingsSheet(
+            settingsDef = fillButtonsDef,
             viewModel = viewModel,
             onDismiss = {
                 showButtonSettings = false
@@ -372,19 +374,10 @@ private fun PresetButtonsRow(
     }
 }
 
-private val fillButtonSettingsDef = PreferenceSubScreenDef(
-    key = "prime_fill_settings",
-    titleResId = CoreUiR.string.settings,
-    items = listOf(
-        DoubleKey.ActionsFillButton1,
-        DoubleKey.ActionsFillButton2,
-        DoubleKey.ActionsFillButton3
-    )
-)
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun FillButtonSettingsSheet(
+    settingsDef: PreferenceSubScreenDef,
     viewModel: FillDialogViewModel,
     onDismiss: () -> Unit
 ) {
@@ -397,14 +390,14 @@ private fun FillButtonSettingsSheet(
     ) {
         Column(modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 24.dp)) {
             Text(
-                text = stringResource(fillButtonSettingsDef.titleResId),
+                text = stringResource(settingsDef.titleResId),
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 12.dp)
             )
             ProvidePreferenceTheme {
                 AdaptivePreferenceList(
-                    items = fillButtonSettingsDef.items,
+                    items = settingsDef.items,
                     preferences = viewModel.preferences,
                     config = viewModel.config
                 )

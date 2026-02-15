@@ -1,10 +1,22 @@
 package app.aaps.core.ui.compose.preference
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import app.aaps.core.interfaces.configuration.Config
 import app.aaps.core.interfaces.profile.ProfileUtil
 import app.aaps.core.keys.interfaces.BooleanPreferenceKey
@@ -14,6 +26,7 @@ import app.aaps.core.keys.interfaces.LongPreferenceKey
 import app.aaps.core.keys.interfaces.PreferenceKey
 import app.aaps.core.keys.interfaces.PreferenceVisibilityContext
 import app.aaps.core.keys.interfaces.Preferences
+import kotlinx.coroutines.delay
 
 /**
  * Helper function to add preference content inline in a LazyListScope.
@@ -87,13 +100,15 @@ private fun RenderPreferenceItems(
             is PreferenceKey          -> {
                 // Render using AdaptivePreferenceItem which handles visibility reactively
                 if (preferences != null && config != null) {
-                    AdaptivePreferenceItem(
-                        key = item,
-                        preferences = preferences,
-                        config = config,
-                        profileUtil = profileUtil,
-                        visibilityContext = visibilityContext
-                    )
+                    HighlightablePreference(preferenceKey = item.key) {
+                        AdaptivePreferenceItem(
+                            key = item,
+                            preferences = preferences,
+                            config = config,
+                            profileUtil = profileUtil,
+                            visibilityContext = visibilityContext
+                        )
+                    }
                 }
             }
 
@@ -196,4 +211,46 @@ private fun shouldShowSubScreenInline(
     }
     // No hideParentScreenIfHidden items found, or all are visible
     return true
+}
+
+/**
+ * Wrapper that highlights a preference if it matches the LocalHighlightKey.
+ * Shows a brief color flash animation to draw attention to the preference.
+ */
+@Composable
+private fun HighlightablePreference(
+    preferenceKey: String,
+    content: @Composable () -> Unit
+) {
+    val highlightKey = LocalHighlightKey.current
+    val shouldHighlight = highlightKey == preferenceKey
+
+    var isHighlighted by remember { mutableStateOf(shouldHighlight) }
+
+    // Animate highlight fade out
+    LaunchedEffect(shouldHighlight) {
+        if (shouldHighlight) {
+            isHighlighted = true
+            delay(2000) // Keep highlight for 2 seconds
+            isHighlighted = false
+        }
+    }
+
+    val highlightColor by animateColorAsState(
+        targetValue = if (isHighlighted) {
+            MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)
+        } else {
+            Color.Transparent
+        },
+        animationSpec = tween(durationMillis = 500),
+        label = "highlightColor"
+    )
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(highlightColor)
+    ) {
+        content()
+    }
 }

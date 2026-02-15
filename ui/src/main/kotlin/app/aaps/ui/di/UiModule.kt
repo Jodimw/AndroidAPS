@@ -1,6 +1,7 @@
 package app.aaps.ui.di
 
 import app.aaps.core.interfaces.overview.graph.OverviewDataCache
+import app.aaps.core.ui.search.SearchableProvider
 import app.aaps.ui.activities.BolusProgressHelperActivity
 import app.aaps.ui.activities.ErrorActivity
 import app.aaps.ui.activities.ProfileViewerActivity
@@ -23,12 +24,15 @@ import app.aaps.ui.dialogs.TempTargetDialog
 import app.aaps.ui.dialogs.TreatmentDialog
 import app.aaps.ui.dialogs.WizardDialog
 import app.aaps.ui.dialogs.WizardInfoDialog
+import app.aaps.ui.search.BuiltInSearchables
+import app.aaps.ui.search.DialogSearchables
 import app.aaps.ui.services.AlarmSoundService
 import app.aaps.ui.widget.Widget
 import app.aaps.ui.widget.WidgetConfigureActivity
 import dagger.Binds
 import dagger.Module
 import dagger.android.ContributesAndroidInjector
+import dagger.multibindings.IntoSet
 
 @Module(includes = [UiModule.Bindings::class])
 @Suppress("unused")
@@ -38,6 +42,9 @@ abstract class UiModule {
     interface Bindings {
 
         @Binds fun bindOverviewDataCache(impl: OverviewDataCacheImpl): OverviewDataCache
+
+        @Binds @IntoSet fun bindBuiltInSearchables(impl: BuiltInSearchables): SearchableProvider
+        @Binds @IntoSet fun bindDialogSearchables(impl: DialogSearchables): SearchableProvider
     }
 
     @ContributesAndroidInjector abstract fun contributesAlarmSoundService(): AlarmSoundService

@@ -29,3 +29,9 @@ val LocalHashPassword = compositionLocalOf<((String) -> String)?> { null }
  * Used by preference dialogs to show feedback messages.
  */
 val LocalSnackbarHostState = compositionLocalOf<SnackbarHostState?> { null }
+
+/**
+ * CompositionLocal for highlighting a specific preference key.
+ * Used when navigating from search to highlight the found preference.
+ */
+val LocalHighlightKey = compositionLocalOf<String?> { null }

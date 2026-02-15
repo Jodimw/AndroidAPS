@@ -56,19 +56,6 @@ import app.aaps.ui.compose.main.QuickWizardItem
 import app.aaps.core.ui.R as CoreUiR
 import app.aaps.core.objects.R as ObjectsR
 
-private val treatmentButtonSettingsDef = PreferenceSubScreenDef(
-    key = "treatment_button_settings",
-    titleResId = CoreUiR.string.settings,
-    items = listOf(
-        BooleanKey.OverviewShowCgmButton,
-        BooleanKey.OverviewShowCalibrationButton,
-        BooleanKey.OverviewShowTreatmentButton,
-        BooleanKey.OverviewShowInsulinButton,
-        BooleanKey.OverviewShowCarbsButton,
-        BooleanKey.OverviewShowWizardButton
-    )
-)
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TreatmentBottomSheet(
@@ -93,6 +80,7 @@ fun TreatmentBottomSheet(
     onCalculatorClick: (() -> Unit)? = null,
     onQuickWizardClick: ((String) -> Unit)? = null,
     // For settings screen
+    treatmentButtonsDef: PreferenceSubScreenDef? = null,
     preferences: Preferences? = null,
     config: Config? = null
 ) {
@@ -104,8 +92,9 @@ fun TreatmentBottomSheet(
         sheetState = sheetState,
         containerColor = MaterialTheme.colorScheme.surface
     ) {
-        if (showSettings && preferences != null && config != null) {
+        if (showSettings && treatmentButtonsDef != null && preferences != null && config != null) {
             TreatmentSettingsContent(
+                settingsDef = treatmentButtonsDef,
                 preferences = preferences,
                 config = config,
                 onBack = { showSettings = false }
@@ -433,6 +422,7 @@ private fun TreatmentSelectionContent(
 
 @Composable
 private fun TreatmentSettingsContent(
+    settingsDef: PreferenceSubScreenDef,
     preferences: Preferences,
     config: Config,
     onBack: () -> Unit
@@ -462,7 +452,7 @@ private fun TreatmentSettingsContent(
         }
         ProvidePreferenceTheme {
             AdaptivePreferenceList(
-                items = treatmentButtonSettingsDef.items,
+                items = settingsDef.items,
                 preferences = preferences,
                 config = config
             )

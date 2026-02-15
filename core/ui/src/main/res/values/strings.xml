@@ -2,6 +2,7 @@
 <resources>
     <!--    General-->
     <string name="treatments">Treatments</string>
+    <string name="treatments_desc">View and manage treatment history</string>
     <string name="count_selected">%1$d selected</string>
     <string name="delete">Delete</string>
     <string name="show_invalidated">Show invalidated</string>
@@ -700,13 +701,16 @@
 
     <!-- Navigation -->
     <string name="nav_about">About</string>
+    <string name="nav_about_desc">View app version and information</string>
     <string name="nav_exit">Exit</string>
     <string name="open_navigation">Open navigation</string>
     <string name="nav_history_browser">History browser</string>
+    <string name="nav_history_browser_desc">Browse historical data and graphs</string>
     <string name="overview">Overview</string>
     <string name="manage">Manage</string>
     <string name="localprofile">Profile</string>
     <string name="nav_setupwizard">Setup Wizard</string>
+    <string name="nav_setupwizard_desc">Configure AAPS step by step</string>
 
     <!-- Alerts -->
     <string name="localalertsettings_title">Local alerts</string>
@@ -799,5 +803,16 @@
     <string name="a11y_add_new_profile">add new profile</string>
     <string name="a11y_clone_profile">clone current profile</string>
     <string name="a11y_delete_current_profile">delete current profile</string>
+
+    <!--    Search-->
+    <string name="search">Search</string>
+    <string name="search_preferences">Search preferences</string>
+    <string name="clear">Clear</string>
+    <string name="search_category_categories">Preference categories</string>
+    <string name="search_category_preferences">Preferences</string>
+    <string name="search_category_dialogs">Dialogs</string>
+    <string name="search_category_plugins">Plugins</string>
+    <string name="no_search_results">No results found</string>
+    <string name="search_plugin_disabled">Plugin %1$s disabled</string>
 
 </resources>

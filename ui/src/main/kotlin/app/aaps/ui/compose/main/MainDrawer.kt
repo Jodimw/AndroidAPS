@@ -74,6 +74,7 @@ fun MainDrawer(
             DrawerMenuItem(
                 iconRes = app.aaps.core.objects.R.drawable.ic_treatments,
                 label = stringResource(app.aaps.core.ui.R.string.treatments),
+                description = stringResource(app.aaps.core.ui.R.string.treatments_desc),
                 enabled = isTreatmentsEnabled,
                 onClick = { onMenuItemClick(MainMenuItem.Treatments) }
             )
@@ -81,24 +82,28 @@ fun MainDrawer(
             DrawerMenuItem(
                 iconRes = app.aaps.core.ui.R.drawable.ic_pump_history,
                 label = stringResource(app.aaps.core.ui.R.string.nav_history_browser),
+                description = stringResource(app.aaps.core.ui.R.string.nav_history_browser_desc),
                 onClick = { onMenuItemClick(MainMenuItem.HistoryBrowser) }
             )
 
             DrawerMenuItem(
                 iconRes = app.aaps.core.ui.R.drawable.ic_settings,
                 label = stringResource(app.aaps.core.ui.R.string.nav_setupwizard),
+                description = stringResource(app.aaps.core.ui.R.string.nav_setupwizard_desc),
                 onClick = { onMenuItemClick(MainMenuItem.SetupWizard) }
             )
 
             DrawerMenuItem(
                 iconRes = app.aaps.core.ui.R.drawable.ic_stats,
                 label = stringResource(app.aaps.ui.R.string.statistics),
+                description = stringResource(app.aaps.ui.R.string.statistics_desc),
                 onClick = { onMenuItemClick(MainMenuItem.Stats) }
             )
 
             DrawerMenuItem(
                 iconRes = app.aaps.core.ui.R.drawable.ic_home_profile,
                 label = stringResource(app.aaps.ui.R.string.nav_profile_helper),
+                description = stringResource(app.aaps.ui.R.string.nav_profile_helper_desc),
                 onClick = { onMenuItemClick(MainMenuItem.ProfileHelper) }
             )
 
@@ -126,6 +131,7 @@ fun MainDrawer(
         DrawerMenuItemWithIcon(
             icon = Icons.Default.Info,
             label = stringResource(app.aaps.core.ui.R.string.nav_about),
+            description = stringResource(app.aaps.core.ui.R.string.nav_about_desc),
             onClick = { onMenuItemClick(MainMenuItem.About) }
         )
 
@@ -143,6 +149,7 @@ fun MainDrawer(
 private fun DrawerMenuItem(
     iconRes: Int,
     label: String,
+    description: String? = null,
     enabled: Boolean = true,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
@@ -152,7 +159,7 @@ private fun DrawerMenuItem(
         modifier = modifier
             .fillMaxWidth()
             .clickable(enabled = enabled, onClick = onClick)
-            .padding(horizontal = 24.dp, vertical = 12.dp)
+            .padding(horizontal = 24.dp, vertical = if (description != null) 8.dp else 12.dp)
     ) {
         Icon(
             painter = painterResource(id = iconRes),
@@ -165,15 +172,28 @@ private fun DrawerMenuItem(
             modifier = Modifier.size(24.dp)
         )
         Spacer(modifier = Modifier.width(16.dp))
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelLarge,
-            color = if (enabled) {
-                MaterialTheme.colorScheme.onSurface
-            } else {
-                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+        Column {
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelLarge,
+                color = if (enabled) {
+                    MaterialTheme.colorScheme.onSurface
+                } else {
+                    MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+                }
+            )
+            if (description != null) {
+                Text(
+                    text = description,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = if (enabled) {
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    } else {
+                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+                    }
+                )
             }
-        )
+        }
     }
 }
 
@@ -181,6 +201,7 @@ private fun DrawerMenuItem(
 private fun DrawerMenuItemWithIcon(
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     label: String,
+    description: String? = null,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -189,7 +210,7 @@ private fun DrawerMenuItemWithIcon(
         modifier = modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)
-            .padding(horizontal = 24.dp, vertical = 12.dp)
+            .padding(horizontal = 24.dp, vertical = if (description != null) 8.dp else 12.dp)
     ) {
         Icon(
             imageVector = icon,
@@ -198,11 +219,20 @@ private fun DrawerMenuItemWithIcon(
             modifier = Modifier.size(24.dp)
         )
         Spacer(modifier = Modifier.width(16.dp))
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.onSurface
-        )
+        Column {
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            if (description != null) {
+                Text(
+                    text = description,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
     }
 }
 

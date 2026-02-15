@@ -29,17 +29,10 @@ import app.aaps.core.interfaces.plugin.PluginBase
 import app.aaps.core.interfaces.profile.ProfileUtil
 import app.aaps.core.interfaces.resources.ResourceHelper
 import app.aaps.core.interfaces.smsCommunicator.SmsCommunicator
-import app.aaps.core.keys.BooleanKey
-import app.aaps.core.keys.IntKey
-import app.aaps.core.keys.StringKey
-import app.aaps.core.keys.interfaces.PreferenceVisibilityContext
 import app.aaps.core.keys.interfaces.Preferences
-import app.aaps.core.keys.interfaces.withEntries
+import app.aaps.ui.search.BuiltInSearchables
 import app.aaps.core.ui.compose.AapsTopAppBar
-import app.aaps.core.ui.compose.preference.LocalCheckPassword
-import app.aaps.core.ui.compose.preference.LocalHashPassword
 import app.aaps.core.ui.compose.preference.LocalSnackbarHostState
-import app.aaps.core.ui.compose.preference.LocalVisibilityContext
 import app.aaps.core.ui.compose.preference.PreferenceSubScreenDef
 import app.aaps.core.ui.compose.preference.ProvidePreferenceTheme
 import app.aaps.core.ui.compose.preference.addPreferenceContent
@@ -57,11 +50,8 @@ import app.aaps.core.ui.compose.preference.verticalScrollIndicators
  * @param preferences Preferences instance for built-in settings
  * @param config Config instance
  * @param rh ResourceHelper instance
- * @param checkPassword Function to verify passwords: (enteredPassword, storedHash) -> Boolean
- * @param hashPassword Function to hash passwords before storing: (password) -> String
- * @param visibilityContext PreferenceVisibilityContext for visibility control
+ * @param builtInSearchables BuiltInSearchables instance (single source of truth for built-in screens)
  * @param profileUtil ProfileUtil instance
- * @param skinEntries Map of skin class names to their display names for the skin preference
  * @param onBackClick Callback when back button is clicked
  */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -71,11 +61,8 @@ fun AllPreferencesScreen(
     preferences: Preferences,
     config: Config,
     rh: ResourceHelper,
-    checkPassword: (password: String, hash: String) -> Boolean,
-    hashPassword: (password: String) -> String,
-    visibilityContext: PreferenceVisibilityContext,
+    builtInSearchables: BuiltInSearchables,
     profileUtil: ProfileUtil,
-    skinEntries: Map<String, String>,
     onBackClick: () -> Unit
 ) {
     // Look up plugins by interface
@@ -84,65 +71,11 @@ fun AllPreferencesScreen(
     val autotunePlugin = activePlugin.getSpecificPluginsListByInterface(Autotune::class.java).firstOrNull()
     val maintenancePlugin = activePlugin.getSpecificPluginsListByInterface(Maintenance::class.java).firstOrNull()
 
-    // Built-in preference screens
-    val generalPreferences = PreferenceSubScreenDef(
-        key = "general",
-        titleResId = app.aaps.core.ui.R.string.configbuilder_general,
-        items = listOf(
-            StringKey.GeneralUnits,
-            StringKey.GeneralLanguage,
-            BooleanKey.GeneralSimpleMode,
-            StringKey.GeneralPatientName,
-            StringKey.GeneralSkin.withEntries(skinEntries),
-            StringKey.GeneralDarkMode
-        ),
-        iconResId = app.aaps.core.ui.R.drawable.ic_settings
-    )
-    val protectionPreferences = PreferenceSubScreenDef(
-        key = "protection",
-        titleResId = app.aaps.core.ui.R.string.protection,
-        items = listOf(
-            // Master Password
-            StringKey.ProtectionMasterPassword,
-            // Settings Protection
-            IntKey.ProtectionTypeSettings,
-            StringKey.ProtectionSettingsPassword,  // Visibility defined on StringKey
-            StringKey.ProtectionSettingsPin,       // Visibility defined on StringKey
-            // Application Protection
-            IntKey.ProtectionTypeApplication,
-            StringKey.ProtectionApplicationPassword,
-            StringKey.ProtectionApplicationPin,
-            // Bolus Protection
-            IntKey.ProtectionTypeBolus,
-            StringKey.ProtectionBolusPassword,
-            StringKey.ProtectionBolusPin,
-            // Protection Timeout
-            IntKey.ProtectionTimeout
-        ),
-        iconResId = app.aaps.core.objects.R.drawable.ic_header_key
-    )
-    val pumpPreferences = PreferenceSubScreenDef(
-        key = "pump",
-        titleResId = app.aaps.core.ui.R.string.pump,
-        items = listOf(
-            BooleanKey.PumpBtWatchdog
-        ),
-        iconResId = app.aaps.core.ui.R.drawable.ic_settings
-    )
-    val alertsPreferences = PreferenceSubScreenDef(
-        key = "alerts",
-        titleResId = app.aaps.core.ui.R.string.localalertsettings_title,
-        items = listOf(
-            BooleanKey.AlertMissedBgReading,
-            IntKey.AlertsStaleDataThreshold,
-            BooleanKey.AlertPumpUnreachable,
-            IntKey.AlertsPumpUnreachableThreshold,
-            BooleanKey.AlertCarbsRequired,
-            BooleanKey.AlertUrgentAsAndroidNotification,
-            BooleanKey.AlertIncreaseVolume
-        ),
-        iconResId = app.aaps.core.objects.R.drawable.ic_cp_announcement
-    )
+    // Built-in preference screens from BuiltInSearchables (single source of truth)
+    val generalPreferences = builtInSearchables.general
+    val protectionPreferences = builtInSearchables.protection
+    val pumpPreferences = builtInSearchables.pump
+    val alertsPreferences = builtInSearchables.alerts
 
     // Helper function to get preference content if plugin is enabled
     fun getPreferenceContentIfEnabled(plugin: PluginBase?, enabledCondition: Boolean = true): Any? {
@@ -207,12 +140,7 @@ fun AllPreferencesScreen(
 
     val snackbarHostState = remember { SnackbarHostState() }
 
-    CompositionLocalProvider(
-        LocalCheckPassword provides checkPassword,
-        LocalHashPassword provides hashPassword,
-        LocalSnackbarHostState provides snackbarHostState,
-        LocalVisibilityContext provides visibilityContext
-    ) {
+    CompositionLocalProvider(LocalSnackbarHostState provides snackbarHostState) {
         ProvidePreferenceTheme {
             Scaffold(
                 topBar = {

@@ -384,4 +384,10 @@ class PreferencesImpl @Inject constructor(
                 .maxOfOrNull { it.amount }
                 ?: hardLimits.get().maxBolus()
         }
+
+    override fun getAllPreferenceKeys(): List<PreferenceKey> =
+        prefsList
+            .filter { PreferenceKey::class.java.isAssignableFrom(it) }
+            .flatMap { it.enumConstants!!.asIterable() }
+            .filterIsInstance<PreferenceKey>()
 }

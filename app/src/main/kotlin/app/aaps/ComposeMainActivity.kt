@@ -42,13 +42,16 @@ import app.aaps.core.objects.crypto.CryptoUtil
 import app.aaps.core.ui.compose.AapsTheme
 import app.aaps.core.ui.compose.LocalPreferences
 import app.aaps.core.ui.compose.LocalRxBus
+import app.aaps.core.ui.compose.preference.LocalCheckPassword
+import app.aaps.core.ui.compose.preference.LocalHashPassword
+import app.aaps.core.ui.compose.preference.LocalVisibilityContext
 import app.aaps.core.ui.compose.ProtectionHost
 import app.aaps.core.ui.compose.preference.PluginPreferencesScreen
+import app.aaps.core.ui.compose.preference.PreferenceSubScreenDef
 import app.aaps.implementation.protection.BiometricCheck
 import app.aaps.plugins.configuration.activities.DaggerAppCompatActivityWithResult
 import app.aaps.plugins.configuration.activities.SingleFragmentActivity
 import app.aaps.plugins.configuration.setupwizard.SetupWizardActivity
-import app.aaps.plugins.main.skins.SkinProvider
 import app.aaps.ui.compose.overview.manage.ManageViewModel
 import app.aaps.ui.compose.overview.statusLights.StatusViewModel
 import app.aaps.ui.compose.overview.treatments.TreatmentViewModel
@@ -68,6 +71,11 @@ import app.aaps.ui.compose.main.MainMenuItem
 import app.aaps.ui.compose.main.MainScreen
 import app.aaps.ui.compose.main.MainViewModel
 import app.aaps.ui.compose.preferences.AllPreferencesScreen
+import app.aaps.ui.compose.preferences.PreferenceScreenView
+import app.aaps.ui.search.BuiltInSearchables
+import app.aaps.ui.search.SearchIndexEntry
+import app.aaps.ui.search.SearchViewModel
+import app.aaps.core.ui.search.SearchableItem
 import app.aaps.ui.compose.profileHelper.ProfileHelperScreen
 import app.aaps.ui.compose.profileManagement.ProfileActivationScreen
 import app.aaps.ui.compose.profileManagement.ProfileEditorScreen
@@ -101,12 +109,12 @@ class ComposeMainActivity : DaggerAppCompatActivityWithResult() {
     @Inject lateinit var configBuilder: ConfigBuilder
     @Inject lateinit var config: Config
     @Inject lateinit var uiInteraction: UiInteraction
-    @Inject lateinit var skinProvider: SkinProvider
     @Inject lateinit var profileUtil: ProfileUtil
     @Inject lateinit var visibilityContext: PreferenceVisibilityContext
     @Inject lateinit var xDripSource: XDripSource
     @Inject lateinit var dexcomBoyda: DexcomBoyda
     @Inject lateinit var iobCobCalculator: IobCobCalculator
+    @Inject lateinit var builtInSearchables: BuiltInSearchables
 
     // ViewModels
     @Inject lateinit var mainViewModel: MainViewModel
@@ -127,6 +135,7 @@ class ComposeMainActivity : DaggerAppCompatActivityWithResult() {
     @Inject lateinit var carbsDialogViewModel: CarbsDialogViewModel
     @Inject lateinit var insulinDialogViewModel: InsulinDialogViewModel
     @Inject lateinit var treatmentDialogViewModel: TreatmentDialogViewModel
+    @Inject lateinit var searchViewModel: SearchViewModel
 
     private val disposable = CompositeDisposable()
 
@@ -147,7 +156,10 @@ class ComposeMainActivity : DaggerAppCompatActivityWithResult() {
 
         CompositionLocalProvider(
             LocalPreferences provides preferences,
-            LocalRxBus provides rxBus
+            LocalRxBus provides rxBus,
+            LocalCheckPassword provides cryptoUtil::checkPassword,
+            LocalHashPassword provides cryptoUtil::hashPassword,
+            LocalVisibilityContext provides visibilityContext
         ) {
             AapsTheme {
                 // Protection dialog host - handles all protection requests
@@ -167,6 +179,8 @@ class ComposeMainActivity : DaggerAppCompatActivityWithResult() {
                     startDestination = AppRoute.Main.route
                 ) {
                     composable(AppRoute.Main.route) {
+                        val searchState by searchViewModel.uiState.collectAsState()
+
                         MainScreen(
                             uiState = state,
                             versionName = mainViewModel.versionName,
@@ -177,6 +191,17 @@ class ComposeMainActivity : DaggerAppCompatActivityWithResult() {
                             manageViewModel = manageViewModel,
                             statusViewModel = statusViewModel,
                             treatmentViewModel = treatmentViewModel,
+                            // Search
+                            searchUiState = searchState,
+                            onSearchQueryChange = { searchViewModel.onQueryChanged(it) },
+                            onSearchClear = { searchViewModel.clearQuery() },
+                            onSearchActiveChange = { active ->
+                                if (active) searchViewModel.onSearchModeActivated()
+                                else searchViewModel.onSearchModeDeactivated()
+                            },
+                            onSearchResultClick = { entry ->
+                                handleSearchResultClick(entry, navController)
+                            },
                             onMenuClick = { mainViewModel.openDrawer() },
                             onProfileManagementClick = {
                                 protectionCheck.requestProtection(ProtectionCheck.Protection.PREFERENCES) { result ->
@@ -341,6 +366,8 @@ class ComposeMainActivity : DaggerAppCompatActivityWithResult() {
                                 uiInteraction.runAlarm(comment, title, app.aaps.core.ui.R.raw.boluserror)
                             },
                             graphViewModel = graphViewModel,
+                            statusLightsDef = builtInSearchables.statusLights,
+                            treatmentButtonsDef = builtInSearchables.treatmentButtons,
                             preferences = mainViewModel.preferences,
                             config = mainViewModel.config
                         )
@@ -426,6 +453,7 @@ class ComposeMainActivity : DaggerAppCompatActivityWithResult() {
                         FillDialogScreen(
                             viewModel = fillDialogViewModel,
                             preselect = preselect,
+                            fillButtonsDef = builtInSearchables.fillButtons,
                             onNavigateBack = { navController.popBackStack() },
                             onShowSiteRotationDialog = {
                                 uiInteraction.runSiteRotationDialog(supportFragmentManager)
@@ -439,6 +467,7 @@ class ComposeMainActivity : DaggerAppCompatActivityWithResult() {
                     composable(route = AppRoute.CarbsDialog.route) {
                         CarbsDialogScreen(
                             viewModel = carbsDialogViewModel,
+                            carbsButtonsDef = builtInSearchables.carbsButtons,
                             onNavigateBack = { navController.popBackStack() },
                             onShowDeliveryError = { comment ->
                                 uiInteraction.runAlarm(comment, rh.gs(app.aaps.core.ui.R.string.treatmentdeliveryerror), app.aaps.core.ui.R.raw.boluserror)
@@ -449,6 +478,7 @@ class ComposeMainActivity : DaggerAppCompatActivityWithResult() {
                     composable(route = AppRoute.InsulinDialog.route) {
                         InsulinDialogScreen(
                             viewModel = insulinDialogViewModel,
+                            insulinButtonsDef = builtInSearchables.insulinButtons,
                             onNavigateBack = { navController.popBackStack() },
                             onShowDeliveryError = { comment ->
                                 uiInteraction.runAlarm(comment, rh.gs(app.aaps.core.ui.R.string.treatmentdeliveryerror), app.aaps.core.ui.R.raw.boluserror)
@@ -555,11 +585,8 @@ class ComposeMainActivity : DaggerAppCompatActivityWithResult() {
                             preferences = preferences,
                             config = config,
                             rh = rh,
-                            checkPassword = cryptoUtil::checkPassword,
-                            hashPassword = cryptoUtil::hashPassword,
-                            visibilityContext = visibilityContext,
+                            builtInSearchables = builtInSearchables,
                             profileUtil = profileUtil,
-                            skinEntries = skinProvider.list.associate { skin -> skin.javaClass.name to rh.gs(skin.description) },
                             onBackClick = { navController.popBackStack() }
                         )
                     }
@@ -579,9 +606,61 @@ class ComposeMainActivity : DaggerAppCompatActivityWithResult() {
                             )
                         }
                     }
+
+                    composable(AppRoute.PreferenceScreen.route) { backStackEntry ->
+                        val screenKey = backStackEntry.arguments?.getString("screenKey")
+                        val highlightKey = backStackEntry.arguments?.getString("highlightKey")
+                        val screenDef = screenKey?.let { key ->
+                            findScreenDef(key)
+                        }
+                        if (screenDef != null) {
+                            PreferenceScreenView(
+                                screenDef = screenDef,
+                                preferences = preferences,
+                                config = config,
+                                profileUtil = profileUtil,
+                                highlightKey = highlightKey,
+                                onBackClick = { navController.popBackStack() }
+                            )
+                        }
+                    }
                 }
             }
         }
+    }
+
+    private fun findScreenDef(key: String): PreferenceSubScreenDef? {
+        // Check built-in screens from BuiltInSearchables
+        builtInSearchables.getSearchableItems().forEach { item ->
+            if (item is SearchableItem.Category && item.screenDef.key == key) {
+                return item.screenDef
+            }
+        }
+        // Check plugin screens
+        for (plugin in activePlugin.getPluginsList()) {
+            val content = plugin.getPreferenceScreenContent()
+            if (content is PreferenceSubScreenDef) {
+                if (content.key == key) return content
+                // Check nested screens
+                val nested = findNestedScreen(content, key)
+                if (nested != null) return nested
+            }
+        }
+        return null
+    }
+
+    private fun findNestedScreen(
+        screen: PreferenceSubScreenDef,
+        key: String
+    ): PreferenceSubScreenDef? {
+        for (item in screen.items) {
+            if (item is PreferenceSubScreenDef) {
+                if (item.key == key) return item
+                val nested = findNestedScreen(item, key)
+                if (nested != null) return nested
+            }
+        }
+        return null
     }
 
     override fun onResume() {
@@ -668,6 +747,128 @@ class ComposeMainActivity : DaggerAppCompatActivityWithResult() {
             startActivity(intent)
         } catch (_: ActivityNotFoundException) {
             aapsLogger.debug("Error opening CGM app: $packageName")
+        }
+    }
+
+    private fun handleSearchResultClick(entry: SearchIndexEntry, navController: NavController) {
+        // Keep search active so user can return to results with back button
+
+        when (val item = entry.item) {
+            is SearchableItem.Category -> {
+                // Navigate to the specific preference screen
+                protectionCheck.requestProtection(ProtectionCheck.Protection.PREFERENCES) { result ->
+                    if (result == ProtectionResult.GRANTED) {
+                        navController.navigate(AppRoute.PreferenceScreen.createRoute(item.screenDef.key))
+                    }
+                }
+            }
+
+            is SearchableItem.Preference -> {
+                // Navigate to parent screen with preference highlighted
+                val screenKey = item.parentScreenKey
+                if (screenKey != null) {
+                    protectionCheck.requestProtection(ProtectionCheck.Protection.PREFERENCES) { result ->
+                        if (result == ProtectionResult.GRANTED) {
+                            navController.navigate(AppRoute.PreferenceScreen.createRoute(screenKey, item.preferenceKey.key))
+                        }
+                    }
+                } else {
+                    // Fallback to all preferences if no parent screen
+                    protectionCheck.requestProtection(ProtectionCheck.Protection.PREFERENCES) { result ->
+                        if (result == ProtectionResult.GRANTED) {
+                            navController.navigate(AppRoute.Preferences.route)
+                        }
+                    }
+                }
+            }
+
+            is SearchableItem.Dialog -> {
+                // Handle dialog navigation based on dialog key
+                when (item.dialogKey) {
+                    // Drawer menu screens
+                    "treatments" -> navController.navigate(AppRoute.Treatments.route)
+                    "stats" -> navController.navigate(AppRoute.Stats.route)
+                    "profile_helper" -> navController.navigate(AppRoute.ProfileHelper.route)
+                    "history_browser" -> {
+                        startActivity(Intent(this@ComposeMainActivity, uiInteraction.historyBrowseActivity))
+                    }
+                    "setup_wizard" -> {
+                        protectionCheck.requestProtection(ProtectionCheck.Protection.PREFERENCES) { result ->
+                            if (result == ProtectionResult.GRANTED) {
+                                startActivity(Intent(this@ComposeMainActivity, SetupWizardActivity::class.java))
+                            }
+                        }
+                    }
+                    "about" -> mainViewModel.setShowAboutDialog(true)
+
+                    // Action screens
+                    "running_mode" -> {
+                        protectionCheck.requestProtection(ProtectionCheck.Protection.BOLUS) { result ->
+                            if (result == ProtectionResult.GRANTED) {
+                                navController.navigate(AppRoute.RunningMode.route)
+                            }
+                        }
+                    }
+                    "temp_target_management" -> {
+                        protectionCheck.requestProtection(ProtectionCheck.Protection.BOLUS) { result ->
+                            if (result == ProtectionResult.GRANTED) {
+                                navController.navigate(AppRoute.TempTargetManagement.route)
+                            }
+                        }
+                    }
+                    "quick_wizard_management" -> {
+                        protectionCheck.requestProtection(ProtectionCheck.Protection.BOLUS) { result ->
+                            if (result == ProtectionResult.GRANTED) {
+                                navController.navigate(AppRoute.QuickWizardManagement.route)
+                            }
+                        }
+                    }
+
+                    // Dialogs
+                    "carbs_dialog" -> {
+                        protectionCheck.requestProtection(ProtectionCheck.Protection.BOLUS) { result ->
+                            if (result == ProtectionResult.GRANTED) {
+                                navController.navigate(AppRoute.CarbsDialog.route)
+                            }
+                        }
+                    }
+                    "insulin_dialog" -> {
+                        protectionCheck.requestProtection(ProtectionCheck.Protection.BOLUS) { result ->
+                            if (result == ProtectionResult.GRANTED) {
+                                navController.navigate(AppRoute.InsulinDialog.route)
+                            }
+                        }
+                    }
+                    "treatment_dialog" -> {
+                        protectionCheck.requestProtection(ProtectionCheck.Protection.BOLUS) { result ->
+                            if (result == ProtectionResult.GRANTED) {
+                                navController.navigate(AppRoute.TreatmentDialog.route)
+                            }
+                        }
+                    }
+                    "fill_dialog" -> {
+                        protectionCheck.requestProtection(ProtectionCheck.Protection.BOLUS) { result ->
+                            if (result == ProtectionResult.GRANTED) {
+                                navController.navigate(AppRoute.FillDialog.createRoute(0))
+                            }
+                        }
+                    }
+
+                    // CareDialog events
+                    "care_bgcheck" -> navController.navigate(AppRoute.CareDialog.createRoute(UiInteraction.EventType.BGCHECK.ordinal))
+                    "care_sensor_insert" -> navController.navigate(AppRoute.CareDialog.createRoute(UiInteraction.EventType.SENSOR_INSERT.ordinal))
+                    "care_battery_change" -> navController.navigate(AppRoute.CareDialog.createRoute(UiInteraction.EventType.BATTERY_CHANGE.ordinal))
+                    "care_note" -> navController.navigate(AppRoute.CareDialog.createRoute(UiInteraction.EventType.NOTE.ordinal))
+                    "care_exercise" -> navController.navigate(AppRoute.CareDialog.createRoute(UiInteraction.EventType.EXERCISE.ordinal))
+                    "care_question" -> navController.navigate(AppRoute.CareDialog.createRoute(UiInteraction.EventType.QUESTION.ordinal))
+                    "care_announcement" -> navController.navigate(AppRoute.CareDialog.createRoute(UiInteraction.EventType.ANNOUNCEMENT.ordinal))
+                }
+            }
+
+            is SearchableItem.Plugin -> {
+                // Handle plugin click - same as drawer plugin click
+                handlePluginClick(item.pluginRef)
+            }
         }
     }
 

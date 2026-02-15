@@ -82,6 +82,7 @@ fun OverviewScreen(
     graphViewModel: GraphViewModel,
     manageViewModel: ManageViewModel,
     statusViewModel: StatusViewModel,
+    statusLightsDef: PreferenceSubScreenDef,
     onProfileManagementClick: () -> Unit,
     onTempTargetClick: () -> Unit,
     onRunningModeClick: () -> Unit,
@@ -167,6 +168,7 @@ fun OverviewScreen(
             onFillClick = onFillClick,
             onInsulinChangeClick = onInsulinChangeClick,
             onBatteryChangeClick = onBatteryChangeClick,
+            statusLightsDef = statusLightsDef,
             preferences = preferences,
             config = config,
             onCopyFromNightscout = { manageViewModel.copyStatusLightsFromNightscout() }
@@ -190,6 +192,7 @@ private fun OverviewStatusSection(
     onFillClick: () -> Unit,
     onInsulinChangeClick: () -> Unit,
     onBatteryChangeClick: () -> Unit,
+    statusLightsDef: PreferenceSubScreenDef,
     preferences: Preferences,
     config: Config,
     onCopyFromNightscout: () -> Unit
@@ -297,6 +300,7 @@ private fun OverviewStatusSection(
     // Settings bottom sheet
     if (showSettingsSheet) {
         StatusLightsSettingsBottomSheet(
+            settingsDef = statusLightsDef,
             onDismiss = { showSettingsSheet = false },
             preferences = preferences,
             config = config,
@@ -309,6 +313,7 @@ private fun OverviewStatusSection(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun StatusLightsSettingsBottomSheet(
+    settingsDef: PreferenceSubScreenDef,
     onDismiss: () -> Unit,
     preferences: Preferences,
     config: Config,
@@ -321,6 +326,7 @@ private fun StatusLightsSettingsBottomSheet(
         containerColor = MaterialTheme.colorScheme.surface
     ) {
         StatusLightsSettingsContent(
+            settingsDef = settingsDef,
             preferences = preferences,
             config = config,
             onCopyFromNightscout = onCopyFromNightscout
@@ -330,32 +336,12 @@ private fun StatusLightsSettingsBottomSheet(
 
 @Composable
 private fun StatusLightsSettingsContent(
+    settingsDef: PreferenceSubScreenDef,
     preferences: Preferences,
     config: Config,
     onCopyFromNightscout: () -> Unit
 ) {
     var showCopyDialog by remember { mutableStateOf(false) }
-
-    val statusLightsSettingsDef = PreferenceSubScreenDef(
-        key = "statuslights_overview_advanced",
-        titleResId = app.aaps.core.ui.R.string.statuslights,
-        items = listOf(
-            IntKey.OverviewCageWarning,
-            IntKey.OverviewCageCritical,
-            IntKey.OverviewIageWarning,
-            IntKey.OverviewIageCritical,
-            IntKey.OverviewSageWarning,
-            IntKey.OverviewSageCritical,
-            IntKey.OverviewSbatWarning,
-            IntKey.OverviewSbatCritical,
-            IntKey.OverviewResWarning,
-            IntKey.OverviewResCritical,
-            IntKey.OverviewBattWarning,
-            IntKey.OverviewBattCritical,
-            IntKey.OverviewBageWarning,
-            IntKey.OverviewBageCritical,
-        )
-    )
 
     Column(
         modifier = Modifier
@@ -373,7 +359,7 @@ private fun StatusLightsSettingsContent(
         // Settings list
         ProvidePreferenceTheme {
             AdaptivePreferenceList(
-                items = statusLightsSettingsDef.items,
+                items = settingsDef.items,
                 preferences = preferences,
                 config = config
             )

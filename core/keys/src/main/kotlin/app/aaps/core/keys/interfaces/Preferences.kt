@@ -508,4 +508,11 @@ interface Preferences {
      * @return true if exportable key
      */
     fun isExportableKey(key: String): Boolean
+
+    /**
+     * Get all registered PreferenceKey instances.
+     * Used by the global search feature to build the search index.
+     * @return list of all PreferenceKey instances from registered enums
+     */
+    fun getAllPreferenceKeys(): List<PreferenceKey>
 }
