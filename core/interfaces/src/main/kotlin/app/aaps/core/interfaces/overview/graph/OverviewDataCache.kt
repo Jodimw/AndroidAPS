@@ -86,5 +86,13 @@ interface OverviewDataCache {
     val varSensGraphFlow: StateFlow<VarSensGraphData>
     fun updateVarSensGraph(data: VarSensGraphData)
 
+    // =========================================================================
+    // Treatment graph flows (main graph overlays)
+    // =========================================================================
+
+    // Treatments: boluses, SMBs, carbs, extended boluses, therapy events
+    val treatmentGraphFlow: StateFlow<TreatmentGraphData>
+    fun updateTreatmentGraph(data: TreatmentGraphData)
+
     fun reset()
 }

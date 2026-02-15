@@ -14,8 +14,8 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
-import app.aaps.core.graph.vico.AdaptiveStep
 import app.aaps.core.graph.vico.Square
+import app.aaps.core.interfaces.overview.graph.BolusType
 import app.aaps.core.ui.compose.AapsTheme
 import com.patrykandpatrick.vico.compose.cartesian.CartesianChartHost
 import com.patrykandpatrick.vico.compose.cartesian.VicoScrollState
@@ -23,42 +23,29 @@ import com.patrykandpatrick.vico.compose.cartesian.VicoZoomState
 import com.patrykandpatrick.vico.compose.cartesian.axis.HorizontalAxis
 import com.patrykandpatrick.vico.compose.cartesian.axis.VerticalAxis
 import com.patrykandpatrick.vico.compose.cartesian.data.CartesianChartModelProducer
+import com.patrykandpatrick.vico.compose.cartesian.data.CartesianLayerRangeProvider
 import com.patrykandpatrick.vico.compose.cartesian.data.lineSeries
 import com.patrykandpatrick.vico.compose.cartesian.layer.LineCartesianLayer
 import com.patrykandpatrick.vico.compose.cartesian.layer.rememberLineCartesianLayer
 import com.patrykandpatrick.vico.compose.cartesian.rememberCartesianChart
 import com.patrykandpatrick.vico.compose.common.Fill
+import com.patrykandpatrick.vico.compose.common.component.ShapeComponent
 import com.patrykandpatrick.vico.compose.common.component.TextComponent
 import com.patrykandpatrick.vico.compose.common.component.rememberTextComponent
 
 /**
  * IOB (Insulin On Board) Graph using Vico.
  *
- * Architecture:
- * - Collects iobGraphFlow independently
- * - Two blue lines: regular IOB + IOB predictions
- * - Uses same x-axis coordinate system as BG graph
- * - Same axis configuration as BG graph (Y-axis + X-axis with time labels)
+ * Series (ALWAYS 6, fixed order):
+ *   0: IOB data (or invisible dummy)
+ *   1: Small SMB triangles (or invisible dummy)
+ *   2: Medium SMB triangles (or invisible dummy)
+ *   3: Large SMB triangles (or invisible dummy)
+ *   4: Normal bolus markers (or invisible dummy)
+ *   5: Normalizer (invisible, ensures identical maxPointSize — see GraphUtils.kt)
  *
- * X-Axis Range Alignment ("Open to the Future"):
- * - MUST match BG graph's x-axis range exactly (derivedTimeRange: minTimestamp to maxTimestamp)
- * - Uses invisible anchor series: 3 points [minX, minX+1, maxX] to establish xStep = 1 via GCD
- * - CRITICAL: With only 2 points [minX, maxX], xStep = (maxX-minX), causing vertical stacking
- * - With 3 points [minX, minX+1, maxX]: deltas [1, maxX-minX-1] → GCD = 1 → proper spacing
- * - Start anchor: At y=0 if IOB data starts later than time range (invisible in gradient)
- * - End anchor: Holds last IOB value (not drop to 0) - shows ongoing IOB status
- * - Graph is "open to the future" - extends horizontally at last value, not dropping prematurely
- * - This ensures perfect vertical alignment with BG graph when stacked
- *
- * Scroll/Zoom:
- * - Receives scroll/zoom state from BG graph (synchronized automatically)
- * - User cannot manually scroll/zoom this graph - it follows BG graph
- *
- * Rendering:
- * - IOB line: Blue step line (Square PointConnector) - horizontal→vertical staircase
- * - Predictions: Blue step line (Square PointConnector) - same style as regular IOB
- * - Gradient fill from semi-transparent blue to transparent
- * - No failover regions (IOB doesn't have failover points like COB)
+ * Uses fixed series count with invisible dummies for empty slots to ensure
+ * Vico's LineProvider.series() always maps lines to series by index correctly.
  */
 @Composable
 fun IobGraphCompose(
@@ -69,87 +56,121 @@ fun IobGraphCompose(
 ) {
     // Collect flows independently
     val iobGraphData by viewModel.iobGraphFlow.collectAsState()
+    val treatmentGraphData by viewModel.treatmentGraphFlow.collectAsState()
     val derivedTimeRange by viewModel.derivedTimeRange.collectAsState()
 
-    // Use derived time range or fall back to default (last 24 hours)
-    // With anchor series, we can render immediately even without data
+    val hasRealTimeRange = derivedTimeRange != null
     val (minTimestamp, maxTimestamp) = derivedTimeRange ?: run {
         val now = System.currentTimeMillis()
         val dayAgo = now - 24 * 60 * 60 * 1000L
         dayAgo to now
     }
 
-    // Single model producer for IOB lines
     val modelProducer = remember { CartesianChartModelProducer() }
 
     // Colors from theme
     val iobColor = AapsTheme.generalColors.activeInsulinText
+    val smbColor = AapsTheme.elementColors.insulin
 
-    // Calculate x-axis range (must match BG graph for alignment)
     val minX = 0.0
     val maxX = remember(minTimestamp, maxTimestamp) {
         timestampToX(maxTimestamp, minTimestamp)
     }
 
-    // Track which series are currently included (for matching LineProvider)
-    val hasIobDataState = remember { mutableStateOf(false) }
-//    val hasPredictionsDataState = remember { mutableStateOf(false) }
-
-    // LaunchedEffect for IOB series - only runs when iobGraphData or time range changes significantly
-    // Use remember to cache and only update when time range changes by more than 1 minute
     val stableTimeRange = remember(minTimestamp / 60000, maxTimestamp / 60000) {
         minTimestamp to maxTimestamp
     }
 
-    LaunchedEffect(iobGraphData, stableTimeRange) {
+    // Dummy series for empty slots — 2 invisible points at y=0
+    val dummyX = listOf(minX, minX + 1.0)
+    val dummyY = listOf(0.0, 0.0)
+
+    // Cache last non-empty treatment data to survive reset() cycles
+    val lastTreatmentData = remember { mutableStateOf(treatmentGraphData) }
+    if (treatmentGraphData.boluses.isNotEmpty()) {
+        lastTreatmentData.value = treatmentGraphData
+    }
+
+    LaunchedEffect(iobGraphData, treatmentGraphData, stableTimeRange) {
+        // Skip model building when derivedTimeRange is null (fallback 24h range).
+        // The fallback range differs from BG graph's range, causing scroll sync misalignment
+        // because pixel-based sync maps to different time windows with different data ranges.
+        if (!hasRealTimeRange) return@LaunchedEffect
+
         val iobPoints = iobGraphData.iob
-        iobGraphData.predictions
+        val activeTreatmentData = lastTreatmentData.value
+        val allBoluses = activeTreatmentData.boluses
+        val smbs = allBoluses.filter { it.bolusType == BolusType.SMB }
+        val normalBoluses = allBoluses.filter { it.bolusType == BolusType.NORMAL }
+
+        // Split SMBs into 3 size categories
+        var smallSmbs: List<Pair<Double, Double>> = emptyList()
+        var mediumSmbs: List<Pair<Double, Double>> = emptyList()
+        var largeSmbs: List<Pair<Double, Double>> = emptyList()
+
+        if (smbs.isNotEmpty()) {
+            if (smbs.size <= 1 || smbs.minOf { it.amount } == smbs.maxOf { it.amount }) {
+                mediumSmbs = smbs.map { timestampToX(it.timestamp, minTimestamp) to 0.0 }
+            } else {
+                val minAmount = smbs.minOf { it.amount }
+                val range = smbs.maxOf { it.amount } - minAmount
+                val smallThreshold = minAmount + range / 3.0
+                val largeThreshold = minAmount + 2.0 * range / 3.0
+
+                val small = mutableListOf<Pair<Double, Double>>()
+                val medium = mutableListOf<Pair<Double, Double>>()
+                val large = mutableListOf<Pair<Double, Double>>()
+
+                for (smb in smbs) {
+                    val point = timestampToX(smb.timestamp, minTimestamp) to 0.0
+                    when {
+                        smb.amount < smallThreshold  -> small.add(point)
+                        smb.amount < largeThreshold  -> medium.add(point)
+                        else                         -> large.add(point)
+                    }
+                }
+                smallSmbs = small
+                mediumSmbs = medium
+                largeSmbs = large
+            }
+        }
 
         modelProducer.runTransaction {
             lineSeries {
-                // Invisible anchor series (ALWAYS FIRST for x-axis range normalization)
-                // CRITICAL: 3 points [minX, minX+1, maxX] establish xStep = 1 via GCD
-                // With only 2 points [minX, maxX]: xStep = (maxX-minX) → stacked rendering
-                // With 3 points: deltas [1, maxX-minX-1] → GCD = 1 → xStep = 1.0 → proper spacing
-                val (anchorX, anchorY) = createInvisibleAnchorSeries(minX, maxX)
-                series(anchorX, anchorY)
+                // Series 0: IOB data (or dummy)
+                val iobFiltered = if (iobPoints.isNotEmpty()) {
+                    val pts = iobPoints.map { timestampToX(it.timestamp, minTimestamp) to it.value }
+                    filterToRange(pts, minX, maxX)
+                } else emptyList()
+                if (iobFiltered.isNotEmpty()) {
+                    series(x = iobFiltered.map { it.first }, y = iobFiltered.map { it.second })
+                } else {
+                    series(x = dummyX, y = dummyY)
+                }
 
-                var hasIobData = false
-
-                // IOB data series (only if data exists after filtering)
-                if (iobPoints.isNotEmpty()) {
-                    val dataPoints = iobPoints
-                        .map { timestampToX(it.timestamp, minTimestamp) to it.value }
-                    val filteredPoints = filterToRange(dataPoints, minX, maxX)
-
-                    if (filteredPoints.isNotEmpty()) {
-                        series(
-                            x = filteredPoints.map { it.first },
-                            y = filteredPoints.map { it.second }
-                        )
-                        hasIobData = true
+                // Series 1-3: SMBs by size (small, medium, large) — or dummy
+                for (smbList in listOf(smallSmbs, mediumSmbs, largeSmbs)) {
+                    val filtered = filterToRange(smbList, minX, maxX)
+                    if (filtered.isNotEmpty()) {
+                        series(x = filtered.map { it.first }, y = filtered.map { it.second })
+                    } else {
+                        series(x = dummyX, y = dummyY)
                     }
                 }
 
-                // Predictions series (only if data exists after filtering)
-                /*
-                                if (predictionPoints.isNotEmpty()) {
-                                    val dataPoints = predictionPoints
-                                        .map { timestampToX(it.timestamp, minTimestamp) to it.value }
-                                    val filteredPoints = filterToRange(dataPoints, minX, maxX)
+                // Series 4: Normal boluses (or dummy)
+                val bolusFiltered = if (normalBoluses.isNotEmpty()) {
+                    val pts = normalBoluses.map { timestampToX(it.timestamp, minTimestamp) to it.amount }
+                    filterToRange(pts, minX, maxX)
+                } else emptyList()
+                if (bolusFiltered.isNotEmpty()) {
+                    series(x = bolusFiltered.map { it.first }, y = bolusFiltered.map { it.second })
+                } else {
+                    series(x = dummyX, y = dummyY)
+                }
 
-                                    if (filteredPoints.isNotEmpty()) {
-                                        series(
-                                            x = filteredPoints.map { it.first },
-                                            y = filteredPoints.map { it.second }
-                                        )
-                                        hasPredictionsData = true
-                                    }
-                                }
-                */
-                // Update state
-                hasIobDataState.value = hasIobData
-//                hasPredictionsDataState.value = hasPredictionsData
+                // Series 5: Normalizer — ensures identical maxPointSize across all charts (see GraphUtils.kt)
+                series(x = NORMALIZER_X, y = NORMALIZER_Y)
             }
         }
     }
@@ -158,53 +179,82 @@ fun IobGraphCompose(
     val timeFormatter = rememberTimeFormatter(minTimestamp)
     val bottomAxisItemPlacer = rememberBottomAxisItemPlacer(minTimestamp)
 
-    // Line style for IOB: solid blue line with square step connector
+    // Line styles — FIXED order matching series indices
     val iobLine = remember(iobColor) {
         LineCartesianLayer.Line(
             fill = LineCartesianLayer.LineFill.single(Fill(iobColor)),
             areaFill = LineCartesianLayer.AreaFill.single(
-                Fill(
-                    Brush.verticalGradient(
-                        listOf(
-                            iobColor.copy(alpha = 1f),
-                            Color.Transparent
-                        )
-                    )
-                )
+                Fill(Brush.verticalGradient(listOf(iobColor.copy(alpha = 1f), Color.Transparent)))
             ),
-            pointConnector = AdaptiveStep
+            pointConnector = Square
         )
     }
 
-    // Line style for predictions: same as IOB but without gradient fill
-    val predictionsLine = remember(iobColor) {
+    val smallSmbLine = remember(smbColor) {
         LineCartesianLayer.Line(
-            fill = LineCartesianLayer.LineFill.single(Fill(iobColor)),
-            areaFill = null,  // No gradient for predictions
-            pointConnector = Square  // Fixed step: horizontal→vertical staircase
+            fill = LineCartesianLayer.LineFill.single(Fill(Color.Transparent)),
+            areaFill = null,
+            pointProvider = LineCartesianLayer.PointProvider.single(
+                LineCartesianLayer.Point(
+                    component = ShapeComponent(fill = Fill(smbColor), shape = TriangleShape),
+                    size = 10.dp
+                )
+            )
+        )
+    }
+    val mediumSmbLine = remember(smbColor) {
+        LineCartesianLayer.Line(
+            fill = LineCartesianLayer.LineFill.single(Fill(Color.Transparent)),
+            areaFill = null,
+            pointProvider = LineCartesianLayer.PointProvider.single(
+                LineCartesianLayer.Point(
+                    component = ShapeComponent(fill = Fill(smbColor), shape = TriangleShape),
+                    size = 16.dp
+                )
+            )
+        )
+    }
+    val largeSmbLine = remember(smbColor) {
+        LineCartesianLayer.Line(
+            fill = LineCartesianLayer.LineFill.single(Fill(Color.Transparent)),
+            areaFill = null,
+            pointProvider = LineCartesianLayer.PointProvider.single(
+                LineCartesianLayer.Point(
+                    component = ShapeComponent(fill = Fill(smbColor), shape = TriangleShape),
+                    size = 22.dp
+                )
+            )
         )
     }
 
-    // Invisible line for anchor series (always added, corresponds to first series)
-    val invisibleLine = remember { createInvisibleDots() }
+    val bolusLine = remember(smbColor) {
+        LineCartesianLayer.Line(
+            fill = LineCartesianLayer.LineFill.single(Fill(Color.Transparent)),
+            areaFill = null,
+            pointProvider = LineCartesianLayer.PointProvider.single(
+                LineCartesianLayer.Point(
+                    component = ShapeComponent(fill = Fill(smbColor), shape = InvertedTriangleShape),
+                    size = 22.dp
+                )
+            )
+        )
+    }
 
-    // Build lines list dynamically - MUST match series order exactly
-    // Series order: anchor FIRST, then IOB data, then predictions
-    val hasIobData by hasIobDataState
-//    val hasPredictionsData by hasPredictionsDataState
-//    val lines = remember(hasIobData, hasPredictionsData, iobLine, predictionsLine, invisibleLine) {
-    val lines = remember(hasIobData, iobLine, predictionsLine, invisibleLine) {
-        buildList {
-            add(invisibleLine)                          // Series 1: Anchor (always first)
-            if (hasIobData) add(iobLine)               // Series 2: IOB data (if exists)
-//            if (hasPredictionsData) add(predictionsLine) // Series 3: Predictions (if exists)
-        }
+    // Normalizer line — invisible 22dp-point line that equalizes maxPointSize across all charts.
+    // Without this, charts with different point sizes get different xSpacing and unscalableStartPadding,
+    // breaking pixel-based scroll/zoom sync. See GraphUtils.kt for details.
+    val normalizerLine = remember { createNormalizerLine() }
+
+    // FIXED 6 lines — always matches 6 series
+    val lines = remember(iobLine, smallSmbLine, mediumSmbLine, largeSmbLine, bolusLine, normalizerLine) {
+        listOf(iobLine, smallSmbLine, mediumSmbLine, largeSmbLine, bolusLine, normalizerLine)
     }
 
     CartesianChartHost(
         chart = rememberCartesianChart(
             rememberLineCartesianLayer(
-                lineProvider = LineCartesianLayer.LineProvider.series(lines)
+                lineProvider = LineCartesianLayer.LineProvider.series(lines),
+                rangeProvider = remember(maxX) { CartesianLayerRangeProvider.fixed(minX = 0.0, maxX = maxX) }
             ),
             startAxis = VerticalAxis.rememberStart(
                 label = rememberTextComponent(
@@ -218,7 +268,8 @@ fun IobGraphCompose(
                 label = rememberTextComponent(
                     style = TextStyle(color = MaterialTheme.colorScheme.onSurface)
                 )
-            )
+            ),
+            getXStep = { 1.0 }
         ),
         modelProducer = modelProducer,
         modifier = modifier

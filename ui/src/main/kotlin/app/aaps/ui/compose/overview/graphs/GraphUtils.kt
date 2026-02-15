@@ -3,7 +3,10 @@ package app.aaps.ui.compose.overview.graphs
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.GenericShape
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.patrykandpatrick.vico.compose.cartesian.axis.HorizontalAxis
 import com.patrykandpatrick.vico.compose.cartesian.data.CartesianValueFormatter
@@ -24,37 +27,23 @@ import kotlin.time.Instant
  * CRITICAL: All graphs MUST use the same x-coordinate system to ensure proper alignment.
  * This uses whole minutes from minTimestamp to avoid label repetition and precision errors.
  *
- * **X-Axis Range Alignment (Vico Pattern - Invisible Anchor Series):**
- * All graphs MUST show the same x-axis range from derivedTimeRange:
- * - Extract both minTimestamp and maxTimestamp from derivedTimeRange
- * - Calculate minX = 0.0 and maxX = timestampToX(maxTimestamp, minTimestamp)
- * - Add invisible anchor series: `val (anchorX, anchorY) = createInvisibleAnchorSeries(minX, maxX)`
- * - Then: `series(anchorX, anchorY)` (FIRST series for consistency)
- * - Configure anchor series in LineProvider as invisible: `createInvisibleLine()`
- * - Filter real data if needed: `filterToRange(dataPoints, minX, maxX)`
- * - This ensures ALL charts show identical x-axis range for perfect alignment
+ * **Graph Alignment (3 pillars):**
+ * All graphs MUST have identical x-axis configuration for pixel-based scroll/zoom sync:
+ * 1. `rangeProvider = CartesianLayerRangeProvider.fixed(minX = 0.0, maxX = maxX)` — same X range
+ * 2. `getXStep = { 1.0 }` — same xStep (1 minute per unit)
+ * 3. Normalizer line ([createNormalizerLine] + [NORMALIZER_X]/[NORMALIZER_Y] dummy series) —
+ *    ensures identical maxPointSize across all charts → same xSpacing and unscalable padding
  *
- * **CRITICAL - xStep and GCD Issue:**
- * Vico calculates xStep using GCD (Greatest Common Divisor) of all x-value deltas:
- * - With only 2 anchor points [0, 1440]: xStep = 1440 → points are 1 unit apart → render stacked
- * - With 3 anchor points [0, 1, 1440]: deltas [1, 1439] → GCD = 1 → xStep = 1 → proper spacing
- * - ALWAYS use createInvisibleAnchorSeries(minX, maxX) which generates 3 points
- * - NEVER use just 2 points: series(listOf(minX, maxX), listOf(0, 0)) ❌
- *
- * **Scroll/Zoom Synchronization (Vico Pattern - Separate States + Explicit Sync):**
- * All graphs must stay aligned when scrolling/zooming:
+ * **Scroll/Zoom Synchronization:**
  * - BG graph (primary): scrollEnabled = true, zoomEnabled = true
  * - Secondary graphs: scrollEnabled = false, zoomEnabled = false
- * - Use snapshotFlow { bgScrollState.value to bgZoomState.value }
- * - Update zoom first, delay(50), then update scroll
+ * - Pixel-based sync: snapshotFlow { bgScrollState.value to bgZoomState.value }
  * - See OverviewGraphsSection for full implementation
  *
  * **Point Connectors:**
  * - Adaptive step graphs (COB): Use `AdaptiveStep` - steps for steep angles (>45°), lines for gradual
- *   Uses fast ratio calculation (|dy/dx| > 1.0) instead of trigonometry
  * - Fixed step graphs (IOB, AbsIOB): Use `Square` PointConnector from core.graph.vico
  * - Smooth graphs (Activity, BGI, Ratio): Use default connector (no pointConnector parameter)
- * - Bar graphs (Deviations): N/A
  */
 
 /**
@@ -140,110 +129,67 @@ fun filterToRange(
 }
 
 /**
- * Creates an invisible anchor series for x-axis range normalization with proper xStep.
+ * Target point size for layout normalization across all synchronized graphs.
+ * Must be >= the largest actual point size used in any graph (currently 22dp from IOB SMB/bolus markers).
  *
- * CRITICAL: Vico calculates xStep using GCD of all x-value deltas. With only 2 anchor points
- * at [minX, maxX], xStep becomes (maxX - minX), making them only 1 unit apart in normalized
- * space. This causes them to render very close together or stacked.
+ * Every graph includes an invisible normalizer line with this point size (via [createNormalizerLine]).
+ * This ensures all charts have the same maxPointSize, which makes Vico compute identical:
+ * - `xSpacing` (maxPointSize + pointSpacing) → same content width → pixel scroll sync works
+ * - `unscalableStartPadding` (maxPointSize / 2) → same content offset → no start alignment shift
  *
- * Solution: Use 3 points [minX, minX+1, maxX] to establish xStep = 1.0
- * - Deltas: [1, maxX - minX - 1]
- * - GCD(1, anything) = 1 → xStep = 1.0areas
- * - All y-values are 0.0 (invisible baseline)
- * - Forces all charts to show the same x-axis range AND scale
- * - Guarantees perfect alignment between multiple synchronized charts
- *
- * Example: minX=0, maxX=1440
- * - Creates x=[0, 1, 1440], y=[0, 0, 0]
- * - Deltas: [1, 1439]
- * - GCD(1, 1439) = 1 → xStep = 1.0
- * - Points are properly spaced across full range
- *
- * Usage:
- * ```
- * lineSeries {
- *     val (anchorX, anchorY) = createInvisibleAnchorSeries(minX, maxX)
- *     series(anchorX, anchorY)  // Anchor series FIRST
- *     if (hasData) series(actualXValues, actualYValues)  // Real data
- * }
- * ```
- *
- * @param minX Minimum X value for the graph range
- * @param maxX Maximum X value for the graph range
- * @return Pair of (x-values, y-values) for the invisible anchor series (3 points)
+ * Without this, each chart's different point sizes cause different layout, breaking pixel-based sync.
  */
-fun createInvisibleAnchorSeries(
-    minX: Double,
-    maxX: Double
-): Pair<List<Double>, List<Double>> {
-    // 3 points: [minX, minX+1, maxX]
-    // This establishes xStep = 1 via GCD while showing full range
-    val xValues = listOf(minX, minX + 1.0, maxX)
-    val yValues = listOf(0.0, 0.0, 0.0)
-    return xValues to yValues
-}
+val NORMALIZER_POINT_SIZE: Dp = 22.dp
 
 /**
- * Creates a transparent line configuration for invisible anchor series.
- *
- * Shows only points (dots), no line between them:
- * - Line fill is transparent (no line drawn between points)
- * - Points are transparent (invisible)
- * - This ensures y-axis labels appear even when only anchor series exists
- *
- * @return LineCartesianLayer.Line configured to show only dots, no line
+ * Creates an invisible line with [NORMALIZER_POINT_SIZE] transparent points.
+ * Include this in every chart's lines list to normalize layout across synchronized graphs.
  */
-fun createInvisibleDots(): LineCartesianLayer.Line =
+fun createNormalizerLine(): LineCartesianLayer.Line =
     LineCartesianLayer.Line(
-        fill = LineCartesianLayer.LineFill.single(Fill(Color.Transparent)),  // No line
+        fill = LineCartesianLayer.LineFill.single(Fill(Color.Transparent)),
         areaFill = null,
         pointProvider = LineCartesianLayer.PointProvider.single(
             LineCartesianLayer.Point(
-                component = ShapeComponent(
-                    fill = Fill(Color.Transparent),
-                    shape = CircleShape
-                ),
-                size = 4.dp
+                component = ShapeComponent(fill = Fill(Color.Transparent), shape = CircleShape),
+                size = NORMALIZER_POINT_SIZE
             )
         )
     )
 
 /**
- * Groups consecutive timestamps into ranges.
- *
- * Consecutive means timestamps within maxGapMinutes of each other.
- *
- * @param timestamps List of timestamps in milliseconds (must be sorted)
- * @param maxGapMinutes Maximum gap in minutes to consider timestamps consecutive (default: 10)
- * @return List of timestamp ranges (pairs of start/end timestamps)
+ * X/Y data for the normalizer dummy series. Always add this to every chart's lineSeries block.
+ * Two points at y=0, invisible, just to occupy a series slot for the normalizer line.
  */
-fun groupConsecutiveTimestamps(
-    timestamps: List<Long>,
-    maxGapMinutes: Int = 10
-): List<Pair<Long, Long>> {
-    if (timestamps.isEmpty()) return emptyList()
+val NORMALIZER_X = listOf(0.0, 1.0)
+val NORMALIZER_Y = listOf(0.0, 0.0)
 
-    val maxGapMs = maxGapMinutes * 60 * 1000L
-    val ranges = mutableListOf<Pair<Long, Long>>()
+/**
+ * Triangle shape pointing upward (apex at top center, flat base at bottom).
+ *
+ * Used for rendering SMB markers on graphs. The triangle sits on the X axis
+ * with the point facing up, making it visually distinct from circle dots.
+ */
+val TriangleShape: Shape = GenericShape { size, _ ->
+    // Triangle drawn in upper half of bounding box so that when Vico centers
+    // the shape on the data point, the base sits exactly on the y-coordinate.
+    moveTo(size.width / 2f, 0f)              // Top center (apex)
+    lineTo(size.width, size.height / 2f)     // Middle right (base)
+    lineTo(0f, size.height / 2f)             // Middle left (base)
+    close()
+}
 
-    var rangeStart = timestamps.first()
-    var rangeEnd = timestamps.first()
-
-    for (i in 1 until timestamps.size) {
-        val timestamp = timestamps[i]
-        if (timestamp - rangeEnd <= maxGapMs) {
-            // Extend current range
-            rangeEnd = timestamp
-        } else {
-            // Close current range and start new one
-            ranges.add(rangeStart to rangeEnd)
-            rangeStart = timestamp
-            rangeEnd = timestamp
-        }
-    }
-
-    // Add final range
-    ranges.add(rangeStart to rangeEnd)
-
-    return ranges
+/**
+ * Inverted triangle shape pointing downward (flat base at top, apex at bottom).
+ *
+ * Used for rendering bolus markers on graphs. The base sits at the data point's
+ * y-coordinate with the apex pointing down.
+ */
+val InvertedTriangleShape: Shape = GenericShape { size, _ ->
+    // Triangle drawn in upper half of bounding box so that when Vico centers
+    // the shape on the data point, the apex touches the y-coordinate pointing down.
+    moveTo(0f, 0f)                           // Top left (base)
+    lineTo(size.width, 0f)                   // Top right (base)
+    lineTo(size.width / 2f, size.height / 2f)  // Middle center (apex)
+    close()
 }

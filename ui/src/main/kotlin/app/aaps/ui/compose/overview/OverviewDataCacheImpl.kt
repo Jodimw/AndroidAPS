@@ -31,6 +31,7 @@ import app.aaps.core.interfaces.overview.graph.RunningModeDisplayData
 import app.aaps.core.interfaces.overview.graph.TempTargetDisplayData
 import app.aaps.core.interfaces.overview.graph.TempTargetState
 import app.aaps.core.interfaces.overview.graph.TimeRange
+import app.aaps.core.interfaces.overview.graph.TreatmentGraphData
 import app.aaps.core.interfaces.overview.graph.VarSensGraphData
 import app.aaps.core.interfaces.profile.ProfileFunction
 import app.aaps.core.interfaces.profile.ProfileUtil
@@ -129,6 +130,7 @@ class OverviewDataCacheImpl @Inject constructor(
     private val _ratioGraphFlow = MutableStateFlow(RatioGraphData(emptyList()))
     private val _devSlopeGraphFlow = MutableStateFlow(DevSlopeGraphData(emptyList(), emptyList()))
     private val _varSensGraphFlow = MutableStateFlow(VarSensGraphData(emptyList()))
+    private val _treatmentGraphFlow = MutableStateFlow(TreatmentGraphData(emptyList(), emptyList(), emptyList(), emptyList()))
 
     override val iobGraphFlow: StateFlow<IobGraphData> = _iobGraphFlow.asStateFlow()
     override val absIobGraphFlow: StateFlow<AbsIobGraphData> = _absIobGraphFlow.asStateFlow()
@@ -139,6 +141,7 @@ class OverviewDataCacheImpl @Inject constructor(
     override val ratioGraphFlow: StateFlow<RatioGraphData> = _ratioGraphFlow.asStateFlow()
     override val devSlopeGraphFlow: StateFlow<DevSlopeGraphData> = _devSlopeGraphFlow.asStateFlow()
     override val varSensGraphFlow: StateFlow<VarSensGraphData> = _varSensGraphFlow.asStateFlow()
+    override val treatmentGraphFlow: StateFlow<TreatmentGraphData> = _treatmentGraphFlow.asStateFlow()
 
     init {
         // Load initial data from database
@@ -411,6 +414,10 @@ class OverviewDataCacheImpl @Inject constructor(
         _varSensGraphFlow.value = data
     }
 
+    override fun updateTreatmentGraph(data: TreatmentGraphData) {
+        _treatmentGraphFlow.value = data
+    }
+
     override fun reset() {
         _timeRangeFlow.value = null
         _bgReadingsFlow.value = emptyList()
@@ -429,6 +436,7 @@ class OverviewDataCacheImpl @Inject constructor(
         _ratioGraphFlow.value = RatioGraphData(emptyList())
         _devSlopeGraphFlow.value = DevSlopeGraphData(emptyList(), emptyList())
         _varSensGraphFlow.value = VarSensGraphData(emptyList())
+        _treatmentGraphFlow.value = TreatmentGraphData(emptyList(), emptyList(), emptyList(), emptyList())
         calcProgressPct = 100
     }
 }

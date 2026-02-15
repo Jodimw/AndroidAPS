@@ -121,6 +121,7 @@ class GraphViewModel @Inject constructor(
     // Secondary graph flows
     val iobGraphFlow = cache.iobGraphFlow
     val cobGraphFlow = cache.cobGraphFlow
+    val treatmentGraphFlow = cache.treatmentGraphFlow
 
     // =========================================================================
     // BG Info Section (Overview info display)

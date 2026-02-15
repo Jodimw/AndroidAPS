@@ -188,6 +188,88 @@ data class VarSensGraphData(
 )
 
 // ============================================================================
+// Treatment / Therapy Graph Data (main graph overlays)
+// ============================================================================
+
+/**
+ * Bolus type for rendering (different shapes/colors)
+ */
+enum class BolusType {
+    NORMAL,   // Regular bolus (triangle shape)
+    SMB       // Super micro bolus (small diamond)
+}
+
+/**
+ * Individual bolus data point for the main graph
+ */
+data class BolusGraphPoint(
+    val timestamp: Long,
+    val amount: Double,        // Insulin amount in units
+    val bolusType: BolusType,  // NORMAL or SMB
+    val yValue: Double,        // Y position (nearest BG in user units; SMB at low mark)
+    val isValid: Boolean,
+    val label: String          // Pre-formatted amount string (pump-supported step)
+)
+
+/**
+ * Individual carbs data point for the main graph
+ */
+data class CarbsGraphPoint(
+    val timestamp: Long,
+    val amount: Double,        // Carbs amount in grams
+    val yValue: Double,        // Y position (nearest BG in user units)
+    val isValid: Boolean,
+    val label: String          // Pre-formatted carbs string (e.g., "45 g")
+)
+
+/**
+ * Extended bolus data point for the main graph
+ */
+data class ExtendedBolusGraphPoint(
+    val timestamp: Long,
+    val amount: Double,        // Total insulin amount
+    val rate: Double,          // Rate per hour
+    val duration: Long,        // Duration in ms
+    val yValue: Double,        // Y position (nearest BG in user units)
+    val label: String          // Pre-formatted string (e.g., "1.5U/h 2.0U")
+)
+
+/**
+ * Therapy event type for rendering (different shapes/colors)
+ */
+enum class TherapyEventType {
+    MBG,                   // Manual blood glucose
+    FINGER_STICK,          // Finger stick BG check
+    ANNOUNCEMENT,          // Announcement
+    SETTINGS_EXPORT,       // Settings export
+    EXERCISE,              // Exercise
+    GENERAL,               // General event (no duration)
+    GENERAL_WITH_DURATION  // General event with duration
+}
+
+/**
+ * Therapy event data point for the main graph
+ */
+data class TherapyEventGraphPoint(
+    val timestamp: Long,
+    val eventType: TherapyEventType,
+    val yValue: Double,        // Y position (glucose value or nearest BG)
+    val label: String,         // Note or translated type name
+    val duration: Long         // Duration in ms (0 if no duration)
+)
+
+/**
+ * Container for all treatment graph data (overlaid on main BG graph).
+ * All lists are computed together in PrepareTreatmentsDataWorker.
+ */
+data class TreatmentGraphData(
+    val boluses: List<BolusGraphPoint>,
+    val carbs: List<CarbsGraphPoint>,
+    val extendedBoluses: List<ExtendedBolusGraphPoint>,
+    val therapyEvents: List<TherapyEventGraphPoint>
+)
+
+// ============================================================================
 // Overview Display State (TempTarget, Profile chips)
 // ============================================================================
 

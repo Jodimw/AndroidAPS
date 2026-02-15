@@ -24,6 +24,7 @@ import com.patrykandpatrick.vico.compose.cartesian.VicoZoomState
 import com.patrykandpatrick.vico.compose.cartesian.axis.HorizontalAxis
 import com.patrykandpatrick.vico.compose.cartesian.axis.VerticalAxis
 import com.patrykandpatrick.vico.compose.cartesian.data.CartesianChartModelProducer
+import com.patrykandpatrick.vico.compose.cartesian.data.CartesianLayerRangeProvider
 import com.patrykandpatrick.vico.compose.cartesian.data.lineSeries
 import com.patrykandpatrick.vico.compose.cartesian.decoration.HorizontalBox
 import com.patrykandpatrick.vico.compose.cartesian.layer.LineCartesianLayer
@@ -70,7 +71,6 @@ fun BgGraphCompose(
     val chartConfig by viewModel.chartConfigFlow.collectAsState()
 
     // Use derived time range or fall back to default (last 24 hours)
-    // With anchor series, we can render immediately even without data
     val (minTimestamp, maxTimestamp) = derivedTimeRange ?: run {
         val now = System.currentTimeMillis()
         val dayAgo = now - 24 * 60 * 60 * 1000L
@@ -110,6 +110,8 @@ fun BgGraphCompose(
         val regularPoints = seriesRegistry[SERIES_REGULAR] ?: emptyList()
         val bucketedPoints = seriesRegistry[SERIES_BUCKETED] ?: emptyList()
 
+        if (regularPoints.isEmpty() && bucketedPoints.isEmpty()) return
+
         modelProducer.runTransaction {
             lineSeries {
                 val activeSeries = mutableListOf<String>()
@@ -140,13 +142,8 @@ fun BgGraphCompose(
                     activeSeries.add(SERIES_BUCKETED)
                 }
 
-                // Series N: Invisible anchor series (ALWAYS added for x-axis range normalization)
-                // CRITICAL: 3 points [minX, minX+1, maxX] establish xStep = 1 via GCD
-                // With only 2 points [minX, maxX]: xStep = (maxX-minX) → stacked rendering
-                // With 3 points: deltas [1, maxX-minX-1] → GCD = 1 → xStep = 1.0 → proper spacing
-                val (anchorX, anchorY) = createInvisibleAnchorSeries(minX, maxX)
-                series(anchorX, anchorY)
-                activeSeries.add("anchor")
+                // Normalizer series — ensures identical maxPointSize across all charts (see GraphUtils.kt)
+                series(x = NORMALIZER_X, y = NORMALIZER_Y)
 
                 // Update which series are active
                 activeSeriesState.value = activeSeries.toList()
@@ -204,18 +201,19 @@ fun BgGraphCompose(
         )
     }
 
-    // Invisible line for anchor series (always added, corresponds to last series)
-    val invisibleLine = remember { createInvisibleDots() }
+    // Normalizer line — invisible 22dp-point line that equalizes maxPointSize across all charts.
+    // Without this, charts with different point sizes get different xSpacing and unscalableStartPadding,
+    // breaking pixel-based scroll/zoom sync. See GraphUtils.kt for details.
+    val normalizerLine = remember { createNormalizerLine() }
 
     // Build lines list dynamically - MUST match series order exactly
     // CRITICAL: Number and order of lines MUST match number and order of series
     val activeSeries by activeSeriesState
-    val lines = remember(activeSeries, regularLine, bucketedLine, invisibleLine) {
+    val lines = remember(activeSeries, regularLine, bucketedLine, normalizerLine) {
         buildList {
-            // Add lines in the same order as series were added
             if (SERIES_REGULAR in activeSeries) add(regularLine)
             if (SERIES_BUCKETED in activeSeries) add(bucketedLine)
-            if ("anchor" in activeSeries) add(invisibleLine)
+            add(normalizerLine)  // Always last — normalizes layout
         }
     }
 
@@ -233,7 +231,8 @@ fun BgGraphCompose(
     CartesianChartHost(
         chart = rememberCartesianChart(
             rememberLineCartesianLayer(
-                lineProvider = LineCartesianLayer.LineProvider.series(lines)
+                lineProvider = LineCartesianLayer.LineProvider.series(lines),
+                rangeProvider = remember(maxX) { CartesianLayerRangeProvider.fixed(minX = 0.0, maxX = maxX) }
             ),
             startAxis = VerticalAxis.rememberStart(
                 label = rememberTextComponent(
@@ -248,7 +247,8 @@ fun BgGraphCompose(
                     style = TextStyle(color = MaterialTheme.colorScheme.onSurface)
                 )
             ),
-            decorations = decorations
+            decorations = decorations,
+            getXStep = { 1.0 }
         ),
         modelProducer = modelProducer,
         modifier = modifier

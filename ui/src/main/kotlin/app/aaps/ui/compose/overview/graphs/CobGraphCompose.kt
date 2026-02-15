@@ -23,6 +23,7 @@ import com.patrykandpatrick.vico.compose.cartesian.VicoZoomState
 import com.patrykandpatrick.vico.compose.cartesian.axis.HorizontalAxis
 import com.patrykandpatrick.vico.compose.cartesian.axis.VerticalAxis
 import com.patrykandpatrick.vico.compose.cartesian.data.CartesianChartModelProducer
+import com.patrykandpatrick.vico.compose.cartesian.data.CartesianLayerRangeProvider
 import com.patrykandpatrick.vico.compose.cartesian.data.lineSeries
 import com.patrykandpatrick.vico.compose.cartesian.layer.LineCartesianLayer
 import com.patrykandpatrick.vico.compose.cartesian.layer.rememberLineCartesianLayer
@@ -41,15 +42,9 @@ import com.patrykandpatrick.vico.compose.common.component.rememberTextComponent
  * - Uses same x-axis coordinate system as BG graph
  * - Same axis configuration as BG graph (Y-axis + X-axis with time labels)
  *
- * X-Axis Range Alignment ("Open to the Future"):
- * - MUST match BG graph's x-axis range exactly (derivedTimeRange: minTimestamp to maxTimestamp)
- * - Uses invisible anchor series: 3 points [minX, minX+1, maxX] to establish xStep = 1 via GCD
- * - CRITICAL: With only 2 points [minX, maxX], xStep = (maxX-minX), causing vertical stacking
- * - With 3 points [minX, minX+1, maxX]: deltas [1, maxX-minX-1] → GCD = 1 → proper spacing
- * - Start anchor: At y=0 if COB data starts later than time range (invisible in gradient)
- * - End anchor: Holds last COB value (not drop to 0) - shows ongoing COB status
- * - Graph is "open to the future" - extends horizontally at last value, not dropping prematurely
- * - This ensures perfect vertical alignment with BG graph when stacked
+ * X-Axis Range Alignment:
+ * - Uses CartesianLayerRangeProvider.fixed() and getXStep = { 1.0 } for alignment with BG graph
+ * - See GraphUtils.kt for the 3 pillars of graph alignment
  *
  * Scroll/Zoom:
  * - Receives scroll/zoom state from BG graph (synchronized automatically)
@@ -76,7 +71,6 @@ fun CobGraphCompose(
     val derivedTimeRange by viewModel.derivedTimeRange.collectAsState()
 
     // Use derived time range or fall back to default (last 24 hours)
-    // With anchor series, we can render immediately even without data
     val (minTimestamp, maxTimestamp) = derivedTimeRange ?: run {
         val now = System.currentTimeMillis()
         val dayAgo = now - 24 * 60 * 60 * 1000L
@@ -109,18 +103,13 @@ fun CobGraphCompose(
         val cobPoints = cobGraphData.cob
         val failoverPoints = cobGraphData.failOverPoints
 
+        if (cobPoints.isEmpty() && failoverPoints.isEmpty()) return@LaunchedEffect
+
+        var hasCobData = false
+        var hasFailoverData = false
+
         modelProducer.runTransaction {
             lineSeries {
-                // Invisible anchor series (ALWAYS FIRST for x-axis range normalization)
-                // CRITICAL: 3 points [minX, minX+1, maxX] establish xStep = 1 via GCD
-                // With only 2 points [minX, maxX]: xStep = (maxX-minX) → stacked rendering
-                // With 3 points: deltas [1, maxX-minX-1] → GCD = 1 → xStep = 1.0 → proper spacing
-                val (anchorX, anchorY) = createInvisibleAnchorSeries(minX, maxX)
-                series(anchorX, anchorY)
-
-                var hasCobData = false
-                var hasFailoverData = false
-
                 // COB data series (only if data exists after filtering)
                 if (cobPoints.isNotEmpty()) {
                     val dataPoints = cobPoints
@@ -151,11 +140,14 @@ fun CobGraphCompose(
                     }
                 }
 
-                // Update state
-                hasCobDataState.value = hasCobData
-                hasFailoverDataState.value = hasFailoverData
+                // Normalizer series — ensures identical maxPointSize across all charts (see GraphUtils.kt)
+                series(x = NORMALIZER_X, y = NORMALIZER_Y)
             }
         }
+
+        // Update state after transaction completes
+        hasCobDataState.value = hasCobData
+        hasFailoverDataState.value = hasFailoverData
     }
 
     // Time formatter and axis configuration
@@ -180,9 +172,6 @@ fun CobGraphCompose(
         )
     }
 
-    // Invisible line for anchor series (always added, corresponds to last series)
-    val invisibleLine = remember { createInvisibleDots() }
-
     // Failover dots style - same color as COB line, dots only, no line
     val failoverDotsLine = remember(cobColor) {
         LineCartesianLayer.Line(
@@ -200,22 +189,27 @@ fun CobGraphCompose(
         )
     }
 
+    // Normalizer line — invisible 22dp-point line that equalizes maxPointSize across all charts.
+    // Without this, charts with different point sizes get different xSpacing and unscalableStartPadding,
+    // breaking pixel-based scroll/zoom sync. See GraphUtils.kt for details.
+    val normalizerLine = remember { createNormalizerLine() }
+
     // Build lines list dynamically - MUST match series order exactly
-    // Series order: anchor FIRST, then COB data, then failover dots
     val hasCobData by hasCobDataState
     val hasFailoverData by hasFailoverDataState
-    val lines = remember(hasCobData, hasFailoverData, cobLine, failoverDotsLine, invisibleLine) {
+    val lines = remember(hasCobData, hasFailoverData, cobLine, failoverDotsLine, normalizerLine) {
         buildList {
-            add(invisibleLine)                          // Series 1: Anchor (always first)
-            if (hasCobData) add(cobLine)               // Series 2: COB data (if exists)
-            if (hasFailoverData) add(failoverDotsLine) // Series 3: Failover dots (if exists)
+            if (hasCobData) add(cobLine)
+            if (hasFailoverData) add(failoverDotsLine)
+            add(normalizerLine)  // Always last — normalizes layout
         }
     }
 
     CartesianChartHost(
         chart = rememberCartesianChart(
             rememberLineCartesianLayer(
-                lineProvider = LineCartesianLayer.LineProvider.series(lines)
+                lineProvider = LineCartesianLayer.LineProvider.series(lines),
+                rangeProvider = remember(maxX) { CartesianLayerRangeProvider.fixed(minX = 0.0, maxX = maxX) }
             ),
             startAxis = VerticalAxis.rememberStart(
                 label = rememberTextComponent(
@@ -229,7 +223,8 @@ fun CobGraphCompose(
                 label = rememberTextComponent(
                     style = TextStyle(color = MaterialTheme.colorScheme.onSurface)
                 )
-            )
+            ),
+            getXStep = { 1.0 }
         ),
         modelProducer = modelProducer,
         modifier = modifier
