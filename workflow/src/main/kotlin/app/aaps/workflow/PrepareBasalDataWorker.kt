@@ -9,6 +9,9 @@ import app.aaps.core.graph.data.LineGraphSeries
 import app.aaps.core.graph.data.ScaledDataPoint
 import app.aaps.core.interfaces.iob.IobCobCalculator
 import app.aaps.core.interfaces.overview.OverviewData
+import app.aaps.core.interfaces.overview.graph.BasalGraphData
+import app.aaps.core.interfaces.overview.graph.GraphDataPoint
+import app.aaps.core.interfaces.overview.graph.OverviewDataCache
 import app.aaps.core.interfaces.profile.ProfileFunction
 import app.aaps.core.interfaces.resources.ResourceHelper
 import app.aaps.core.interfaces.rx.bus.RxBus
@@ -18,6 +21,7 @@ import app.aaps.core.objects.workflow.LoggingWorker
 import app.aaps.core.utils.receivers.DataWorkerStorage
 import kotlinx.coroutines.Dispatchers
 import javax.inject.Inject
+import kotlin.math.max
 
 class PrepareBasalDataWorker(
     context: Context,
@@ -28,6 +32,7 @@ class PrepareBasalDataWorker(
     @Inject lateinit var profileFunction: ProfileFunction
     @Inject lateinit var rh: ResourceHelper
     @Inject lateinit var rxBus: RxBus
+    @Inject lateinit var overviewDataCache: OverviewDataCache
     private var ctx: Context = rh.getThemedCtx(context)
 
     class PrepareBasalData(
@@ -49,6 +54,12 @@ class PrepareBasalDataWorker(
         var lastAbsoluteLineBasal = -1.0
         var lastBaseBasal = 0.0
         var lastTempBasal = 0.0
+        // Compose basal data collection
+        val composeProfileBasal = mutableListOf<GraphDataPoint>()
+        val composeActualBasal = mutableListOf<GraphDataPoint>()
+        var composeLastProfileBasal = -1.0
+        var composeLastActualBasal = -1.0
+        var composeMaxBasal = 0.0
         val endTime = data.overviewData.endTime
         val fromTime = data.overviewData.fromTime
         var time = fromTime
@@ -97,6 +108,19 @@ class PrepareBasalDataWorker(
                 absoluteBasalLineArray.add(ScaledDataPoint(time, lastAbsoluteLineBasal, data.overviewData.basalScale))
                 absoluteBasalLineArray.add(ScaledDataPoint(time, basal, data.overviewData.basalScale))
             }
+            // Compose: collect profile basal and actual delivered basal (transition points only)
+            val profileBasalValue = baseBasalValue
+            val actualBasalValue = if (basalData.isTempBasalRunning) basalData.tempBasalAbsolute else baseBasalValue
+            if (profileBasalValue != composeLastProfileBasal) {
+                composeProfileBasal.add(GraphDataPoint(time, profileBasalValue))
+                composeLastProfileBasal = profileBasalValue
+            }
+            if (actualBasalValue != composeLastActualBasal) {
+                composeActualBasal.add(GraphDataPoint(time, actualBasalValue))
+                composeLastActualBasal = actualBasalValue
+            }
+            composeMaxBasal = max(composeMaxBasal, max(profileBasalValue, actualBasalValue))
+
             lastAbsoluteLineBasal = absoluteLineValue
             lastLineBasal = baseBasalValue
             lastTempBasal = tempBasalValue
@@ -108,6 +132,11 @@ class PrepareBasalDataWorker(
         baseBasalArray.add(ScaledDataPoint(endTime, lastBaseBasal, data.overviewData.basalScale))
         tempBasalArray.add(ScaledDataPoint(endTime, lastTempBasal, data.overviewData.basalScale))
         absoluteBasalLineArray.add(ScaledDataPoint(endTime, lastAbsoluteLineBasal, data.overviewData.basalScale))
+
+        // Compose: final points at endTime
+        if (composeLastProfileBasal >= 0.0) composeProfileBasal.add(GraphDataPoint(endTime, composeLastProfileBasal))
+        if (composeLastActualBasal >= 0.0) composeActualBasal.add(GraphDataPoint(endTime, composeLastActualBasal))
+        overviewDataCache.updateBasalGraph(BasalGraphData(composeProfileBasal, composeActualBasal, composeMaxBasal))
 
         // create series
         data.overviewData.baseBasalGraphSeries = LineGraphSeries(Array(baseBasalArray.size) { i -> baseBasalArray[i] }).also {

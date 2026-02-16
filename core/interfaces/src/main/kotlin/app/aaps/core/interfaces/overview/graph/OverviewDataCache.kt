@@ -94,5 +94,9 @@ interface OverviewDataCache {
     val treatmentGraphFlow: StateFlow<TreatmentGraphData>
     fun updateTreatmentGraph(data: TreatmentGraphData)
 
+    // Basal graph: profile basal (dashed) + actual delivered basal (solid + fill)
+    val basalGraphFlow: StateFlow<BasalGraphData>
+    fun updateBasalGraph(data: BasalGraphData)
+
     fun reset()
 }

@@ -15,6 +15,7 @@ import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.logging.LTag
 import app.aaps.core.interfaces.nsclient.ProcessedDeviceStatusData
 import app.aaps.core.interfaces.overview.graph.AbsIobGraphData
+import app.aaps.core.interfaces.overview.graph.BasalGraphData
 import app.aaps.core.interfaces.overview.graph.ActivityGraphData
 import app.aaps.core.interfaces.overview.graph.BgDataPoint
 import app.aaps.core.interfaces.overview.graph.BgInfoData
@@ -131,6 +132,7 @@ class OverviewDataCacheImpl @Inject constructor(
     private val _devSlopeGraphFlow = MutableStateFlow(DevSlopeGraphData(emptyList(), emptyList()))
     private val _varSensGraphFlow = MutableStateFlow(VarSensGraphData(emptyList()))
     private val _treatmentGraphFlow = MutableStateFlow(TreatmentGraphData(emptyList(), emptyList(), emptyList(), emptyList()))
+    private val _basalGraphFlow = MutableStateFlow(BasalGraphData(emptyList(), emptyList(), 0.0))
 
     override val iobGraphFlow: StateFlow<IobGraphData> = _iobGraphFlow.asStateFlow()
     override val absIobGraphFlow: StateFlow<AbsIobGraphData> = _absIobGraphFlow.asStateFlow()
@@ -142,6 +144,7 @@ class OverviewDataCacheImpl @Inject constructor(
     override val devSlopeGraphFlow: StateFlow<DevSlopeGraphData> = _devSlopeGraphFlow.asStateFlow()
     override val varSensGraphFlow: StateFlow<VarSensGraphData> = _varSensGraphFlow.asStateFlow()
     override val treatmentGraphFlow: StateFlow<TreatmentGraphData> = _treatmentGraphFlow.asStateFlow()
+    override val basalGraphFlow: StateFlow<BasalGraphData> = _basalGraphFlow.asStateFlow()
 
     init {
         // Load initial data from database
@@ -418,6 +421,10 @@ class OverviewDataCacheImpl @Inject constructor(
         _treatmentGraphFlow.value = data
     }
 
+    override fun updateBasalGraph(data: BasalGraphData) {
+        _basalGraphFlow.value = data
+    }
+
     override fun reset() {
         _timeRangeFlow.value = null
         _bgReadingsFlow.value = emptyList()
@@ -437,6 +444,7 @@ class OverviewDataCacheImpl @Inject constructor(
         _devSlopeGraphFlow.value = DevSlopeGraphData(emptyList(), emptyList())
         _varSensGraphFlow.value = VarSensGraphData(emptyList())
         _treatmentGraphFlow.value = TreatmentGraphData(emptyList(), emptyList(), emptyList(), emptyList())
+        _basalGraphFlow.value = BasalGraphData(emptyList(), emptyList(), 0.0)
         calcProgressPct = 100
     }
 }

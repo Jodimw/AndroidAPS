@@ -187,6 +187,18 @@ data class VarSensGraphData(
     val varSens: List<GraphDataPoint>
 )
 
+/**
+ * Basal graph data for BG graph overlay (dual Y-axis).
+ * Profile basal: dashed step line (scheduled profile rate).
+ * Actual basal: solid step line with area fill (profile rate when no temp, temp absolute when temp active).
+ * maxBasal used for Y-axis scaling: maxY = maxBasal * 4.0 so basal occupies ~25% of chart height.
+ */
+data class BasalGraphData(
+    val profileBasal: List<GraphDataPoint>,
+    val actualBasal: List<GraphDataPoint>,
+    val maxBasal: Double
+)
+
 // ============================================================================
 // Treatment / Therapy Graph Data (main graph overlays)
 // ============================================================================

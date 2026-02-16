@@ -1,8 +1,5 @@
 package app.aaps.ui.search
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -124,13 +121,8 @@ fun M3SearchBar(
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     },
-                    trailingIcon = {
-                        // Show X when active - always closes search
-                        AnimatedVisibility(
-                            visible = isActive,
-                            enter = fadeIn(),
-                            exit = fadeOut()
-                        ) {
+                    trailingIcon = if (isActive) {
+                        {
                             IconButton(onClick = {
                                 keyboardController?.hide()
                                 onActiveChange(false)
@@ -142,7 +134,7 @@ fun M3SearchBar(
                                 )
                             }
                         }
-                    },
+                    } else null,
                     contentPadding = PaddingValues(horizontal = 16.dp),
                     colors = TextFieldDefaults.colors(
                         focusedContainerColor = Color.Transparent,
