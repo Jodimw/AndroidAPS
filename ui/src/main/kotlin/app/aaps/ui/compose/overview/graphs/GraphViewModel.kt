@@ -123,6 +123,7 @@ class GraphViewModel @Inject constructor(
     val cobGraphFlow = cache.cobGraphFlow
     val treatmentGraphFlow = cache.treatmentGraphFlow
     val basalGraphFlow = cache.basalGraphFlow
+    val targetLineFlow = cache.targetLineFlow
 
     // =========================================================================
     // BG Info Section (Overview info display)
@@ -188,7 +189,7 @@ class GraphViewModel @Inject constructor(
             if (constraintsProcessed.carbsReq > 0) {
                 val lastCarbsTime = persistenceLayer.getNewestCarbs()?.timestamp ?: 0L
                 if (lastCarbsTime < lastRun.lastAPSRun) {
-                    cobText += "\n${constraintsProcessed.carbsReq} ${rh.gs(R.string.required)}"
+                    cobText += " ${constraintsProcessed.carbsReq}${rh.gs(R.string.required)}"
                 }
                 carbsReq = constraintsProcessed.carbsReq
             }

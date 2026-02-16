@@ -98,5 +98,9 @@ interface OverviewDataCache {
     val basalGraphFlow: StateFlow<BasalGraphData>
     fun updateBasalGraph(data: BasalGraphData)
 
+    // Target line: step-function showing target midpoint (TT or profile default)
+    val targetLineFlow: StateFlow<TargetLineData>
+    fun updateTargetLine(data: TargetLineData)
+
     fun reset()
 }

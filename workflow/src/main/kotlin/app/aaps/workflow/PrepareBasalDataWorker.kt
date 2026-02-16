@@ -5,6 +5,7 @@ import android.graphics.DashPathEffect
 import android.graphics.Paint
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
+import app.aaps.core.data.configuration.Constants
 import app.aaps.core.graph.data.LineGraphSeries
 import app.aaps.core.graph.data.ScaledDataPoint
 import app.aaps.core.interfaces.iob.IobCobCalculator
@@ -16,12 +17,14 @@ import app.aaps.core.interfaces.profile.ProfileFunction
 import app.aaps.core.interfaces.resources.ResourceHelper
 import app.aaps.core.interfaces.rx.bus.RxBus
 import app.aaps.core.interfaces.rx.events.EventIobCalculationProgress
+import app.aaps.core.data.time.T
 import app.aaps.core.interfaces.workflow.CalculationWorkflow
 import app.aaps.core.objects.workflow.LoggingWorker
 import app.aaps.core.utils.receivers.DataWorkerStorage
 import kotlinx.coroutines.Dispatchers
 import javax.inject.Inject
 import kotlin.math.max
+import kotlin.math.min
 
 class PrepareBasalDataWorker(
     context: Context,
@@ -60,8 +63,14 @@ class PrepareBasalDataWorker(
         var composeLastProfileBasal = -1.0
         var composeLastActualBasal = -1.0
         var composeMaxBasal = 0.0
-        val endTime = data.overviewData.endTime
-        val fromTime = data.overviewData.fromTime
+        // MIGRATION: Get time range from OLD cache for OLD GraphView system
+        val endTimeOld = data.overviewData.endTime
+        val fromTimeOld = data.overviewData.fromTime
+        // MIGRATION: Calculate 24h range for NEW Compose system
+        val fromTimeNew = endTimeOld - T.hours(Constants.GRAPH_TIME_RANGE_HOURS.toLong()).msecs()
+        // Use MIN of both ranges (ensures we get data for both old and new systems)
+        val endTime = endTimeOld
+        val fromTime = min(fromTimeOld, fromTimeNew)
         var time = fromTime
         while (time < endTime) {
             if (isStopped) return Result.failure(workDataOf("Error" to "stopped"))

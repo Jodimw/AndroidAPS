@@ -6,7 +6,7 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -52,7 +52,7 @@ internal fun CobChip(
         shape = RoundedCornerShape(8.dp),
         color = if (hasValue) AapsTheme.elementColors.carbs.copy(alpha = 0.2f) else Color.Transparent,
         modifier = modifier
-            .height(35.dp)
+            .heightIn(min = 35.dp)
             .then(alphaModifier)
     ) {
         Row(

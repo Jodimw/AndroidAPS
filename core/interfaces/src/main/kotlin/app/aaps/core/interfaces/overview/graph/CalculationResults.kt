@@ -199,6 +199,15 @@ data class BasalGraphData(
     val maxBasal: Double
 )
 
+/**
+ * Target line data for BG graph overlay.
+ * Step-function showing target midpoint: TT midpoint when active, profile target midpoint otherwise.
+ * Rendered as a step line on the BG (start) Y-axis.
+ */
+data class TargetLineData(
+    val targets: List<GraphDataPoint>  // step-function transition points (timestamp, value in user units)
+)
+
 // ============================================================================
 // Treatment / Therapy Graph Data (main graph overlays)
 // ============================================================================

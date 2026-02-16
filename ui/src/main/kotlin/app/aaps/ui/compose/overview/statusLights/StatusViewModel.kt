@@ -78,7 +78,14 @@ class StatusViewModel @Inject constructor(
                 state.copy(
                     sensorStatus = sensorStatus,
                     insulinStatus = insulinStatus,
-                    cannulaStatus = cannulaStatus,
+                    // Preserve previous cannula level while TDD recalculates
+                    cannulaStatus = state.cannulaStatus?.let { prev ->
+                        cannulaStatus.copy(
+                            level = prev.level,
+                            levelStatus = prev.levelStatus,
+                            levelPercent = prev.levelPercent
+                        )
+                    } ?: cannulaStatus,
                     batteryStatus = batteryStatus,
                     showFill = pumpDescription.isRefillingCapable && isInitialized,
                     showPumpBatteryChange = pumpDescription.isBatteryReplaceable || pump.isBatteryChangeLoggingEnabled(),

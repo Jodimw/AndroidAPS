@@ -12,7 +12,6 @@ import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.text.TextStyle
@@ -20,6 +19,7 @@ import androidx.compose.ui.unit.dp
 import app.aaps.core.graph.vico.Square
 import app.aaps.core.interfaces.overview.graph.BasalGraphData
 import app.aaps.core.interfaces.overview.graph.BgDataPoint
+import app.aaps.core.interfaces.overview.graph.TargetLineData
 import app.aaps.core.ui.compose.AapsTheme
 import com.patrykandpatrick.vico.compose.cartesian.CartesianChartHost
 import com.patrykandpatrick.vico.compose.cartesian.VicoScrollState
@@ -69,6 +69,7 @@ fun BgGraphCompose(
     val derivedTimeRange by viewModel.derivedTimeRange.collectAsState()
     val chartConfig by viewModel.chartConfigFlow.collectAsState()
     val basalData by viewModel.basalGraphFlow.collectAsState()
+    val targetData by viewModel.targetLineFlow.collectAsState()
 
     // Use derived time range or fall back to default (last 24 hours)
     val (minTimestamp, maxTimestamp) = derivedTimeRange ?: run {
@@ -89,6 +90,7 @@ fun BgGraphCompose(
     val inRangeColor = AapsTheme.generalColors.bgInRange
     val highColor = AapsTheme.generalColors.bgHigh
     val basalColor = AapsTheme.elementColors.tempBasal
+    val targetLineColor = AapsTheme.elementColors.tempTarget
 
     // Calculate x-axis range (must match COB graph for alignment)
     val minX = 0.0
@@ -105,7 +107,7 @@ fun BgGraphCompose(
     }
 
     // Function to rebuild chart from registry
-    suspend fun rebuildChart(currentBasalData: BasalGraphData) {
+    suspend fun rebuildChart(currentBasalData: BasalGraphData, currentTargetData: TargetLineData) {
         val regularPoints = seriesRegistry[SERIES_REGULAR] ?: emptyList()
         val bucketedPoints = seriesRegistry[SERIES_BUCKETED] ?: emptyList()
 
@@ -160,14 +162,27 @@ fun BgGraphCompose(
                     series(x = listOf(0.0, 1.0), y = listOf(0.0, 0.0))
                 }
             }
+
+            // Block 3 → Target line layer (layer 2, start axis)
+            lineSeries {
+                if (currentTargetData.targets.size >= 2) {
+                    val pts = currentTargetData.targets
+                        .map { timestampToX(it.timestamp, minTimestamp) to it.value }
+                        .sortedBy { it.first }
+                    series(x = pts.map { it.first }, y = pts.map { it.second })
+                } else {
+                    // Dummy series - invisible at y=0
+                    series(x = listOf(0.0, 1.0), y = listOf(0.0, 0.0))
+                }
+            }
         }
     }
 
     // Single LaunchedEffect for all data - ensures atomic updates
-    LaunchedEffect(bgReadings, bucketedData, basalData, stableTimeRange) {
+    LaunchedEffect(bgReadings, bucketedData, basalData, targetData, stableTimeRange) {
         seriesRegistry[SERIES_REGULAR] = bgReadings
         seriesRegistry[SERIES_BUCKETED] = bucketedData
-        rebuildChart(basalData)
+        rebuildChart(basalData, targetData)
     }
 
     // Build lookup map for BUCKETED points: x-value -> BgDataPoint (for PointProvider)
@@ -243,18 +258,12 @@ fun BgGraphCompose(
         )
     }
 
-    // Actual delivered basal: solid line with gradient area fill, step connector
+    // Actual delivered basal: solid line with semi-transparent area fill, step connector
     val actualBasalLine = remember(basalColor) {
         LineCartesianLayer.Line(
             fill = LineCartesianLayer.LineFill.single(Fill(basalColor)),
             stroke = LineCartesianLayer.LineStroke.Continuous(thickness = 1.dp),
-            areaFill = LineCartesianLayer.AreaFill.single(
-                Fill(
-                    Brush.verticalGradient(
-                        listOf(basalColor.copy(alpha = 1f), Color.Transparent)
-                    )
-                )
-            ),
+            areaFill = LineCartesianLayer.AreaFill.single(Fill(basalColor.copy(alpha = 0.3f))),
             pointConnector = Square
         )
     }
@@ -262,6 +271,21 @@ fun BgGraphCompose(
     val basalLines = remember(profileBasalLine, actualBasalLine) {
         listOf(profileBasalLine, actualBasalLine)
     }
+
+    // =========================================================================
+    // Target line (layer 2) — single line on start (BG) axis
+    // =========================================================================
+
+    val targetLine = remember(targetLineColor) {
+        LineCartesianLayer.Line(
+            fill = LineCartesianLayer.LineFill.single(Fill(targetLineColor)),
+            stroke = LineCartesianLayer.LineStroke.Continuous(thickness = 1.dp),
+            areaFill = null,
+            pointConnector = Square
+        )
+    }
+
+    val targetLines = remember(targetLine) { listOf(targetLine) }
 
     // Basal Y-axis range: maxBasal * 4 so basal occupies ~25% of chart height
     val basalMaxY = remember(basalData.maxBasal) {
@@ -301,6 +325,12 @@ fun BgGraphCompose(
                     CartesianLayerRangeProvider.fixed(minX = 0.0, maxX = maxX, minY = 0.0, maxY = basalMaxY)
                 },
                 verticalAxisPosition = Axis.Position.Vertical.End
+            ),
+            // Layer 2: Target line (start axis — shares BG Y-axis range)
+            rememberLineCartesianLayer(
+                lineProvider = LineCartesianLayer.LineProvider.series(targetLines),
+                rangeProvider = remember(maxX) { CartesianLayerRangeProvider.fixed(minX = 0.0, maxX = maxX) },
+                verticalAxisPosition = Axis.Position.Vertical.Start
             ),
             startAxis = VerticalAxis.rememberStart(
                 label = rememberTextComponent(
