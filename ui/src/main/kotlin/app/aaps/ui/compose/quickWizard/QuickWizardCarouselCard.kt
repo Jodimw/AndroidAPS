@@ -19,7 +19,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -28,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import app.aaps.core.interfaces.utils.DateUtil
 import app.aaps.core.objects.wizard.QuickWizardEntry
 import app.aaps.core.ui.compose.AapsTheme
+import app.aaps.core.ui.compose.icons.IcQuickwizard
 import app.aaps.core.ui.R as CoreR
 
 /**
@@ -75,7 +75,7 @@ fun QuickWizardCarouselCard(
         ) {
             // Icon in top left corner
             Icon(
-                painter = painterResource(app.aaps.core.objects.R.drawable.ic_quick_wizard),
+                imageVector = IcQuickwizard,
                 contentDescription = null,
                 tint = AapsTheme.elementColors.carbs,
                 modifier = Modifier

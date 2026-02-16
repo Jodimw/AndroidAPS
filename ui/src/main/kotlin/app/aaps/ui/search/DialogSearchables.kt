@@ -3,10 +3,17 @@ package app.aaps.ui.search
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Info
 import app.aaps.core.interfaces.ui.UiInteraction
-import app.aaps.core.ui.compose.icons.Carbs
-import app.aaps.core.ui.compose.icons.Prime
-import app.aaps.core.ui.compose.icons.TempTarget
-import app.aaps.core.ui.compose.icons.Treatment
+import app.aaps.core.ui.compose.icons.IcActivity
+import app.aaps.core.ui.compose.icons.IcAnnouncement
+import app.aaps.core.ui.compose.icons.IcBgCheck
+import app.aaps.core.ui.compose.icons.IcCarbs
+import app.aaps.core.ui.compose.icons.IcPumpCartridge
+import app.aaps.core.ui.compose.icons.IcTtHigh
+import app.aaps.core.ui.compose.icons.IcBolus
+import app.aaps.core.ui.compose.icons.IcCgmInsert
+import app.aaps.core.ui.compose.icons.IcNote
+import app.aaps.core.ui.compose.icons.IcPumpBattery
+import app.aaps.core.ui.compose.icons.IcQuestion
 import app.aaps.core.ui.search.SearchableItem
 import app.aaps.core.ui.search.SearchableProvider
 import javax.inject.Inject
@@ -84,7 +91,7 @@ class DialogSearchables @Inject constructor() : SearchableProvider {
             SearchableItem.Dialog(
                 dialogKey = "temp_target_management",
                 dialogTitleResId = CoreUiR.string.temp_target_management,
-                dialogIcon = TempTarget,
+                dialogIcon = IcTtHigh,
                 dialogSummaryResId = CoreUiR.string.manage_temp_target_desc
             )
         )
@@ -102,7 +109,7 @@ class DialogSearchables @Inject constructor() : SearchableProvider {
             SearchableItem.Dialog(
                 dialogKey = "carbs_dialog",
                 dialogTitleResId = CoreUiR.string.carbs,
-                dialogIcon = Carbs,
+                dialogIcon = IcCarbs,
                 dialogSummaryResId = CoreUiR.string.treatment_carbs_desc
             )
         )
@@ -110,7 +117,7 @@ class DialogSearchables @Inject constructor() : SearchableProvider {
             SearchableItem.Dialog(
                 dialogKey = "insulin_dialog",
                 dialogTitleResId = CoreUiR.string.overview_insulin_label,
-                dialogIcon = Treatment,
+                dialogIcon = IcBolus,
                 dialogSummaryResId = CoreUiR.string.treatment_insulin_desc
             )
         )
@@ -118,7 +125,7 @@ class DialogSearchables @Inject constructor() : SearchableProvider {
             SearchableItem.Dialog(
                 dialogKey = "treatment_dialog",
                 dialogTitleResId = CoreUiR.string.overview_treatment_label,
-                dialogIcon = Treatment,
+                dialogIcon = IcBolus,
                 dialogSummaryResId = CoreUiR.string.treatment_desc
             )
         )
@@ -126,7 +133,7 @@ class DialogSearchables @Inject constructor() : SearchableProvider {
             SearchableItem.Dialog(
                 dialogKey = "fill_dialog",
                 dialogTitleResId = CoreUiR.string.prime_fill,
-                dialogIcon = Prime
+                dialogIcon = IcPumpCartridge
             )
         )
 
@@ -139,49 +146,49 @@ class DialogSearchables @Inject constructor() : SearchableProvider {
             SearchableItem.Dialog(
                 dialogKey = "care_${UiInteraction.EventType.BGCHECK.name.lowercase()}",
                 dialogTitleResId = CoreUiR.string.careportal_bgcheck,
-                dialogIconResId = CoreObjectsR.drawable.ic_cp_bgcheck
+                dialogIcon = IcBgCheck
             )
         )
         add(
             SearchableItem.Dialog(
                 dialogKey = "care_${UiInteraction.EventType.SENSOR_INSERT.name.lowercase()}",
                 dialogTitleResId = CoreUiR.string.cgm_sensor_insert,
-                dialogIconResId = CoreObjectsR.drawable.ic_cp_cgm_insert
+                dialogIcon = IcCgmInsert
             )
         )
         add(
             SearchableItem.Dialog(
                 dialogKey = "care_${UiInteraction.EventType.BATTERY_CHANGE.name.lowercase()}",
                 dialogTitleResId = CoreUiR.string.pump_battery_change,
-                dialogIconResId = CoreObjectsR.drawable.ic_cp_pump_battery
+                dialogIcon = IcPumpBattery
             )
         )
         add(
             SearchableItem.Dialog(
                 dialogKey = "care_${UiInteraction.EventType.NOTE.name.lowercase()}",
                 dialogTitleResId = CoreUiR.string.careportal_note,
-                dialogIconResId = CoreObjectsR.drawable.ic_cp_note
+                dialogIcon = IcNote
             )
         )
         add(
             SearchableItem.Dialog(
                 dialogKey = "care_${UiInteraction.EventType.EXERCISE.name.lowercase()}",
                 dialogTitleResId = CoreUiR.string.careportal_exercise,
-                dialogIconResId = CoreObjectsR.drawable.ic_cp_exercise
+                dialogIcon = IcActivity
             )
         )
         add(
             SearchableItem.Dialog(
                 dialogKey = "care_${UiInteraction.EventType.QUESTION.name.lowercase()}",
                 dialogTitleResId = CoreUiR.string.careportal_question,
-                dialogIconResId = CoreObjectsR.drawable.ic_cp_question
+                dialogIcon = IcQuestion
             )
         )
         add(
             SearchableItem.Dialog(
                 dialogKey = "care_${UiInteraction.EventType.ANNOUNCEMENT.name.lowercase()}",
                 dialogTitleResId = CoreUiR.string.careportal_announcement,
-                dialogIconResId = CoreObjectsR.drawable.ic_cp_announcement
+                dialogIcon = IcAnnouncement
             )
         )
     }

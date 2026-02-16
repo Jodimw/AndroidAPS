@@ -101,6 +101,7 @@ sealed class SearchableItem {
     data class Dialog(
         val dialogKey: String,
         val dialogTitleResId: Int,
+        @Deprecated("use dialogIcon")
         val dialogIconResId: Int? = null,
         val dialogIcon: ImageVector? = null,
         val dialogSummaryResId: Int? = null
@@ -108,6 +109,7 @@ sealed class SearchableItem {
 
         override val key: String = dialogKey
         override val titleResId: Int = dialogTitleResId
+        @Deprecated("use icon")
         override val iconResId: Int? = dialogIconResId
         override val icon: ImageVector? = dialogIcon
         override val summaryResId: Int? = dialogSummaryResId

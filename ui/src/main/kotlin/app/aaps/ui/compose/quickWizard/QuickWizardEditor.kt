@@ -3,11 +3,13 @@ package app.aaps.ui.compose.quickWizard
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Alarm
+import androidx.compose.material.icons.filled.PhoneAndroid
+import androidx.compose.material.icons.filled.Watch
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -17,8 +19,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.painter.Painter
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import app.aaps.core.interfaces.resources.ResourceHelper
@@ -270,7 +271,7 @@ fun QuickWizardEditor(
             label = stringResource(R.string.use_alarm),
             checked = useAlarm,
             onCheckedChange = onUseAlarmChange,
-            icon = painterResource(app.aaps.core.objects.R.drawable.ic_access_alarm_24dp)
+            icon = Icons.Default.Alarm
         )
 
         HorizontalDivider()
@@ -300,14 +301,14 @@ fun QuickWizardEditor(
                 label = stringResource(R.string.show_on_phone),
                 checked = devicePhone,
                 onCheckedChange = onDevicePhoneChange,
-                icon = painterResource(app.aaps.core.objects.R.drawable.ic_smartphone)
+                icon = Icons.Default.PhoneAndroid
             )
 
             SwitchRow(
                 label = stringResource(R.string.show_on_watch),
                 checked = deviceWatch,
                 onCheckedChange = onDeviceWatchChange,
-                icon = painterResource(app.aaps.core.objects.R.drawable.ic_watch)
+                icon = Icons.Default.Watch
             )
         }
 
@@ -375,7 +376,7 @@ private fun SwitchRow(
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
-    icon: Painter? = null
+    icon: ImageVector? = null
 ) {
     Row(
         modifier = modifier.fillMaxWidth(),
@@ -389,7 +390,7 @@ private fun SwitchRow(
         ) {
             icon?.let {
                 Icon(
-                    painter = it,
+                    imageVector = it,
                     contentDescription = null,
                     modifier = Modifier.size(20.dp),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant

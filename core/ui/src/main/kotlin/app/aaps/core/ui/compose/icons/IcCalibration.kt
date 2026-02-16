@@ -1,4 +1,4 @@
-package app.aaps.core.ui.compose.icons.library
+package app.aaps.core.ui.compose.icons
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -18,6 +18,8 @@ import androidx.compose.ui.unit.dp
  * Icon for Calibration treatment type.
  * Represents sensor calibration entries.
  *
+ * replaces ic_calibration
+ *
  * Bounding box: x: 1.2-22.8, y: 2.3-21.3 (viewport: 24x24, ~90% width)
  */
 val IcCalibration: ImageVector by lazy {
@@ -29,7 +31,7 @@ val IcCalibration: ImageVector by lazy {
         viewportHeight = 24f
     ).apply {
         path(
-            fill = SolidColor(Color(0xFFE83258)),
+            fill = SolidColor(Color.Black),
             fillAlpha = 1.0f,
             stroke = null,
             strokeAlpha = 1.0f,

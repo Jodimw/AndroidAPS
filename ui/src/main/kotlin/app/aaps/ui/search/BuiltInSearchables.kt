@@ -12,10 +12,10 @@ import androidx.compose.material.icons.filled.Key
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.TipsAndUpdates
-import app.aaps.core.ui.compose.icons.Carbs
-import app.aaps.core.ui.compose.icons.Prime
+import app.aaps.core.ui.compose.icons.IcCarbs
+import app.aaps.core.ui.compose.icons.IcPumpCartridge
 import app.aaps.core.ui.compose.icons.Pump
-import app.aaps.core.ui.compose.icons.Treatment
+import app.aaps.core.ui.compose.icons.IcBolus
 import app.aaps.core.ui.compose.preference.PreferenceSubScreenDef
 import app.aaps.core.ui.search.SearchableItem
 import app.aaps.core.ui.search.SearchableProvider
@@ -134,7 +134,7 @@ class BuiltInSearchables @Inject constructor(
             DoubleKey.ActionsFillButton2,
             DoubleKey.ActionsFillButton3
         ),
-        icon = Prime
+        icon = IcPumpCartridge
     )
 
     /**
@@ -148,7 +148,7 @@ class BuiltInSearchables @Inject constructor(
             DoubleKey.OverviewInsulinButtonIncrement2,
             DoubleKey.OverviewInsulinButtonIncrement3
         ),
-        icon = Treatment
+        icon = IcBolus
     )
 
     /**
@@ -162,7 +162,7 @@ class BuiltInSearchables @Inject constructor(
             IntKey.OverviewCarbsButtonIncrement2,
             IntKey.OverviewCarbsButtonIncrement3
         ),
-        icon = Carbs
+        icon = IcCarbs
     )
 
     /**
@@ -204,7 +204,7 @@ class BuiltInSearchables @Inject constructor(
             BooleanKey.OverviewShowCarbsButton,
             BooleanKey.OverviewShowWizardButton
         ),
-        icon = Treatment
+        icon = IcBolus
     )
 
     override fun getSearchableItems(): List<SearchableItem> = listOf(

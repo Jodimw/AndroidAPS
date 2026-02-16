@@ -23,7 +23,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import app.aaps.core.ui.compose.AapsTheme
-import app.aaps.core.ui.compose.icons.Carbs
+import app.aaps.core.ui.compose.icons.IcCarbs
 import app.aaps.ui.compose.overview.graphs.CobUiState
 
 @Composable
@@ -60,7 +60,7 @@ internal fun CobChip(
             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
         ) {
             Icon(
-                imageVector = Carbs,
+                imageVector = IcCarbs,
                 contentDescription = null,
                 tint = AapsTheme.elementColors.carbs,
                 modifier = Modifier.size(24.dp)

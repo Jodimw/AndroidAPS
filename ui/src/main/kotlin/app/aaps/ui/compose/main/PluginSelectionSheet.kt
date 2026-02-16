@@ -33,6 +33,7 @@ import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -116,10 +117,12 @@ private fun SheetPluginItem(
     val iconColor = MaterialTheme.colorScheme.primary
     val disabledAlpha = 0.38f
 
-    val iconRes = if (plugin.menuIcon != -1) {
-        plugin.menuIcon
+    val composeIcon = plugin.pluginDescription.icon
+    val iconPainter = if (composeIcon != null) {
+        rememberVectorPainter(composeIcon)
     } else {
-        app.aaps.core.ui.R.drawable.ic_settings
+        val iconRes = if (plugin.menuIcon != -1) plugin.menuIcon else app.aaps.core.ui.R.drawable.ic_settings
+        painterResource(id = iconRes)
     }
 
     val containerColor = if (isEnabled) MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.4f)
@@ -159,7 +162,7 @@ private fun SheetPluginItem(
                         )
                 ) {
                     Icon(
-                        painter = painterResource(id = iconRes),
+                        painter = iconPainter,
                         contentDescription = null,
                         tint = if (isEnabled) iconColor
                         else MaterialTheme.colorScheme.onSurface.copy(alpha = disabledAlpha),

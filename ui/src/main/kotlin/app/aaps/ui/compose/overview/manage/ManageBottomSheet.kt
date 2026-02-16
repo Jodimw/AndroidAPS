@@ -1,17 +1,12 @@
 package app.aaps.ui.compose.overview.manage
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
@@ -19,16 +14,28 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import app.aaps.core.interfaces.pump.actions.CustomAction
 import app.aaps.core.ui.compose.AapsTheme
+import app.aaps.core.ui.compose.TonalIcon
+import app.aaps.core.ui.compose.icons.IcActivity
+import app.aaps.core.ui.compose.icons.IcAnnouncement
+import app.aaps.core.ui.compose.icons.IcBgCheck
+import app.aaps.core.ui.compose.icons.IcCancelExtendedBolus
+import app.aaps.core.ui.compose.icons.IcExtendedBolus
+import app.aaps.core.ui.compose.icons.IcNote
+import app.aaps.core.ui.compose.icons.IcProfile
+import app.aaps.core.ui.compose.icons.IcQuestion
+import app.aaps.core.ui.compose.icons.IcQuickwizard
+import app.aaps.core.ui.compose.icons.IcSiteRotation
+import app.aaps.core.ui.compose.icons.IcTtHigh
 import app.aaps.core.ui.R as CoreUiR
 import app.aaps.core.objects.R as ObjectsR
 
@@ -142,7 +149,7 @@ internal fun ManageBottomSheetContent(
         ManageItem(
             text = stringResource(CoreUiR.string.profile_management),
             description = stringResource(CoreUiR.string.manage_profile_desc),
-            iconPainter = painterResource(CoreUiR.drawable.ic_actions_profileswitch),
+            iconPainter = rememberVectorPainter(IcProfile),
             color = AapsTheme.elementColors.profileSwitch,
             onDismiss = onDismiss,
             onClick = onProfileManagementClick
@@ -153,7 +160,7 @@ internal fun ManageBottomSheetContent(
             ManageItem(
                 text = stringResource(CoreUiR.string.temp_target_management),
                 description = stringResource(CoreUiR.string.manage_temp_target_desc),
-                iconPainter = painterResource(ObjectsR.drawable.ic_temptarget_high),
+                iconPainter = rememberVectorPainter(IcTtHigh),
                 color = AapsTheme.elementColors.tempTarget,
                 onDismiss = onDismiss,
                 onClick = onTempTargetClick
@@ -163,7 +170,7 @@ internal fun ManageBottomSheetContent(
         ManageItem(
             text = stringResource(CoreUiR.string.quickwizard_managemnt),
             description = stringResource(CoreUiR.string.manage_quickwizard_desc),
-            iconPainter = painterResource(ObjectsR.drawable.ic_quick_wizard),
+            iconPainter = rememberVectorPainter(IcQuickwizard),
             color = AapsTheme.elementColors.carbs,
             onDismiss = onDismiss,
             onClick = onQuickWizardClick
@@ -195,7 +202,7 @@ internal fun ManageBottomSheetContent(
             ManageItem(
                 text = cancelExtendedBolusText,
                 description = null,
-                iconPainter = painterResource(CoreUiR.drawable.ic_actions_cancel_extended_bolus),
+                iconPainter = rememberVectorPainter(IcCancelExtendedBolus),
                 color = AapsTheme.elementColors.extendedBolus,
                 onDismiss = onDismiss,
                 onClick = onCancelExtendedBolusClick
@@ -204,7 +211,7 @@ internal fun ManageBottomSheetContent(
             ManageItem(
                 text = stringResource(CoreUiR.string.extended_bolus_button),
                 description = stringResource(CoreUiR.string.manage_extended_bolus_desc),
-                iconPainter = painterResource(ObjectsR.drawable.ic_actions_start_extended_bolus),
+                iconPainter = rememberVectorPainter(IcExtendedBolus),
                 color = AapsTheme.elementColors.extendedBolus,
                 onDismiss = onDismiss,
                 onClick = onExtendedBolusClick
@@ -217,7 +224,7 @@ internal fun ManageBottomSheetContent(
 
         ManageItem(
             text = stringResource(CoreUiR.string.careportal_bgcheck),
-            iconPainter = painterResource(ObjectsR.drawable.ic_cp_bgcheck),
+            iconPainter = rememberVectorPainter(IcBgCheck),
             color = AapsTheme.elementColors.bgCheck,
             onDismiss = onDismiss,
             onClick = onBgCheckClick,
@@ -225,7 +232,7 @@ internal fun ManageBottomSheetContent(
         )
         ManageItem(
             text = stringResource(CoreUiR.string.careportal_note),
-            iconPainter = painterResource(ObjectsR.drawable.ic_cp_note),
+            iconPainter = rememberVectorPainter(IcNote),
             color = AapsTheme.elementColors.careportal,
             onDismiss = onDismiss,
             onClick = onNoteClick,
@@ -233,7 +240,7 @@ internal fun ManageBottomSheetContent(
         )
         ManageItem(
             text = stringResource(CoreUiR.string.careportal_exercise),
-            iconPainter = painterResource(ObjectsR.drawable.ic_cp_exercise),
+            iconPainter = rememberVectorPainter(IcActivity),
             color = AapsTheme.elementColors.exercise,
             onDismiss = onDismiss,
             onClick = onExerciseClick,
@@ -241,7 +248,7 @@ internal fun ManageBottomSheetContent(
         )
         ManageItem(
             text = stringResource(CoreUiR.string.careportal_question),
-            iconPainter = painterResource(ObjectsR.drawable.ic_cp_question),
+            iconPainter = rememberVectorPainter(IcQuestion),
             color = AapsTheme.elementColors.careportal,
             onDismiss = onDismiss,
             onClick = onQuestionClick,
@@ -249,7 +256,7 @@ internal fun ManageBottomSheetContent(
         )
         ManageItem(
             text = stringResource(CoreUiR.string.careportal_announcement),
-            iconPainter = painterResource(ObjectsR.drawable.ic_cp_announcement),
+            iconPainter = rememberVectorPainter(IcAnnouncement),
             color = AapsTheme.elementColors.announcement,
             onDismiss = onDismiss,
             onClick = onAnnouncementClick,
@@ -264,7 +271,7 @@ internal fun ManageBottomSheetContent(
         ManageItem(
             text = stringResource(CoreUiR.string.site_rotation),
             description = stringResource(CoreUiR.string.manage_site_rotation_desc),
-            iconPainter = painterResource(CoreUiR.drawable.ic_site_rotation),
+            iconPainter = rememberVectorPainter(IcSiteRotation),
             color = toolsColor,
             onDismiss = onDismiss,
             onClick = onSiteRotationClick
@@ -334,30 +341,6 @@ private fun ManageItem(
             onClick()
         }
     )
-}
-
-@Composable
-private fun TonalIcon(
-    painter: Painter,
-    color: Color,
-    modifier: Modifier = Modifier
-) {
-    Box(
-        contentAlignment = Alignment.Center,
-        modifier = modifier
-            .size(40.dp)
-            .background(
-                color = color.copy(alpha = 0.12f),
-                shape = CircleShape
-            )
-    ) {
-        Icon(
-            painter = painter,
-            contentDescription = null,
-            tint = color,
-            modifier = Modifier.size(24.dp)
-        )
-    }
 }
 
 @Preview(showBackground = true)

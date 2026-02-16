@@ -31,13 +31,13 @@ import androidx.compose.ui.unit.dp
 import app.aaps.core.ui.compose.AapsTheme
 import app.aaps.core.ui.compose.AapsTopAppBar
 import app.aaps.core.ui.compose.ToolbarConfig
-import app.aaps.core.ui.compose.icons.Carbs
+import app.aaps.core.ui.compose.icons.IcCarbs
 import app.aaps.core.ui.compose.icons.Careportal
-import app.aaps.core.ui.compose.icons.ExtendedBolus
-import app.aaps.core.ui.compose.icons.ProfileSwitch
-import app.aaps.core.ui.compose.icons.RunningMode
+import app.aaps.core.ui.compose.icons.IcExtendedBolus
+import app.aaps.core.ui.compose.icons.IcProfile
+import androidx.compose.material.icons.filled.DirectionsRun
 import app.aaps.core.ui.compose.icons.TempBasal
-import app.aaps.core.ui.compose.icons.TempTarget
+import app.aaps.core.ui.compose.icons.IcTtHigh
 import app.aaps.core.ui.compose.icons.UserEntry
 import app.aaps.ui.R
 import app.aaps.ui.compose.treatments.viewmodels.TreatmentsViewModel
@@ -85,7 +85,7 @@ fun TreatmentsScreen(
             val pageIndex0 = currentIndex++
             add(
                 TreatmentTab(
-                    icon = Carbs,
+                    icon = IcCarbs,
                     titleRes = R.string.carbs_and_bolus,
                     colorGetter = { iconColors.carbs },
                     content = {
@@ -104,7 +104,7 @@ fun TreatmentsScreen(
                 val pageIndex1 = currentIndex++
                 add(
                     TreatmentTab(
-                        icon = ExtendedBolus,
+                        icon = IcExtendedBolus,
                         titleRes = app.aaps.core.ui.R.string.extended_bolus,
                         colorGetter = { iconColors.extendedBolus },
                         content = {
@@ -143,7 +143,7 @@ fun TreatmentsScreen(
             val pageIndex3 = currentIndex++
             add(
                 TreatmentTab(
-                    icon = TempTarget,
+                    icon = IcTtHigh,
                     titleRes = app.aaps.core.ui.R.string.temporary_target,
                     colorGetter = { iconColors.tempTarget },
                     content = {
@@ -163,7 +163,7 @@ fun TreatmentsScreen(
             val pageIndex4 = currentIndex++
             add(
                 TreatmentTab(
-                    icon = ProfileSwitch,
+                    icon = IcProfile,
                     titleRes = app.aaps.core.ui.R.string.careportal_profileswitch,
                     colorGetter = { iconColors.profileSwitch },
                     content = {
@@ -203,7 +203,7 @@ fun TreatmentsScreen(
             val pageIndex6 = currentIndex++
             add(
                 TreatmentTab(
-                    icon = RunningMode,
+                    icon = Icons.Filled.DirectionsRun,
                     titleRes = app.aaps.core.ui.R.string.running_mode,
                     colorGetter = { iconColors.runningMode },
                     content = {

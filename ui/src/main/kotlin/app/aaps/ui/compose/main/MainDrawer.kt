@@ -24,6 +24,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -253,12 +254,14 @@ private fun DrawerCategoryItem(
         category.activePluginName ?: "-"
     }
 
-    // Use plugin icon if only one enabled, otherwise use general settings icon
-    val iconRes = if (category.enabledCount == 1) {
-        val pluginIcon = category.enabledPlugins.firstOrNull()?.menuIcon ?: -1
-        if (pluginIcon != -1) pluginIcon else app.aaps.core.ui.R.drawable.ic_settings
+    // Use plugin compose icon if only one enabled, fall back to resource icon, then settings icon
+    val plugin = if (category.enabledCount == 1) category.enabledPlugins.firstOrNull() else null
+    val composeIcon = plugin?.pluginDescription?.icon
+    val iconPainter = if (composeIcon != null) {
+        rememberVectorPainter(composeIcon)
     } else {
-        app.aaps.core.ui.R.drawable.ic_settings
+        val pluginIcon = plugin?.menuIcon ?: -1
+        painterResource(if (pluginIcon != -1) pluginIcon else app.aaps.core.ui.R.drawable.ic_settings)
     }
 
     Row(
@@ -269,7 +272,7 @@ private fun DrawerCategoryItem(
             .padding(start = 24.dp, top = 6.dp, bottom = 6.dp, end = 8.dp)
     ) {
         Icon(
-            painter = painterResource(id = iconRes),
+            painter = iconPainter,
             contentDescription = null,
             tint = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.size(24.dp)

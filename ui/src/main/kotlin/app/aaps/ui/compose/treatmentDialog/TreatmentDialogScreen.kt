@@ -82,14 +82,7 @@ fun TreatmentDialogScreen(
             OkCancelDialog(
                 title = stringResource(CoreUiR.string.overview_treatment_label),
                 message = summaryLines.joinToString("<br/>"),
-                iconContent = {
-                    Icon(
-                        imageVector = Icons.Default.Add,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(48.dp)
-                    )
-                },
+                icon = Icons.Default.Add,
                 onConfirm = {
                     viewModel.confirmAndSave()
                     onNavigateBack()
@@ -104,14 +97,7 @@ fun TreatmentDialogScreen(
         OkCancelDialog(
             title = stringResource(CoreUiR.string.overview_treatment_label),
             message = stringResource(CoreUiR.string.no_action_selected),
-            iconContent = {
-                Icon(
-                    imageVector = Icons.Default.Add,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(48.dp)
-                )
-            },
+            icon = Icons.Default.Add,
             onConfirm = { showNoAction = false },
             onDismiss = { showNoAction = false }
         )

@@ -41,6 +41,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -60,7 +62,8 @@ internal fun ClickablePreferenceCategoryHeader(
     onToggle: () -> Unit,
     modifier: Modifier = Modifier,
     insideCard: Boolean = false,
-    iconResId: Int? = null
+    iconResId: Int? = null,
+    icon: ImageVector? = null
 ) {
     val theme = LocalPreferenceTheme.current
     val rotationAngle by animateFloatAsState(
@@ -97,10 +100,15 @@ internal fun ClickablePreferenceCategoryHeader(
         verticalAlignment = Alignment.CenterVertically
     ) {
         CompositionLocalProvider(LocalContentColor provides theme.categoryColor) {
-            // Icon (if provided and valid)
-            if (iconResId != null && iconResId != -1) {
+            // Icon (compose icon preferred, resource fallback)
+            val iconPainter = when {
+                icon != null                      -> rememberVectorPainter(icon)
+                iconResId != null && iconResId != -1 -> painterResource(id = iconResId)
+                else                              -> null
+            }
+            if (iconPainter != null) {
                 Icon(
-                    painter = painterResource(id = iconResId),
+                    painter = iconPainter,
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.size(24.dp)

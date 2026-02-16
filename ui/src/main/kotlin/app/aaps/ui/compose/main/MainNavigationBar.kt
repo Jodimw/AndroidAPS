@@ -14,7 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import app.aaps.core.ui.compose.icons.Treatment
+import app.aaps.core.ui.compose.icons.IcBolus
 import app.aaps.core.ui.R as CoreUiR
 
 @Composable
@@ -64,7 +64,7 @@ fun MainNavigationBar(
                     }
                 ) {
                     Icon(
-                        imageVector = Treatment,
+                        imageVector = IcBolus,
                         contentDescription = stringResource(CoreUiR.string.treatments),
                         modifier = Modifier.size(24.dp)
                     )

@@ -1,4 +1,4 @@
-package app.aaps.core.ui.compose.icons.library
+package app.aaps.core.ui.compose.icons
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -18,6 +18,8 @@ import androidx.compose.ui.unit.dp
  * Icon for Extended Bolus.
  * Represents extended or multi-wave insulin bolus.
  *
+ * replaces ic_actions_start_extended_bolus
+ *
  * Bounding box: x: 3.0-21.2, y: 1.2-22.8 (viewport: 24x24, ~90% height)
  */
 val IcExtendedBolus: ImageVector by lazy {
@@ -29,7 +31,7 @@ val IcExtendedBolus: ImageVector by lazy {
         viewportHeight = 24f
     ).apply {
         path(
-            fill = SolidColor(Color(0xFF67DFE8)),
+            fill = SolidColor(Color.Black),
             fillAlpha = 1.0f,
             stroke = null,
             strokeAlpha = 1.0f,

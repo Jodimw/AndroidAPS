@@ -1,4 +1,4 @@
-package app.aaps.core.ui.compose.icons.library
+package app.aaps.core.ui.compose.icons
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -17,6 +17,8 @@ import androidx.compose.ui.unit.dp
 /**
  * Icon for Site Rotation.
  * For Cannula or CGM site rotation.
+ *
+ * replaces ic_site_rotation
  *
  * Bounding box: x: 1.2-22.8, y: 1.2-22.8 (viewport: 24x24, ~90% height)
  */

@@ -16,7 +16,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import app.aaps.core.ui.compose.AapsTheme
-import app.aaps.core.ui.compose.icons.Treatment
+import app.aaps.core.ui.compose.icons.IcBolus
 import app.aaps.ui.compose.overview.graphs.IobUiState
 
 @Composable
@@ -35,7 +35,7 @@ internal fun IobChip(
             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
         ) {
             Icon(
-                imageVector = Treatment,
+                imageVector = IcBolus,
                 contentDescription = null,
                 tint = AapsTheme.elementColors.insulin,
                 modifier = Modifier.size(24.dp)

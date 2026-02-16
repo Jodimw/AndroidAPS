@@ -19,7 +19,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.SwapHoriz
 import app.aaps.core.data.plugin.PluginType
 import app.aaps.core.interfaces.plugin.PluginBase
 import app.aaps.core.ui.compose.AapsFab
@@ -342,7 +343,7 @@ private fun SwitchUiFab(
         modifier = modifier
     ) {
         Icon(
-            painter = painterResource(id = app.aaps.core.ui.R.drawable.ic_swap_horiz),
+            imageVector = Icons.Filled.SwapHoriz,
             contentDescription = "Switch to classic UI"
         )
     }

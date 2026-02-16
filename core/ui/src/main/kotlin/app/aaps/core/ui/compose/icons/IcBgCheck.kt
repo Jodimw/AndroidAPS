@@ -1,4 +1,4 @@
-package app.aaps.core.ui.compose.icons.library
+package app.aaps.core.ui.compose.icons
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -18,6 +18,8 @@ import androidx.compose.ui.unit.dp
  * Icon for BG Check.
  * Represents blood glucose check or measurement.
  *
+ * replaces ic_cp_bgcheck
+ *
  * Bounding box: x: 1.2-22.8, y: 1.8-21.8 (viewport: 24x24, ~90% width)
  */
 val IcBgCheck: ImageVector by lazy {
@@ -29,7 +31,7 @@ val IcBgCheck: ImageVector by lazy {
         viewportHeight = 24f
     ).apply {
         path(
-            fill = SolidColor(Color(0xFFE9375C)),
+            fill = SolidColor(Color.Black),
             fillAlpha = 1.0f,
             stroke = null,
             strokeAlpha = 1.0f,

@@ -44,6 +44,7 @@ import app.aaps.core.objects.extensions.convertedToAbsolute
 import app.aaps.core.objects.extensions.getPassedDurationToTimeInMinutes
 import app.aaps.core.objects.extensions.plannedRemainingMinutes
 import app.aaps.core.objects.extensions.target
+import app.aaps.core.ui.compose.icons.IcCalculator
 import app.aaps.core.ui.compose.preference.PreferenceSubScreenDef
 import app.aaps.core.utils.MidnightUtils
 import app.aaps.core.validators.preferences.AdaptiveDoublePreference
@@ -88,6 +89,7 @@ class OpenAPSAMAPlugin @Inject constructor(
         .mainType(PluginType.APS)
         .fragmentClass(OpenAPSFragment::class.java.name)
         .pluginIcon(app.aaps.core.objects.R.drawable.ic_calculator)
+        .icon(IcCalculator)
         .pluginName(R.string.openapsama)
         .shortName(R.string.oaps_shortname)
         .preferencesId(PluginDescription.PREFERENCE_SCREEN)

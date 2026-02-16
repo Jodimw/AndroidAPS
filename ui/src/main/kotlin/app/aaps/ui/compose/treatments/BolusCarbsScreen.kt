@@ -50,10 +50,10 @@ import app.aaps.core.ui.compose.AapsTheme
 import app.aaps.core.ui.compose.OkCancelDialog
 import app.aaps.core.ui.compose.SelectableListToolbar
 import app.aaps.core.ui.compose.ToolbarConfig
-import app.aaps.core.ui.compose.icons.Calculator
-import app.aaps.core.ui.compose.icons.Carbs
+import app.aaps.core.ui.compose.icons.IcCalculator
+import app.aaps.core.ui.compose.icons.IcCarbs
 import app.aaps.core.ui.compose.icons.Ns
-import app.aaps.core.ui.compose.icons.Prime
+import app.aaps.core.ui.compose.icons.IcPumpCartridge
 import app.aaps.core.ui.compose.icons.Pump
 import app.aaps.core.ui.compose.icons.Smb
 import app.aaps.ui.compose.components.ContentContainer
@@ -231,7 +231,7 @@ private fun MealLinkItem(
                         Box(modifier = Modifier.weight(1f))
 
                         Icon(
-                            imageVector = Calculator,
+                            imageVector = IcCalculator,
                             contentDescription = stringResource(app.aaps.core.ui.R.string.boluswizard),
                             modifier = Modifier.size(21.dp),
                             tint = Color(AapsTheme.generalColors.calculator.value)
@@ -332,7 +332,7 @@ private fun MealLinkItem(
 
                             BS.Type.NORMAL  -> {
                                 Icon(
-                                    imageVector = Carbs,
+                                    imageVector = IcCarbs,
                                     contentDescription = stringResource(app.aaps.core.ui.R.string.careportal_mealbolus),
                                     modifier = Modifier.size(21.dp)
                                 )
@@ -340,7 +340,7 @@ private fun MealLinkItem(
 
                             BS.Type.PRIMING -> {
                                 Icon(
-                                    imageVector = Prime,
+                                    imageVector = IcPumpCartridge,
                                     contentDescription = stringResource(app.aaps.core.ui.R.string.prime_fill),
                                     modifier = Modifier.size(21.dp)
                                 )

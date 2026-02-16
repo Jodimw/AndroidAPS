@@ -1,4 +1,4 @@
-package app.aaps.core.ui.compose.icons.library
+package app.aaps.core.ui.compose.icons
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -18,6 +18,8 @@ import androidx.compose.ui.unit.dp
  * Icon for Bolus treatment type.
  * Represents insulin bolus entries.
  *
+ * replaces ic_bolus
+ *
  * Bounding box: x: 1.2-22.6, y: 3.3-21.0 (viewport: 24x24, ~90% width)
  */
 val IcBolus: ImageVector by lazy {
@@ -29,7 +31,7 @@ val IcBolus: ImageVector by lazy {
         viewportHeight = 24f
     ).apply {
         path(
-            fill = SolidColor(Color(0xFF67DFE8)),
+            fill = SolidColor(Color.Black),
             fillAlpha = 1.0f,
             stroke = null,
             strokeAlpha = 1.0f,

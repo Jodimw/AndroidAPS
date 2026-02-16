@@ -17,11 +17,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import app.aaps.core.ui.compose.AapsTheme
-import app.aaps.ui.R
+import app.aaps.core.ui.compose.icons.IcTtActivity
+import app.aaps.core.ui.compose.icons.IcTtEatingSoon
+import app.aaps.core.ui.compose.icons.IcTtHypo
+import app.aaps.core.ui.compose.icons.IcTtManual
 import app.aaps.ui.compose.main.TempTargetChipState
 
 @Composable
@@ -59,7 +62,7 @@ fun TempTargetChip(
                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
             ) {
                 Icon(
-                    painter = painterResource(reason.toIconRes()),
+                    imageVector = reason.toIcon(),
                     contentDescription = null,
                     tint = iconColor,
                     modifier = Modifier.size(24.dp)
@@ -96,11 +99,11 @@ private fun String?.toIconColor(): Color = when (this) {
     else          -> AapsTheme.generalColors.ttCustom // Custom, Automation, Wear
 }
 
-private fun String?.toIconRes(): Int = when (this) {
-    "Eating Soon" -> R.drawable.ic_target_eatingsoon
-    "Activity"    -> R.drawable.ic_target_activity
-    "Hypo"        -> R.drawable.ic_target_hypo
-    else          -> app.aaps.core.ui.R.drawable.ic_crosstarget // Custom, Automation, Wear, null
+private fun String?.toIcon(): ImageVector = when (this) {
+    "Eating Soon" -> IcTtEatingSoon
+    "Activity"    -> IcTtActivity
+    "Hypo"        -> IcTtHypo
+    else          -> IcTtManual // Custom, Automation, Wear, null
 }
 
 @Preview(showBackground = true)

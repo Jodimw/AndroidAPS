@@ -28,6 +28,7 @@ import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 
 /**
  * Composable for a collapsible card section.
@@ -43,6 +44,7 @@ fun CollapsibleCardSectionContent(
     expanded: Boolean,
     onToggle: () -> Unit,
     iconResId: Int? = null,
+    icon: ImageVector? = null,
     content: @Composable () -> Unit
 ) {
     val theme = LocalPreferenceTheme.current
@@ -62,7 +64,8 @@ fun CollapsibleCardSectionContent(
                 expanded = expanded,
                 onToggle = onToggle,
                 insideCard = true,
-                iconResId = iconResId
+                iconResId = iconResId,
+                icon = icon
             )
 
             AnimatedVisibility(

@@ -36,7 +36,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
@@ -53,7 +53,13 @@ import app.aaps.core.ui.compose.OkCancelDialog
 import app.aaps.core.ui.compose.SliderWithButtons
 import app.aaps.core.ui.compose.TimePickerModal
 import app.aaps.core.ui.compose.clearFocusOnTap
-import app.aaps.ui.R
+import app.aaps.core.ui.compose.icons.IcActivity
+import app.aaps.core.ui.compose.icons.IcAnnouncement
+import app.aaps.core.ui.compose.icons.IcBgCheck
+import app.aaps.core.ui.compose.icons.IcCgmInsert
+import app.aaps.core.ui.compose.icons.IcNote
+import app.aaps.core.ui.compose.icons.IcPumpBattery
+import app.aaps.core.ui.compose.icons.IcQuestion
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.LocalTime
 import kotlinx.datetime.TimeZone
@@ -61,6 +67,7 @@ import kotlinx.datetime.toInstant
 import kotlinx.datetime.toLocalDateTime
 import java.text.DecimalFormat
 import kotlin.time.Instant
+import app.aaps.ui.R
 import app.aaps.core.keys.R as KeysR
 import app.aaps.core.ui.R as CoreUiR
 
@@ -101,7 +108,7 @@ fun CareDialogScreen(
         OkCancelDialog(
             title = stringResource(eventType.titleResId()),
             message = summaryLines.joinToString("<br/>"),
-            icon = eventType.iconRes(),
+            icon = eventType.icon(),
             onConfirm = {
                 viewModel.confirmAndSave()
                 onNavigateBack()
@@ -182,7 +189,7 @@ fun CareDialogScreen(
                 horizontalArrangement = Arrangement.Center
             ) {
                 Icon(
-                    painter = painterResource(id = eventType.iconRes()),
+                    imageVector = eventType.icon(),
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.padding(vertical = 8.dp)
@@ -414,12 +421,12 @@ fun UiInteraction.EventType.titleResId(): Int = when (this) {
     UiInteraction.EventType.ANNOUNCEMENT   -> CoreUiR.string.careportal_announcement
 }
 
-fun UiInteraction.EventType.iconRes(): Int = when (this) {
-    UiInteraction.EventType.BGCHECK        -> app.aaps.core.objects.R.drawable.ic_cp_bgcheck
-    UiInteraction.EventType.SENSOR_INSERT  -> app.aaps.core.objects.R.drawable.ic_cp_cgm_insert
-    UiInteraction.EventType.BATTERY_CHANGE -> app.aaps.core.objects.R.drawable.ic_cp_pump_battery
-    UiInteraction.EventType.NOTE           -> app.aaps.core.objects.R.drawable.ic_cp_note
-    UiInteraction.EventType.EXERCISE       -> app.aaps.core.objects.R.drawable.ic_cp_exercise
-    UiInteraction.EventType.QUESTION       -> app.aaps.core.objects.R.drawable.ic_cp_question
-    UiInteraction.EventType.ANNOUNCEMENT   -> app.aaps.core.objects.R.drawable.ic_cp_announcement
+fun UiInteraction.EventType.icon(): ImageVector = when (this) {
+    UiInteraction.EventType.BGCHECK        -> IcBgCheck
+    UiInteraction.EventType.SENSOR_INSERT  -> IcCgmInsert
+    UiInteraction.EventType.BATTERY_CHANGE -> IcPumpBattery
+    UiInteraction.EventType.NOTE           -> IcNote
+    UiInteraction.EventType.EXERCISE       -> IcActivity
+    UiInteraction.EventType.QUESTION       -> IcQuestion
+    UiInteraction.EventType.ANNOUNCEMENT   -> IcAnnouncement
 }

@@ -45,7 +45,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.aaps.core.interfaces.configuration.Config
-import app.aaps.core.keys.DoubleKey
 import app.aaps.core.keys.interfaces.Preferences
 import app.aaps.core.ui.compose.AapsTheme
 import app.aaps.core.ui.compose.AapsTopAppBar
@@ -54,7 +53,7 @@ import app.aaps.core.ui.compose.OkCancelDialog
 import app.aaps.core.ui.compose.SliderWithButtons
 import app.aaps.core.ui.compose.TimePickerModal
 import app.aaps.core.ui.compose.clearFocusOnTap
-import app.aaps.core.ui.compose.icons.Treatment
+import app.aaps.core.ui.compose.icons.IcBolus
 import app.aaps.core.ui.compose.preference.AdaptivePreferenceList
 import app.aaps.core.ui.compose.preference.PreferenceSubScreenDef
 import app.aaps.core.ui.compose.preference.ProvidePreferenceTheme
@@ -115,14 +114,8 @@ fun InsulinDialogScreen(
             OkCancelDialog(
                 title = stringResource(CoreUiR.string.bolus),
                 message = summaryLines.joinToString("<br/>"),
-                iconContent = {
-                    Icon(
-                        imageVector = Treatment,
-                        contentDescription = null,
-                        tint = AapsTheme.elementColors.insulin,
-                        modifier = Modifier.size(48.dp)
-                    )
-                },
+                icon = IcBolus,
+                iconTint = AapsTheme.elementColors.insulin,
                 onConfirm = {
                     viewModel.confirmAndSave()
                     onNavigateBack()
@@ -137,14 +130,8 @@ fun InsulinDialogScreen(
         OkCancelDialog(
             title = stringResource(CoreUiR.string.bolus),
             message = stringResource(CoreUiR.string.no_action_selected),
-            iconContent = {
-                Icon(
-                    imageVector = Treatment,
-                    contentDescription = null,
-                    tint = AapsTheme.elementColors.insulin,
-                    modifier = Modifier.size(48.dp)
-                )
-            },
+            icon = IcBolus,
+            iconTint = AapsTheme.elementColors.insulin,
             onConfirm = { showNoAction = false },
             onDismiss = { showNoAction = false }
         )
@@ -202,7 +189,7 @@ fun InsulinDialogScreen(
                 title = {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
-                            imageVector = Treatment,
+                            imageVector = IcBolus,
                             contentDescription = null,
                             tint = AapsTheme.elementColors.insulin,
                             modifier = Modifier.size(24.dp)

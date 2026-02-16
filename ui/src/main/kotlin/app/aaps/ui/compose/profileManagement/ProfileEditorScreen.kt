@@ -62,7 +62,7 @@ import app.aaps.core.ui.compose.AapsTopAppBar
 import app.aaps.core.ui.compose.SliderWithButtons
 import app.aaps.core.ui.compose.ValueInputDialog
 import app.aaps.core.ui.compose.clearFocusOnTap
-import app.aaps.core.ui.compose.icons.ProfileSwitch
+import app.aaps.core.ui.compose.icons.IcProfile
 import app.aaps.ui.compose.profileManagement.viewmodels.ProfileEditorViewModel
 import app.aaps.ui.compose.profileManagement.viewmodels.ProfileUiState
 import app.aaps.ui.compose.profileManagement.viewmodels.SingleProfileState
@@ -110,7 +110,7 @@ fun ProfileEditorScreen(
                 title = {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
-                            imageVector = ProfileSwitch,
+                            imageVector = IcProfile,
                             contentDescription = null,
                             tint = AapsTheme.elementColors.profileSwitch,
                             modifier = Modifier.size(24.dp)

@@ -1,4 +1,4 @@
-package app.aaps.core.ui.compose.icons.library
+package app.aaps.core.ui.compose.icons
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -17,6 +17,8 @@ import androidx.compose.ui.unit.dp
 /**
  * Icon for Question mark.
  * Represents comment for help.
+ *
+ * replaces ic_cp_question
  *
  * Bounding box: x: 5.5-18.3, y: 1.2-22.8 (viewport: 24x24, ~90% height)
  */

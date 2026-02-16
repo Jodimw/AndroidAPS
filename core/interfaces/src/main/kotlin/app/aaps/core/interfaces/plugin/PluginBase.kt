@@ -34,8 +34,10 @@ abstract class PluginBase(
     private var state = State.NOT_INITIALIZED
     private var fragmentVisible = false
 
+    @Deprecated("use icon")
     open val menuIcon: Int
         get() = pluginDescription.pluginIcon
+    @Deprecated("use icon2")
     open val menuIcon2: Int
         get() = pluginDescription.pluginIcon2
 

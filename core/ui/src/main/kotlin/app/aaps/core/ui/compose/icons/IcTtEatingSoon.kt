@@ -1,4 +1,4 @@
-package app.aaps.core.ui.compose.icons.library
+package app.aaps.core.ui.compose.icons
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -17,6 +17,8 @@ import androidx.compose.ui.unit.dp
 /**
  * Icon for Eating Soon Temp Target.
  *
+ * replaces ic_target_eatingsoon
+ *
  * Bounding box: x: 1.2-22.8, y: 1.2-22.2 (viewport: 24x24, ~90% height)
  */
 val IcTtEatingSoon: ImageVector by lazy {
@@ -28,7 +30,7 @@ val IcTtEatingSoon: ImageVector by lazy {
         viewportHeight = 24f
     ).apply {
         path(
-            fill = SolidColor(Color(0xFFFEAF05)),
+            fill = SolidColor(Color.Black),
             fillAlpha = 1.0f,
             stroke = null,
             strokeAlpha = 1.0f,

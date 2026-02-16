@@ -49,7 +49,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.res.painterResource
+import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -58,7 +58,7 @@ import app.aaps.core.ui.compose.AapsTheme
 import app.aaps.core.ui.compose.AapsTopAppBar
 import app.aaps.core.ui.compose.NumberInputRow
 import app.aaps.core.ui.compose.clearFocusOnTap
-import app.aaps.core.ui.compose.icons.ProfileSwitch
+import app.aaps.core.ui.compose.icons.IcProfile
 import app.aaps.ui.R
 import app.aaps.ui.compose.profileManagement.ProfileCompareContent
 import app.aaps.ui.compose.profileManagement.buildBasalRows
@@ -145,7 +145,7 @@ fun ProfileHelperScreen(
                 title = {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
-                            imageVector = ProfileSwitch,
+                            imageVector = IcProfile,
                             contentDescription = null,
                             tint = AapsTheme.elementColors.profileSwitch,
                             modifier = Modifier.size(24.dp)
@@ -175,7 +175,7 @@ fun ProfileHelperScreen(
                             modifier = Modifier.padding(end = 8.dp)
                         ) {
                             Icon(
-                                painter = painterResource(app.aaps.core.objects.R.drawable.ic_clone_48),
+                                imageVector = Icons.Filled.ContentCopy,
                                 contentDescription = null,
                                 modifier = Modifier.size(18.dp)
                             )

@@ -65,7 +65,7 @@ import app.aaps.ui.compose.components.ContentContainer
 import app.aaps.ui.compose.components.PageIndicatorDots
 import java.util.Calendar
 import kotlin.math.absoluteValue
-import app.aaps.core.ui.compose.icons.TempTarget as TempTargetIcon
+import app.aaps.core.ui.compose.icons.IcTtHigh as TempTargetIcon
 
 /**
  * Screen for managing temporary target presets and activating TTs.

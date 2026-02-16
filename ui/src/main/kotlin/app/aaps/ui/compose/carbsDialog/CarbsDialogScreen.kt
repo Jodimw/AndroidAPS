@@ -46,7 +46,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.aaps.core.interfaces.configuration.Config
-import app.aaps.core.keys.IntKey
 import app.aaps.core.keys.interfaces.Preferences
 import app.aaps.core.ui.compose.AapsTheme
 import app.aaps.core.ui.compose.AapsTopAppBar
@@ -68,7 +67,7 @@ import kotlin.time.Instant
 import app.aaps.core.interfaces.R as InterfacesR
 import app.aaps.core.keys.R as KeysR
 import app.aaps.core.ui.R as CoreUiR
-import app.aaps.core.ui.compose.icons.Carbs as CarbsIcon
+import app.aaps.core.ui.compose.icons.IcCarbs as CarbsIcon
 
 @Composable
 fun CarbsDialogScreen(
@@ -117,14 +116,8 @@ fun CarbsDialogScreen(
             OkCancelDialog(
                 title = stringResource(CoreUiR.string.carbs),
                 message = summaryLines.joinToString("<br/>"),
-                iconContent = {
-                    Icon(
-                        imageVector = CarbsIcon,
-                        contentDescription = null,
-                        tint = AapsTheme.elementColors.carbs,
-                        modifier = Modifier.size(48.dp)
-                    )
-                },
+                icon = CarbsIcon,
+                iconTint = AapsTheme.elementColors.carbs,
                 onConfirm = {
                     viewModel.confirmAndSave()
                     onNavigateBack()
@@ -139,14 +132,8 @@ fun CarbsDialogScreen(
         OkCancelDialog(
             title = stringResource(CoreUiR.string.carbs),
             message = stringResource(CoreUiR.string.no_action_selected),
-            iconContent = {
-                Icon(
-                    imageVector = CarbsIcon,
-                    contentDescription = null,
-                    tint = AapsTheme.elementColors.carbs,
-                    modifier = Modifier.size(48.dp)
-                )
-            },
+            icon = CarbsIcon,
+            iconTint = AapsTheme.elementColors.carbs,
             onConfirm = { showNoAction = false },
             onDismiss = { showNoAction = false }
         )

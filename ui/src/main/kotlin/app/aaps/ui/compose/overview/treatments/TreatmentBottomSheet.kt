@@ -1,15 +1,12 @@
 package app.aaps.ui.compose.overview.treatments
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -32,29 +29,26 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.painter.Painter
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import app.aaps.core.interfaces.configuration.Config
-import app.aaps.core.keys.BooleanKey
 import app.aaps.core.keys.interfaces.Preferences
 import app.aaps.core.ui.compose.AapsTheme
-import app.aaps.core.ui.compose.icons.Byoda
-import app.aaps.core.ui.compose.icons.Calculator
-import app.aaps.core.ui.compose.icons.Calibration
-import app.aaps.core.ui.compose.icons.Carbs
-import app.aaps.core.ui.compose.icons.Treatment
-import app.aaps.core.ui.compose.icons.XDrip
+import app.aaps.core.ui.compose.TonalIcon
+import app.aaps.core.ui.compose.icons.IcByoda
+import app.aaps.core.ui.compose.icons.IcCalculator
+import app.aaps.core.ui.compose.icons.IcCalibration
+import app.aaps.core.ui.compose.icons.IcCarbs
+import app.aaps.core.ui.compose.icons.IcBolus
+import app.aaps.core.ui.compose.icons.IcQuickwizard
+import app.aaps.core.ui.compose.icons.IcXDrip
 import app.aaps.core.ui.compose.preference.AdaptivePreferenceList
 import app.aaps.core.ui.compose.preference.PreferenceSubScreenDef
 import app.aaps.core.ui.compose.preference.ProvidePreferenceTheme
 import app.aaps.ui.compose.main.QuickWizardItem
 import app.aaps.core.ui.R as CoreUiR
-import app.aaps.core.objects.R as ObjectsR
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -206,7 +200,7 @@ private fun TreatmentSelectionContent(
                 },
                 leadingContent = {
                     TonalIcon(
-                        painter = painterResource(ObjectsR.drawable.ic_quick_wizard),
+                        painter = rememberVectorPainter(IcQuickwizard),
                         color = if (itemEnabled) quickWizardColor
                         else MaterialTheme.colorScheme.onSurface.copy(alpha = disabledAlpha),
                         enabled = itemEnabled
@@ -228,7 +222,7 @@ private fun TreatmentSelectionContent(
         // CGM
         if (showCgm) {
             val cgmEnabled = onCgmClick != null
-            val cgmIcon = if (isDexcomSource) Byoda else XDrip
+            val cgmIcon = if (isDexcomSource) IcByoda else IcXDrip
             val cgmColor = if (isDexcomSource) AapsTheme.elementColors.cgmDex else AapsTheme.elementColors.cgmXdrip
             ListItem(
                 headlineContent = {
@@ -240,7 +234,7 @@ private fun TreatmentSelectionContent(
                 },
                 leadingContent = {
                     TonalIcon(
-                        imageVector = cgmIcon,
+                        painter = rememberVectorPainter(cgmIcon),
                         color = if (cgmEnabled) cgmColor
                         else MaterialTheme.colorScheme.onSurface.copy(alpha = disabledAlpha),
                         enabled = cgmEnabled
@@ -268,7 +262,7 @@ private fun TreatmentSelectionContent(
                 },
                 leadingContent = {
                     TonalIcon(
-                        imageVector = Calibration,
+                        painter = rememberVectorPainter(IcCalibration),
                         color = if (calibrationEnabled) calibrationColor
                         else MaterialTheme.colorScheme.onSurface.copy(alpha = disabledAlpha),
                         enabled = calibrationEnabled
@@ -303,7 +297,7 @@ private fun TreatmentSelectionContent(
                 },
                 leadingContent = {
                     TonalIcon(
-                        imageVector = Icons.Default.Add,
+                        painter = rememberVectorPainter(Icons.Default.Add),
                         color = if (treatmentEnabled) treatmentColor
                         else MaterialTheme.colorScheme.onSurface.copy(alpha = disabledAlpha),
                         enabled = treatmentEnabled
@@ -338,7 +332,7 @@ private fun TreatmentSelectionContent(
                 },
                 leadingContent = {
                     TonalIcon(
-                        imageVector = Treatment,
+                        painter = rememberVectorPainter(IcBolus),
                         color = if (insulinEnabled) insulinColor
                         else MaterialTheme.colorScheme.onSurface.copy(alpha = disabledAlpha),
                         enabled = insulinEnabled
@@ -370,7 +364,7 @@ private fun TreatmentSelectionContent(
                 },
                 leadingContent = {
                     TonalIcon(
-                        imageVector = Carbs,
+                        painter = rememberVectorPainter(IcCarbs),
                         color = carbsColor,
                         enabled = true
                     )
@@ -404,7 +398,7 @@ private fun TreatmentSelectionContent(
                 },
                 leadingContent = {
                     TonalIcon(
-                        imageVector = Calculator,
+                        painter = rememberVectorPainter(IcCalculator),
                         color = if (calculatorEnabled) calculatorColor
                         else MaterialTheme.colorScheme.onSurface.copy(alpha = disabledAlpha),
                         enabled = calculatorEnabled
@@ -460,57 +454,6 @@ private fun TreatmentSettingsContent(
     }
 }
 
-@Composable
-private fun TonalIcon(
-    imageVector: ImageVector,
-    color: Color,
-    enabled: Boolean,
-    modifier: Modifier = Modifier
-) {
-    Box(
-        contentAlignment = Alignment.Center,
-        modifier = modifier
-            .size(40.dp)
-            .background(
-                color = if (enabled) color.copy(alpha = 0.12f)
-                else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f),
-                shape = CircleShape
-            )
-    ) {
-        Icon(
-            imageVector = imageVector,
-            contentDescription = null,
-            tint = color,
-            modifier = Modifier.size(24.dp)
-        )
-    }
-}
-
-@Composable
-private fun TonalIcon(
-    painter: Painter,
-    color: Color,
-    enabled: Boolean,
-    modifier: Modifier = Modifier
-) {
-    Box(
-        contentAlignment = Alignment.Center,
-        modifier = modifier
-            .size(40.dp)
-            .background(
-                color = if (enabled) color.copy(alpha = 0.12f)
-                else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f),
-                shape = CircleShape
-            )
-    ) {
-        Icon(
-            painter = painter,
-            contentDescription = null,
-            tint = color,
-            modifier = Modifier.size(24.dp)
-        )
-    }
-}
 
 @Preview(showBackground = true)
 @Composable

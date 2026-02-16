@@ -26,7 +26,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -37,8 +37,11 @@ import app.aaps.core.data.model.TT
 import app.aaps.core.data.model.TTPreset
 import app.aaps.core.interfaces.profile.ProfileUtil
 import app.aaps.core.ui.compose.AapsTheme
+import app.aaps.core.ui.compose.icons.IcTtActivity
+import app.aaps.core.ui.compose.icons.IcTtEatingSoon
+import app.aaps.core.ui.compose.icons.IcTtHypo
+import app.aaps.core.ui.compose.icons.IcTtManual
 import app.aaps.core.ui.compose.formatMinutesAsDuration
-import app.aaps.ui.R
 import kotlinx.coroutines.delay
 
 /**
@@ -110,7 +113,7 @@ fun TempTargetCarouselCard(
     val badgeColor = getTTReasonColor(reason)
 
     // Get icon drawable resource based on reason
-    val iconRes = getTTReasonIconRes(reason)
+    val icon = getTTReasonIcon(reason)
 
     Card(
         modifier = modifier.fillMaxSize(),
@@ -120,7 +123,7 @@ fun TempTargetCarouselCard(
         Box(modifier = Modifier.fillMaxSize()) {
             // TT icon in top left corner (matches original dialog icons)
             Icon(
-                painter = painterResource(iconRes),
+                imageVector = icon,
                 contentDescription = null,
                 modifier = Modifier
                     .align(Alignment.TopStart)
@@ -252,15 +255,15 @@ private fun getTTReasonStringRes(reason: TT.Reason): Int {
 }
 
 /**
- * Get drawable resource ID for TT reason icon (matches original TempTargetDialog icons)
+ * Get compose ImageVector for TT reason icon
  */
-private fun getTTReasonIconRes(reason: TT.Reason): Int {
+private fun getTTReasonIcon(reason: TT.Reason): ImageVector {
     return when (reason) {
-        TT.Reason.EATING_SOON  -> R.drawable.ic_target_eatingsoon
-        TT.Reason.ACTIVITY     -> R.drawable.ic_target_activity
-        TT.Reason.HYPOGLYCEMIA -> R.drawable.ic_target_hypo
+        TT.Reason.EATING_SOON  -> IcTtEatingSoon
+        TT.Reason.ACTIVITY     -> IcTtActivity
+        TT.Reason.HYPOGLYCEMIA -> IcTtHypo
         TT.Reason.CUSTOM,
         TT.Reason.AUTOMATION,
-        TT.Reason.WEAR         -> R.drawable.ic_target_manual
+        TT.Reason.WEAR         -> IcTtManual
     }
 }

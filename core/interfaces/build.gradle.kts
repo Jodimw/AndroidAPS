@@ -27,6 +27,7 @@ dependencies {
 
     api(libs.androidx.appcompat)
     api(libs.androidx.preference)
+    api(libs.androidx.compose.ui)
 
     api(platform(libs.kotlinx.serialization.bom))
     api(libs.kotlinx.serialization.json)
@@ -37,5 +38,6 @@ dependencies {
 
     //RxBus
     api(libs.io.reactivex.rxjava3.rxkotlin)
+
     testImplementation(libs.io.reactivex.rxjava3.rxandroid)
 }

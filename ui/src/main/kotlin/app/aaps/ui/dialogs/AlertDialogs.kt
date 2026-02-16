@@ -304,7 +304,7 @@ class AlertDialogs(
                             title = title,
                             message = message,
                             secondMessage = secondMessage,
-                            icon = icon,
+                            iconId = icon,
                             onConfirm = {
                                 dialog.dismiss()
                                 CoroutineScope(Dispatchers.Main).launch {

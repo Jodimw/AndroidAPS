@@ -1,5 +1,6 @@
 package app.aaps.core.interfaces.plugin
 
+import androidx.compose.ui.graphics.vector.ImageVector
 import app.aaps.core.data.plugin.PluginType
 
 open class PluginDescription {
@@ -43,8 +44,14 @@ open class PluginDescription {
     var enableByDefault = false
     var visibleByDefault = false
     var defaultPlugin = false
+
+    @Deprecated("use icon")
     var pluginIcon = -1
+
+    @Deprecated("use icon2")
     var pluginIcon2 = -1
+    var icon: ImageVector? = null
+    var icon2: ImageVector? = null
     var preferencesVisibleInSimpleMode = true
     var simpleModePosition: Position = Position.MENU
 
@@ -54,8 +61,12 @@ open class PluginDescription {
     fun alwaysVisible(alwaysVisible: Boolean): PluginDescription = this.also { it.alwaysVisible = alwaysVisible }
     fun neverVisible(neverVisible: Boolean): PluginDescription = this.also { it.neverVisible = neverVisible }
     fun showInList(showInList: () -> Boolean): PluginDescription = this.also { it.showInList = showInList }
+    @Deprecated("use icon")
     fun pluginIcon(pluginIcon: Int): PluginDescription = this.also { it.pluginIcon = pluginIcon }
+    @Deprecated("use icon2")
     fun pluginIcon2(pluginIcon2: Int): PluginDescription = this.also { it.pluginIcon2 = pluginIcon2 }
+    fun icon(icon: ImageVector): PluginDescription = this.also { it.icon = icon }
+    fun icon2(icon2: ImageVector): PluginDescription = this.also { it.icon2 = icon2 }
     fun pluginName(pluginName: Int): PluginDescription = this.also { it.pluginName = pluginName }
     fun shortName(shortName: Int): PluginDescription = this.also { it.shortName = shortName }
     fun preferencesId(preferencesId: Int): PluginDescription = this.also { it.preferencesId = preferencesId }

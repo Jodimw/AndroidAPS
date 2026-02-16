@@ -28,6 +28,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
@@ -245,8 +246,11 @@ private fun UserEntryItem(
                 )
 
                 // Source Icon
+                val composeIcon = userEntryPresentationHelper.icon(userEntry.source)
+                val iconPainter = if (composeIcon != null) rememberVectorPainter(composeIcon)
+                    else painterResource(id = userEntryPresentationHelper.iconId(userEntry.source))
                 Image(
-                    painter = painterResource(id = userEntryPresentationHelper.iconId(userEntry.source)),
+                    painter = iconPainter,
                     contentDescription = "${stringResource(app.aaps.core.ui.R.string.ue_source)}: ${userEntry.source}",
                     modifier = Modifier
                         .size(20.dp)

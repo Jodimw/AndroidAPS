@@ -49,7 +49,7 @@ import app.aaps.core.ui.compose.AapsFab
 import app.aaps.core.ui.compose.AapsTheme
 import app.aaps.core.ui.compose.AapsTopAppBar
 import app.aaps.core.ui.compose.OkCancelDialog
-import app.aaps.core.ui.compose.icons.ProfileSwitch
+import app.aaps.core.ui.compose.icons.IcProfile
 import app.aaps.ui.R
 import app.aaps.ui.compose.components.ContentContainer
 import app.aaps.ui.compose.components.PageIndicatorDots
@@ -128,7 +128,7 @@ fun ProfileManagementScreen(
                     title = {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(
-                                imageVector = ProfileSwitch,
+                                imageVector = IcProfile,
                                 contentDescription = null,
                                 tint = AapsTheme.elementColors.profileSwitch,
                                 modifier = Modifier.size(24.dp)

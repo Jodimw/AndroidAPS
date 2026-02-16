@@ -40,18 +40,19 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import app.aaps.core.keys.DoubleKey
+import app.aaps.core.ui.compose.AapsTheme
 import app.aaps.core.ui.compose.AapsTopAppBar
 import app.aaps.core.ui.compose.DatePickerModal
 import app.aaps.core.ui.compose.OkCancelDialog
 import app.aaps.core.ui.compose.SliderWithButtons
 import app.aaps.core.ui.compose.TimePickerModal
 import app.aaps.core.ui.compose.clearFocusOnTap
+import app.aaps.core.ui.compose.icons.IcBolus
+import app.aaps.core.ui.compose.icons.IcCanulaChange
 import app.aaps.core.ui.compose.preference.AdaptivePreferenceList
 import app.aaps.core.ui.compose.preference.PreferenceSubScreenDef
 import app.aaps.core.ui.compose.preference.ProvidePreferenceTheme
@@ -120,7 +121,8 @@ fun FillDialogScreen(
             OkCancelDialog(
                 title = stringResource(CoreUiR.string.prime_fill),
                 message = summaryLines.joinToString("<br/>"),
-                icon = ObjectsR.drawable.ic_cp_pump_cannula,
+                icon = IcCanulaChange,
+                iconTint = AapsTheme.elementColors.insulin,
                 onConfirm = {
                     viewModel.confirmAndSave()
                     onNavigateBack()
@@ -135,7 +137,8 @@ fun FillDialogScreen(
         OkCancelDialog(
             title = stringResource(CoreUiR.string.prime_fill),
             message = stringResource(CoreUiR.string.no_action_selected),
-            icon = ObjectsR.drawable.ic_cp_pump_cannula,
+            icon = IcCanulaChange,
+            iconTint = AapsTheme.elementColors.insulin,
             onConfirm = { showNoAction = false },
             onDismiss = { showNoAction = false }
         )
@@ -225,7 +228,7 @@ fun FillDialogScreen(
                 horizontalArrangement = Arrangement.Center
             ) {
                 Icon(
-                    painter = painterResource(id = ObjectsR.drawable.ic_cp_pump_cannula),
+                    imageVector = IcCanulaChange,
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.padding(vertical = 8.dp)

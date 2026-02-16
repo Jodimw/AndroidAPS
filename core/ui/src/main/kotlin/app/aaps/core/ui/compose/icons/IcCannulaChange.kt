@@ -1,4 +1,4 @@
-package app.aaps.core.ui.compose.icons.library
+package app.aaps.core.ui.compose.icons
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -17,6 +17,8 @@ import androidx.compose.ui.unit.dp
 /**
  * Icon for Canula change treatment type.
  * Represents infusion set change entries.
+ *
+ * replacing ic_cp_pump_cannula
  *
  * Bounding box: x: 1.2-22.8, y: 6.3-19.5 (viewport: 24x24, ~90% width)
  */

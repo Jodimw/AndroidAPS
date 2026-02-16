@@ -1,5 +1,6 @@
 package app.aaps.implementation.userEntry
 
+import androidx.compose.ui.graphics.vector.ImageVector
 import app.aaps.core.data.configuration.Constants
 import app.aaps.core.data.model.GlucoseUnit
 import app.aaps.core.data.model.UE
@@ -13,6 +14,20 @@ import app.aaps.core.interfaces.utils.DateUtil
 import app.aaps.core.interfaces.utils.DecimalFormatter
 import app.aaps.core.interfaces.utils.Translator
 import app.aaps.core.objects.R
+import app.aaps.core.ui.compose.icons.IcActivity
+import app.aaps.core.ui.compose.icons.IcAnnouncement
+import app.aaps.core.ui.compose.icons.IcBgCheck
+import app.aaps.core.ui.compose.icons.IcBolus
+import app.aaps.core.ui.compose.icons.IcCalculator
+import app.aaps.core.ui.compose.icons.IcCalibration
+import app.aaps.core.ui.compose.icons.IcCanulaChange
+import app.aaps.core.ui.compose.icons.IcCarbs
+import app.aaps.core.ui.compose.icons.IcCgmInsert
+import app.aaps.core.ui.compose.icons.IcNote
+import app.aaps.core.ui.compose.icons.IcPumpBattery
+import app.aaps.core.ui.compose.icons.IcQuestion
+import app.aaps.core.ui.compose.icons.IcQuickwizard
+import app.aaps.core.ui.compose.icons.IcSiteRotation
 import dagger.Reusable
 import javax.inject.Inject
 
@@ -25,27 +40,46 @@ class UserEntryPresentationHelperImpl @Inject constructor(
     private val decimalFormatter: DecimalFormatter
 ) : UserEntryPresentationHelper {
 
+    override fun icon(source: Sources): ImageVector? = when (source) {
+        Sources.Announcement        -> IcAnnouncement
+        Sources.BatteryChange       -> IcPumpBattery
+        Sources.BgCheck             -> IcBgCheck
+        Sources.CalibrationDialog   -> IcCalibration
+        Sources.CarbDialog          -> IcCarbs
+        Sources.Exercise            -> IcActivity
+        Sources.FillDialog          -> IcCanulaChange
+        Sources.InsulinDialog       -> IcBolus
+        Sources.Note                -> IcNote
+        Sources.Question            -> IcQuestion
+        Sources.QuickWizard         -> IcQuickwizard
+        Sources.SensorInsert        -> IcCgmInsert
+        Sources.SiteRotationDialog  -> IcSiteRotation
+        Sources.WizardDialog        -> IcCalculator
+        else -> null
+    }
+
+    @Deprecated("use fun icon(source: Sources): ImageVector?")
     override fun iconId(source: Sources): Int = when (source) {
         Sources.TreatmentDialog     -> R.drawable.icon_insulin_carbs
-        Sources.InsulinDialog       -> R.drawable.ic_bolus
-        Sources.CarbDialog          -> R.drawable.ic_cp_bolus_carbs
-        Sources.WizardDialog        -> R.drawable.ic_calculator
-        Sources.QuickWizard         -> R.drawable.ic_quick_wizard
+        //Sources.InsulinDialog       -> R.drawable.ic_bolus
+        //Sources.CarbDialog          -> R.drawable.ic_cp_bolus_carbs
+        //Sources.WizardDialog        -> R.drawable.ic_calculator
+        //Sources.QuickWizard         -> R.drawable.ic_quick_wizard
         Sources.ExtendedBolusDialog -> R.drawable.ic_actions_start_extended_bolus
         Sources.TTDialog            -> R.drawable.ic_temptarget_high
         Sources.ProfileSwitchDialog -> app.aaps.core.ui.R.drawable.ic_actions_profileswitch
         Sources.LoopDialog          -> R.drawable.ic_loop_closed
         Sources.TempBasalDialog     -> R.drawable.ic_actions_start_temp_basal
-        Sources.CalibrationDialog   -> R.drawable.ic_calibration
-        Sources.FillDialog          -> R.drawable.ic_cp_pump_cannula
-        Sources.SiteRotationDialog  -> app.aaps.core.ui.R.drawable.ic_site_rotation
-        Sources.BgCheck             -> R.drawable.ic_cp_bgcheck
-        Sources.SensorInsert        -> R.drawable.ic_cp_cgm_insert
-        Sources.BatteryChange       -> R.drawable.ic_cp_pump_battery
-        Sources.Note                -> R.drawable.ic_cp_note
-        Sources.Exercise            -> R.drawable.ic_cp_exercise
-        Sources.Question            -> R.drawable.ic_cp_question
-        Sources.Announcement        -> R.drawable.ic_cp_announcement
+        //Sources.CalibrationDialog   -> R.drawable.ic_calibration
+        //Sources.FillDialog          -> R.drawable.ic_cp_pump_cannula
+        //Sources.SiteRotationDialog  -> app.aaps.core.ui.R.drawable.ic_site_rotation
+        //Sources.BgCheck             -> R.drawable.ic_cp_bgcheck
+        //Sources.SensorInsert        -> R.drawable.ic_cp_cgm_insert
+        //Sources.BatteryChange       -> R.drawable.ic_cp_pump_battery
+        //Sources.Note                -> R.drawable.ic_cp_note
+        //Sources.Exercise            -> R.drawable.ic_cp_exercise
+        //Sources.Question            -> R.drawable.ic_cp_question
+        //Sources.Announcement        -> R.drawable.ic_cp_announcement
         Sources.SettingsExport      -> R.drawable.ic_automation
         Sources.Actions             -> R.drawable.ic_action
         Sources.Automation          -> R.drawable.ic_automation
@@ -104,6 +138,7 @@ class UserEntryPresentationHelperImpl @Inject constructor(
         Sources.Unknown             -> app.aaps.core.ui.R.drawable.ic_generic_icon
         Sources.Random              -> R.drawable.ic_aaps
         Sources.BgFragment          -> R.drawable.ic_aaps
+        else -> error("Missing resource")
     }
 
     override fun listToPresentationString(list: List<ValueWithUnit>) =

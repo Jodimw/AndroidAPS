@@ -43,7 +43,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.lerp
@@ -53,6 +52,7 @@ import app.aaps.core.ui.compose.AapsTheme
 import app.aaps.core.ui.compose.AapsTopAppBar
 import app.aaps.core.ui.compose.OkCancelDialog
 import app.aaps.core.ui.compose.clearFocusOnTap
+import app.aaps.core.ui.compose.icons.IcQuickwizard
 import app.aaps.ui.R
 import app.aaps.ui.compose.components.ContentContainer
 import app.aaps.ui.compose.components.PageIndicatorDots
@@ -163,7 +163,7 @@ fun QuickWizardManagementScreen(
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
                             Icon(
-                                painter = painterResource(app.aaps.core.objects.R.drawable.ic_quick_wizard),
+                                imageVector = IcQuickwizard,
                                 contentDescription = null,
                                 tint = AapsTheme.elementColors.carbs,
                                 modifier = Modifier.size(24.dp)

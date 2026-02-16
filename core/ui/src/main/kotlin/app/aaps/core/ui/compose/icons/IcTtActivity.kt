@@ -1,4 +1,4 @@
-package app.aaps.core.ui.compose.icons.library
+package app.aaps.core.ui.compose.icons
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -17,6 +17,8 @@ import androidx.compose.ui.unit.dp
 /**
  * Icon for Activity Temp Target.
  *
+ * replaces ic_target_activity
+ *
  * Bounding box: x: 1.2-22.8, y: 1.2-22.0 (viewport: 24x24, ~90% height)
  */
 val IcTtActivity: ImageVector by lazy {
@@ -28,7 +30,7 @@ val IcTtActivity: ImageVector by lazy {
         viewportHeight = 24f
     ).apply {
         path(
-            fill = SolidColor(Color(0xFF67DFE8)),
+            fill = SolidColor(Color.Black),
             fillAlpha = 1.0f,
             stroke = null,
             strokeAlpha = 1.0f,
@@ -110,7 +112,7 @@ val IcTtActivity: ImageVector by lazy {
         }
 
         path(
-            fill = SolidColor(Color(0xFF67E86A)),
+            fill = SolidColor(Color.Black),
             fillAlpha = 1.0f,
             stroke = null,
             strokeAlpha = 1.0f,

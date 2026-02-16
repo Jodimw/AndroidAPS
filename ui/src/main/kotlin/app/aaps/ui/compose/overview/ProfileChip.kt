@@ -17,10 +17,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import app.aaps.core.ui.compose.AapsTheme
+import app.aaps.core.ui.compose.icons.IcProfile
 
 @Composable
 fun ProfileChip(
@@ -47,7 +47,7 @@ fun ProfileChip(
                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
             ) {
                 Icon(
-                    painter = painterResource(app.aaps.core.ui.R.drawable.ic_ribbon_profile),
+                    imageVector = IcProfile,
                     contentDescription = null,
                     tint = contentColor,
                     modifier = Modifier.size(24.dp)

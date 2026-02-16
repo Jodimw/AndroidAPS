@@ -25,6 +25,8 @@ import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
@@ -74,8 +76,9 @@ fun OkDialog(
  * @param title The dialog title (optional)
  * @param message The message to display (supports HTML)
  * @param secondMessage Optional secondary message in accent color
- * @param icon Optional drawable resource for an icon
- * @param iconContent Optional composable icon content (takes precedence over [icon])
+ * @param icon Optional ImageVector icon
+ * @param iconTint Optional tint color for the icon
+ * @param iconId Optional drawable resource for an icon (deprecated, use [icon] instead)
  * @param onConfirm Called when OK is clicked
  * @param onDismiss Called when Cancel is clicked or dialog is dismissed
  */
@@ -84,17 +87,27 @@ fun OkCancelDialog(
     title: String? = null,
     message: String,
     secondMessage: String? = null,
-    @DrawableRes icon: Int? = null,
-    iconContent: @Composable (() -> Unit)? = null,
+    icon: ImageVector? = null,
+    iconTint: Color = MaterialTheme.colorScheme.primary,
+    @DrawableRes iconId: Int? = null, // deprecated: use icon instead
     onConfirm: () -> Unit,
     onDismiss: () -> Unit
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        icon = iconContent ?: icon?.let {
+        icon = icon?.let {
             {
                 Icon(
-                    painter = painterResource(id = icon),
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = iconTint,
+                    modifier = Modifier.size(48.dp)
+                )
+            }
+        } ?: iconId?.let {
+            {
+                Icon(
+                    painter = painterResource(id = iconId),
                     contentDescription = null,
                     modifier = Modifier.size(48.dp)
                 )
