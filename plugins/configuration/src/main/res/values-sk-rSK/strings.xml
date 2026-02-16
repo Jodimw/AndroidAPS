@@ -168,6 +168,7 @@
     <string name="reset_aps_results">Resetovať výsledky APS</string>
     <string name="error_accessing_filesystem_select_aaps_directory_properly">Chyba pri prístupe k súborom. Vyberte adresár AAPS.</string>
     <!-- Google Drive Storage -->
+    <string name="user_entries_csv_export_option">Exportovať záznamy užívateľa do Excelu (CSV)</string>
     <!-- Import source selection dialog -->
     <!-- Google Drive error messages (used by GoogleDriveManager) -->
     <!-- Provider-agnostic cloud storage strings -->
