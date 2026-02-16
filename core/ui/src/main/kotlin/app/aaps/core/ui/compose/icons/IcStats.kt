@@ -1,35 +1,37 @@
-package app.aaps.core.ui.compose.icons.library
+package app.aaps.core.ui.compose.icons
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.path
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 
 /**
  * Icon for TDD (Total Daily Dose).
  * Represents total daily insulin dose.
  *
+ * replaces ic_stats
+ *
  * Bounding box: x: 2.7-21.3, y: 1.2-22.8 (viewport: 24x24, ~90% height)
  */
-val IcTdd: ImageVector by lazy {
+val IcStats: ImageVector by lazy {
     ImageVector.Builder(
-        name = "IcTdd",
+        name = "IcStats",
         defaultWidth = 48.dp,
         defaultHeight = 48.dp,
         viewportWidth = 24f,
         viewportHeight = 24f
     ).apply {
         path(
-            fill = SolidColor(Color(0xFFFEAF05)),
+            fill = SolidColor(Color.Black),
             fillAlpha = 1.0f,
             stroke = null,
             strokeAlpha = 1.0f,
@@ -79,9 +81,9 @@ val IcTdd: ImageVector by lazy {
 
 @Preview(showBackground = true)
 @Composable
-private fun IcTddIconPreview() {
+private fun IcStatsIconPreview() {
     Icon(
-        imageVector = IcTdd,
+        imageVector = IcStats,
         contentDescription = null,
         modifier = Modifier
             .padding(0.dp)

@@ -1,7 +1,7 @@
 package app.aaps.ui.compose.treatments.viewmodels
 
-import androidx.compose.runtime.Stable
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.Stable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.aaps.core.data.model.EPS
@@ -205,17 +205,15 @@ class ProfileSwitchViewModel @Inject constructor(
             try {
                 selected.forEach { profileSwitch ->
                     if (profileSwitch is ProfileSealed.PS) {
-                        runBlocking {
-                            persistenceLayer.invalidateProfileSwitch(
-                                id = profileSwitch.id,
-                                action = Action.PROFILE_SWITCH_REMOVED,
-                                source = Sources.Treatments,
-                                note = profileSwitch.profileName,
-                                listValues = listOf(
-                                    ValueWithUnit.Timestamp(profileSwitch.timestamp)
-                                )
+                        persistenceLayer.invalidateProfileSwitch(
+                            id = profileSwitch.id,
+                            action = Action.PROFILE_SWITCH_REMOVED,
+                            source = Sources.Treatments,
+                            note = profileSwitch.profileName,
+                            listValues = listOf(
+                                ValueWithUnit.Timestamp(profileSwitch.timestamp)
                             )
-                        }
+                        )
                     }
                 }
                 exitSelectionMode()

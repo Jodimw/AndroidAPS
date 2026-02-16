@@ -18,8 +18,8 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import app.aaps.core.data.model.TrendArrow
@@ -67,7 +67,7 @@ fun BgInfoSection(
     ) {
         // Background ring + trend arc indicator
         Canvas(modifier = Modifier.size(size)) {
-            val strokeWidth = 6.dp.toPx()
+            val strokeWidth = 8.dp.toPx()
             val arcSize = Size(size.toPx() - strokeWidth, size.toPx() - strokeWidth)
             val topLeft = Offset(strokeWidth / 2, strokeWidth / 2)
 

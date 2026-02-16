@@ -1,7 +1,7 @@
 package app.aaps.ui.compose.treatments.viewmodels
 
-import androidx.compose.runtime.Stable
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.Stable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.aaps.core.data.model.TE
@@ -30,7 +30,6 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import javax.inject.Inject
 
 /**
@@ -185,18 +184,16 @@ class CareportalViewModel @Inject constructor(
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 selected.forEach { te ->
-                    runBlocking {
-                        persistenceLayer.invalidateTherapyEvent(
-                            id = te.id,
-                            action = Action.CAREPORTAL_REMOVED,
-                            source = Sources.Treatments,
-                            note = te.note,
-                            listValues = listOf(
-                                ValueWithUnit.Timestamp(te.timestamp),
-                                ValueWithUnit.TEType(te.type)
-                            )
+                    persistenceLayer.invalidateTherapyEvent(
+                        id = te.id,
+                        action = Action.CAREPORTAL_REMOVED,
+                        source = Sources.Treatments,
+                        note = te.note,
+                        listValues = listOf(
+                            ValueWithUnit.Timestamp(te.timestamp),
+                            ValueWithUnit.TEType(te.type)
                         )
-                    }
+                    )
                 }
                 exitSelectionMode()
                 loadData()

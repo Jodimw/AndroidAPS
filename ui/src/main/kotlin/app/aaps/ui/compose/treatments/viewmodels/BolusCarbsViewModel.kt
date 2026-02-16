@@ -1,7 +1,7 @@
 package app.aaps.ui.compose.treatments.viewmodels
 
-import androidx.compose.runtime.Stable
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.Stable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.aaps.core.data.model.BCR
@@ -32,7 +32,6 @@ import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import javax.inject.Inject
 
 /**
@@ -228,40 +227,34 @@ class BolusCarbsViewModel @Inject constructor(
             try {
                 selected.forEach { ml ->
                     ml.bolus?.let { bolus ->
-                        runBlocking {
-                            persistenceLayer.invalidateBolus(
-                                bolus.id,
-                                action = Action.BOLUS_REMOVED,
-                                source = Sources.Treatments,
-                                listValues = listOf(
-                                    ValueWithUnit.Timestamp(bolus.timestamp),
-                                    ValueWithUnit.Insulin(bolus.amount)
-                                )
+                        persistenceLayer.invalidateBolus(
+                            bolus.id,
+                            action = Action.BOLUS_REMOVED,
+                            source = Sources.Treatments,
+                            listValues = listOf(
+                                ValueWithUnit.Timestamp(bolus.timestamp),
+                                ValueWithUnit.Insulin(bolus.amount)
                             )
-                        }
+                        )
                     }
                     ml.carbs?.let { carb ->
-                        runBlocking {
-                            persistenceLayer.invalidateCarbs(
-                                carb.id,
-                                action = Action.CARBS_REMOVED,
-                                source = Sources.Treatments,
-                                listValues = listOf(
-                                    ValueWithUnit.Timestamp(carb.timestamp),
-                                    ValueWithUnit.Gram(carb.amount.toInt())
-                                )
+                        persistenceLayer.invalidateCarbs(
+                            carb.id,
+                            action = Action.CARBS_REMOVED,
+                            source = Sources.Treatments,
+                            listValues = listOf(
+                                ValueWithUnit.Timestamp(carb.timestamp),
+                                ValueWithUnit.Gram(carb.amount.toInt())
                             )
-                        }
+                        )
                     }
                     ml.bolusCalculatorResult?.let { bolusCalculatorResult ->
-                        runBlocking {
-                            persistenceLayer.invalidateBolusCalculatorResult(
-                                bolusCalculatorResult.id,
-                                action = Action.BOLUS_CALCULATOR_RESULT_REMOVED,
-                                source = Sources.Treatments,
-                                listValues = listOf(ValueWithUnit.Timestamp(bolusCalculatorResult.timestamp))
-                            )
-                        }
+                        persistenceLayer.invalidateBolusCalculatorResult(
+                            bolusCalculatorResult.id,
+                            action = Action.BOLUS_CALCULATOR_RESULT_REMOVED,
+                            source = Sources.Treatments,
+                            listValues = listOf(ValueWithUnit.Timestamp(bolusCalculatorResult.timestamp))
+                        )
                     }
                 }
                 exitSelectionMode()

@@ -1,7 +1,7 @@
 package app.aaps.ui.compose.treatments.viewmodels
 
-import androidx.compose.runtime.Stable
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.Stable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.aaps.core.data.model.TT
@@ -191,21 +191,19 @@ class TempTargetViewModel @Inject constructor(
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 selected.forEach { tt ->
-                    runBlocking {
-                        persistenceLayer.invalidateTemporaryTarget(
-                            id = tt.id,
-                            action = Action.TT_REMOVED,
-                            source = Sources.Treatments,
-                            note = null,
-                            listValues = listOfNotNull(
-                                ValueWithUnit.Timestamp(tt.timestamp),
-                                ValueWithUnit.TETTReason(tt.reason),
-                                ValueWithUnit.Mgdl(tt.lowTarget),
-                                ValueWithUnit.Mgdl(tt.highTarget).takeIf { tt.lowTarget != tt.highTarget },
-                                ValueWithUnit.Minute(TimeUnit.MILLISECONDS.toMinutes(tt.duration).toInt())
-                            )
+                    persistenceLayer.invalidateTemporaryTarget(
+                        id = tt.id,
+                        action = Action.TT_REMOVED,
+                        source = Sources.Treatments,
+                        note = null,
+                        listValues = listOfNotNull(
+                            ValueWithUnit.Timestamp(tt.timestamp),
+                            ValueWithUnit.TETTReason(tt.reason),
+                            ValueWithUnit.Mgdl(tt.lowTarget),
+                            ValueWithUnit.Mgdl(tt.highTarget).takeIf { tt.lowTarget != tt.highTarget },
+                            ValueWithUnit.Minute(TimeUnit.MILLISECONDS.toMinutes(tt.duration).toInt())
                         )
-                    }
+                    )
                 }
                 exitSelectionMode()
                 loadData()

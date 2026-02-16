@@ -1,7 +1,7 @@
 package app.aaps.ui.compose.treatments.viewmodels
 
-import androidx.compose.runtime.Stable
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.Stable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.aaps.core.data.model.RM
@@ -186,19 +186,17 @@ class RunningModeViewModel @Inject constructor(
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 selected.forEach { rm ->
-                    runBlocking {
-                        persistenceLayer.invalidateRunningMode(
-                            id = rm.id,
-                            action = Action.LOOP_REMOVED,
-                            source = Sources.Treatments,
-                            note = null,
-                            listValues = listOfNotNull(
-                                ValueWithUnit.Timestamp(rm.timestamp),
-                                ValueWithUnit.RMMode(rm.mode),
-                                ValueWithUnit.Minute(TimeUnit.MILLISECONDS.toMinutes(rm.duration).toInt())
-                            )
+                    persistenceLayer.invalidateRunningMode(
+                        id = rm.id,
+                        action = Action.LOOP_REMOVED,
+                        source = Sources.Treatments,
+                        note = null,
+                        listValues = listOfNotNull(
+                            ValueWithUnit.Timestamp(rm.timestamp),
+                            ValueWithUnit.RMMode(rm.mode),
+                            ValueWithUnit.Minute(TimeUnit.MILLISECONDS.toMinutes(rm.duration).toInt())
                         )
-                    }
+                    )
                 }
                 exitSelectionMode()
                 loadData()

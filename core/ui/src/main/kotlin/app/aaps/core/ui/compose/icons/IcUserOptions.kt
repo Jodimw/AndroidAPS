@@ -1,25 +1,27 @@
-package app.aaps.core.ui.compose.icons.library
+package app.aaps.core.ui.compose.icons
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.path
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 
 /**
  * Icon for User Entry.
  *
+ * replaces ic_user_options
+ *
  * Bounding box: x: 1.2-22.8, y: 1.2-22.8 (viewport: 24x24, ~90% height)
  */
-val IcUserEntry: ImageVector by lazy {
+val IcUserOptions: ImageVector by lazy {
     ImageVector.Builder(
         name = "IcUserEntry",
         defaultWidth = 48.dp,
@@ -137,7 +139,7 @@ val IcUserEntry: ImageVector by lazy {
 @Composable
 private fun IcUserEntryIconPreview() {
     Icon(
-        imageVector = IcUserEntry,
+        imageVector = IcUserOptions,
         contentDescription = null,
         modifier = Modifier
             .padding(0.dp)

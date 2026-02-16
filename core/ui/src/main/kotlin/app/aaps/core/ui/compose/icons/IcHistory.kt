@@ -1,4 +1,4 @@
-package app.aaps.core.ui.compose.icons.library
+package app.aaps.core.ui.compose.icons
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -18,6 +18,8 @@ import androidx.compose.ui.unit.dp
  * Icon for History Browser.
  * Represents historical data.
  *
+ * replaces ic_pump_history
+ *
  * Bounding box: x: 1.2-22.8, y: 2.4-21.5 (viewport: 24x24, ~90% width)
  */
 val IcHistory: ImageVector by lazy {
@@ -29,7 +31,7 @@ val IcHistory: ImageVector by lazy {
         viewportHeight = 24f
     ).apply {
         path(
-            fill = SolidColor(Color(0xFF67DFE8)),
+            fill = SolidColor(Color.Black),
             fillAlpha = 1.0f,
             stroke = null,
             strokeAlpha = 1.0f,

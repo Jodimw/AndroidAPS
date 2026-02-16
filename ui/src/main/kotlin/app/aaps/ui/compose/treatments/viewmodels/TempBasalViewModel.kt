@@ -1,7 +1,7 @@
 package app.aaps.ui.compose.treatments.viewmodels
 
-import androidx.compose.runtime.Stable
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.Stable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.aaps.core.data.model.TB
@@ -33,7 +33,6 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
@@ -221,34 +220,30 @@ class TempBasalViewModel @Inject constructor(
                         // For fake extended boluses, delete the underlying extended bolus
                         val extendedBolus = persistenceLayer.getExtendedBolusActiveAt(tempBasal.timestamp)
                         if (extendedBolus != null) {
-                            runBlocking {
-                                persistenceLayer.invalidateExtendedBolus(
-                                    id = extendedBolus.id,
-                                    action = Action.EXTENDED_BOLUS_REMOVED,
-                                    source = Sources.Treatments,
-                                    listValues = listOf(
-                                        ValueWithUnit.Timestamp(extendedBolus.timestamp),
-                                        ValueWithUnit.Insulin(extendedBolus.amount),
-                                        ValueWithUnit.UnitPerHour(extendedBolus.rate),
-                                        ValueWithUnit.Minute(TimeUnit.MILLISECONDS.toMinutes(extendedBolus.duration).toInt())
-                                    )
-                                )
-                            }
-                        }
-                    } else {
-                        // Delete regular temp basal
-                        runBlocking {
-                            persistenceLayer.invalidateTemporaryBasal(
-                                id = tempBasal.id,
-                                action = Action.TEMP_BASAL_REMOVED,
+                            persistenceLayer.invalidateExtendedBolus(
+                                id = extendedBolus.id,
+                                action = Action.EXTENDED_BOLUS_REMOVED,
                                 source = Sources.Treatments,
                                 listValues = listOf(
-                                    ValueWithUnit.Timestamp(tempBasal.timestamp),
-                                    if (tempBasal.isAbsolute) ValueWithUnit.UnitPerHour(tempBasal.rate) else ValueWithUnit.Percent(tempBasal.rate.toInt()),
-                                    ValueWithUnit.Minute(T.msecs(tempBasal.duration).mins().toInt())
+                                    ValueWithUnit.Timestamp(extendedBolus.timestamp),
+                                    ValueWithUnit.Insulin(extendedBolus.amount),
+                                    ValueWithUnit.UnitPerHour(extendedBolus.rate),
+                                    ValueWithUnit.Minute(TimeUnit.MILLISECONDS.toMinutes(extendedBolus.duration).toInt())
                                 )
                             )
                         }
+                    } else {
+                        // Delete regular temp basal
+                        persistenceLayer.invalidateTemporaryBasal(
+                            id = tempBasal.id,
+                            action = Action.TEMP_BASAL_REMOVED,
+                            source = Sources.Treatments,
+                            listValues = listOf(
+                                ValueWithUnit.Timestamp(tempBasal.timestamp),
+                                if (tempBasal.isAbsolute) ValueWithUnit.UnitPerHour(tempBasal.rate) else ValueWithUnit.Percent(tempBasal.rate.toInt()),
+                                ValueWithUnit.Minute(T.msecs(tempBasal.duration).mins().toInt())
+                            )
+                        )
                     }
                 }
                 exitSelectionMode()

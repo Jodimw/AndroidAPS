@@ -23,6 +23,7 @@ import app.aaps.core.ui.compose.icons.IcCalibration
 import app.aaps.core.ui.compose.icons.IcCanulaChange
 import app.aaps.core.ui.compose.icons.IcCarbs
 import app.aaps.core.ui.compose.icons.IcCgmInsert
+import app.aaps.core.ui.compose.icons.IcClinicalNotes
 import app.aaps.core.ui.compose.icons.IcNote
 import app.aaps.core.ui.compose.icons.IcPumpBattery
 import app.aaps.core.ui.compose.icons.IcQuestion
@@ -41,21 +42,22 @@ class UserEntryPresentationHelperImpl @Inject constructor(
 ) : UserEntryPresentationHelper {
 
     override fun icon(source: Sources): ImageVector? = when (source) {
-        Sources.Announcement        -> IcAnnouncement
-        Sources.BatteryChange       -> IcPumpBattery
-        Sources.BgCheck             -> IcBgCheck
-        Sources.CalibrationDialog   -> IcCalibration
-        Sources.CarbDialog          -> IcCarbs
-        Sources.Exercise            -> IcActivity
-        Sources.FillDialog          -> IcCanulaChange
-        Sources.InsulinDialog       -> IcBolus
-        Sources.Note                -> IcNote
-        Sources.Question            -> IcQuestion
-        Sources.QuickWizard         -> IcQuickwizard
-        Sources.SensorInsert        -> IcCgmInsert
-        Sources.SiteRotationDialog  -> IcSiteRotation
-        Sources.WizardDialog        -> IcCalculator
-        else -> null
+        Sources.Announcement       -> IcAnnouncement
+        Sources.BatteryChange      -> IcPumpBattery
+        Sources.BgCheck            -> IcBgCheck
+        Sources.CalibrationDialog  -> IcCalibration
+        Sources.CarbDialog         -> IcCarbs
+        Sources.Exercise           -> IcActivity
+        Sources.FillDialog         -> IcCanulaChange
+        Sources.InsulinDialog      -> IcBolus
+        Sources.Note               -> IcNote
+        Sources.Question           -> IcQuestion
+        Sources.QuickWizard        -> IcQuickwizard
+        Sources.SensorInsert       -> IcCgmInsert
+        Sources.SiteRotationDialog -> IcSiteRotation
+        Sources.Treatments         -> IcClinicalNotes
+        Sources.WizardDialog       -> IcCalculator
+        else                       -> null
     }
 
     @Deprecated("use fun icon(source: Sources): ImageVector?")
@@ -96,10 +98,10 @@ class UserEntryPresentationHelperImpl @Inject constructor(
         Sources.Glunovo             -> R.drawable.ic_glunovo
         Sources.Intelligo           -> app.aaps.core.ui.R.drawable.ic_intelligo
         Sources.Xdrip               -> R.drawable.ic_blooddrop_48
-        Sources.Ottai    -> R.drawable.ic_syai_tag
-        Sources.SyaiTag  -> R.drawable.ic_syai_tag
-        Sources.SiBionic -> R.drawable.ic_generic_cgm
-        Sources.Sino     -> R.drawable.ic_generic_cgm
+        Sources.Ottai               -> R.drawable.ic_syai_tag
+        Sources.SyaiTag             -> R.drawable.ic_syai_tag
+        Sources.SiBionic            -> R.drawable.ic_generic_cgm
+        Sources.Sino                -> R.drawable.ic_generic_cgm
         Sources.LocalProfile        -> R.drawable.ic_local_profile
         Sources.Loop                -> R.drawable.ic_loop_closed_white
         Sources.Maintenance         -> app.aaps.core.ui.R.drawable.ic_maintenance
@@ -126,7 +128,7 @@ class UserEntryPresentationHelperImpl @Inject constructor(
         Sources.MDI                 -> R.drawable.ic_ict
         Sources.VirtualPump         -> R.drawable.ic_virtual_pump
         Sources.SMS                 -> R.drawable.ic_sms
-        Sources.Treatments          -> R.drawable.ic_treatments
+        //Sources.Treatments          -> R.drawable.ic_treatments
         Sources.Wear                -> R.drawable.ic_watch
         Sources.Food                -> R.drawable.ic_food
         Sources.Stats               -> R.drawable.ic_cp_stats
@@ -138,7 +140,7 @@ class UserEntryPresentationHelperImpl @Inject constructor(
         Sources.Unknown             -> app.aaps.core.ui.R.drawable.ic_generic_icon
         Sources.Random              -> R.drawable.ic_aaps
         Sources.BgFragment          -> R.drawable.ic_aaps
-        else -> error("Missing resource")
+        else                        -> error("Missing resource")
     }
 
     override fun listToPresentationString(list: List<ValueWithUnit>) =

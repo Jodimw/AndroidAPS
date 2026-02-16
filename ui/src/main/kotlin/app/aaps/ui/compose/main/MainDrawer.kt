@@ -16,6 +16,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -24,11 +25,16 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import app.aaps.core.ui.compose.icons.IcClinicalNotes
+import app.aaps.core.ui.compose.icons.IcHistory
+import app.aaps.core.ui.compose.icons.IcProfile
+import app.aaps.core.ui.compose.icons.IcStats
 
 @Composable
 fun MainDrawer(
@@ -73,7 +79,8 @@ fun MainDrawer(
             Spacer(modifier = Modifier.height(8.dp))
 
             DrawerMenuItem(
-                iconRes = app.aaps.core.objects.R.drawable.ic_treatments,
+                //iconRes = app.aaps.core.objects.R.drawable.ic_treatments,
+                icon = IcClinicalNotes,
                 label = stringResource(app.aaps.core.ui.R.string.treatments),
                 description = stringResource(app.aaps.core.ui.R.string.treatments_desc),
                 enabled = isTreatmentsEnabled,
@@ -81,28 +88,28 @@ fun MainDrawer(
             )
 
             DrawerMenuItem(
-                iconRes = app.aaps.core.ui.R.drawable.ic_pump_history,
+                icon = IcHistory,
                 label = stringResource(app.aaps.core.ui.R.string.nav_history_browser),
                 description = stringResource(app.aaps.core.ui.R.string.nav_history_browser_desc),
                 onClick = { onMenuItemClick(MainMenuItem.HistoryBrowser) }
             )
 
             DrawerMenuItem(
-                iconRes = app.aaps.core.ui.R.drawable.ic_settings,
+                icon = Icons.Default.Settings,
                 label = stringResource(app.aaps.core.ui.R.string.nav_setupwizard),
                 description = stringResource(app.aaps.core.ui.R.string.nav_setupwizard_desc),
                 onClick = { onMenuItemClick(MainMenuItem.SetupWizard) }
             )
 
             DrawerMenuItem(
-                iconRes = app.aaps.core.ui.R.drawable.ic_stats,
+                icon = IcStats,
                 label = stringResource(app.aaps.ui.R.string.statistics),
                 description = stringResource(app.aaps.ui.R.string.statistics_desc),
                 onClick = { onMenuItemClick(MainMenuItem.Stats) }
             )
 
             DrawerMenuItem(
-                iconRes = app.aaps.core.ui.R.drawable.ic_home_profile,
+                icon = IcProfile,
                 label = stringResource(app.aaps.ui.R.string.nav_profile_helper),
                 description = stringResource(app.aaps.ui.R.string.nav_profile_helper_desc),
                 onClick = { onMenuItemClick(MainMenuItem.ProfileHelper) }
@@ -129,14 +136,14 @@ fun MainDrawer(
         HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
         Spacer(modifier = Modifier.height(8.dp))
 
-        DrawerMenuItemWithIcon(
+        DrawerMenuItem(
             icon = Icons.Default.Info,
             label = stringResource(app.aaps.core.ui.R.string.nav_about),
             description = stringResource(app.aaps.core.ui.R.string.nav_about_desc),
             onClick = { onMenuItemClick(MainMenuItem.About) }
         )
 
-        DrawerMenuItemWithIcon(
+        DrawerMenuItem(
             icon = Icons.AutoMirrored.Filled.ExitToApp,
             label = stringResource(app.aaps.core.ui.R.string.nav_exit),
             onClick = { onMenuItemClick(MainMenuItem.Exit) }
@@ -148,13 +155,24 @@ fun MainDrawer(
 
 @Composable
 private fun DrawerMenuItem(
-    iconRes: Int,
     label: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    icon: ImageVector? = null,
+    iconRes: Int? = null,
     description: String? = null,
     enabled: Boolean = true,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
 ) {
+    val iconPainter = when {
+        icon != null -> rememberVectorPainter(icon)
+        iconRes != null -> painterResource(id = iconRes)
+        else -> error("DrawerMenuItem requires either icon or iconRes")
+    }
+    val tint = if (enabled) MaterialTheme.colorScheme.onSurfaceVariant
+    else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+    val textColor = if (enabled) MaterialTheme.colorScheme.onSurface
+    else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = modifier
@@ -163,13 +181,9 @@ private fun DrawerMenuItem(
             .padding(horizontal = 24.dp, vertical = if (description != null) 8.dp else 12.dp)
     ) {
         Icon(
-            painter = painterResource(id = iconRes),
+            painter = iconPainter,
             contentDescription = null,
-            tint = if (enabled) {
-                MaterialTheme.colorScheme.onSurfaceVariant
-            } else {
-                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
-            },
+            tint = tint,
             modifier = Modifier.size(24.dp)
         )
         Spacer(modifier = Modifier.width(16.dp))
@@ -177,60 +191,13 @@ private fun DrawerMenuItem(
             Text(
                 text = label,
                 style = MaterialTheme.typography.labelLarge,
-                color = if (enabled) {
-                    MaterialTheme.colorScheme.onSurface
-                } else {
-                    MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
-                }
+                color = textColor
             )
             if (description != null) {
                 Text(
                     text = description,
                     style = MaterialTheme.typography.bodySmall,
-                    color = if (enabled) {
-                        MaterialTheme.colorScheme.onSurfaceVariant
-                    } else {
-                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
-                    }
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun DrawerMenuItemWithIcon(
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    label: String,
-    description: String? = null,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(horizontal = 24.dp, vertical = if (description != null) 8.dp else 12.dp)
-    ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.size(24.dp)
-        )
-        Spacer(modifier = Modifier.width(16.dp))
-        Column {
-            Text(
-                text = label,
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            if (description != null) {
-                Text(
-                    text = description,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = tint
                 )
             }
         }

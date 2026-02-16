@@ -2,24 +2,30 @@ package app.aaps.ui.search
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Settings
 import app.aaps.core.interfaces.ui.UiInteraction
 import app.aaps.core.ui.compose.icons.IcActivity
 import app.aaps.core.ui.compose.icons.IcAnnouncement
 import app.aaps.core.ui.compose.icons.IcBgCheck
-import app.aaps.core.ui.compose.icons.IcCarbs
-import app.aaps.core.ui.compose.icons.IcPumpCartridge
-import app.aaps.core.ui.compose.icons.IcTtHigh
 import app.aaps.core.ui.compose.icons.IcBolus
+import app.aaps.core.ui.compose.icons.IcCarbs
 import app.aaps.core.ui.compose.icons.IcCgmInsert
+import app.aaps.core.ui.compose.icons.IcClinicalNotes
+import app.aaps.core.ui.compose.icons.IcHistory
 import app.aaps.core.ui.compose.icons.IcNote
+import app.aaps.core.ui.compose.icons.IcProfile
 import app.aaps.core.ui.compose.icons.IcPumpBattery
+import app.aaps.core.ui.compose.icons.IcPumpCartridge
 import app.aaps.core.ui.compose.icons.IcQuestion
+import app.aaps.core.ui.compose.icons.IcQuickwizard
+import app.aaps.core.ui.compose.icons.IcStats
+import app.aaps.core.ui.compose.icons.IcTtHigh
 import app.aaps.core.ui.search.SearchableItem
 import app.aaps.core.ui.search.SearchableProvider
 import javax.inject.Inject
 import javax.inject.Singleton
-import app.aaps.core.ui.R as CoreUiR
 import app.aaps.core.objects.R as CoreObjectsR
+import app.aaps.core.ui.R as CoreUiR
 
 /**
  * Provides searchable items for dialogs and action screens.
@@ -34,7 +40,7 @@ class DialogSearchables @Inject constructor() : SearchableProvider {
             SearchableItem.Dialog(
                 dialogKey = "treatments",
                 dialogTitleResId = CoreUiR.string.treatments,
-                dialogIconResId = CoreObjectsR.drawable.ic_treatments,
+                dialogIcon = IcClinicalNotes,
                 dialogSummaryResId = CoreUiR.string.treatments_desc
             )
         )
@@ -42,7 +48,7 @@ class DialogSearchables @Inject constructor() : SearchableProvider {
             SearchableItem.Dialog(
                 dialogKey = "stats",
                 dialogTitleResId = app.aaps.ui.R.string.statistics,
-                dialogIconResId = CoreUiR.drawable.ic_stats,
+                dialogIcon = IcStats,
                 dialogSummaryResId = app.aaps.ui.R.string.statistics_desc
             )
         )
@@ -50,7 +56,7 @@ class DialogSearchables @Inject constructor() : SearchableProvider {
             SearchableItem.Dialog(
                 dialogKey = "profile_helper",
                 dialogTitleResId = app.aaps.ui.R.string.nav_profile_helper,
-                dialogIconResId = CoreUiR.drawable.ic_home_profile,
+                dialogIcon = IcProfile,
                 dialogSummaryResId = app.aaps.ui.R.string.nav_profile_helper_desc
             )
         )
@@ -58,7 +64,7 @@ class DialogSearchables @Inject constructor() : SearchableProvider {
             SearchableItem.Dialog(
                 dialogKey = "history_browser",
                 dialogTitleResId = CoreUiR.string.nav_history_browser,
-                dialogIconResId = CoreUiR.drawable.ic_pump_history,
+                dialogIcon = IcHistory,
                 dialogSummaryResId = CoreUiR.string.nav_history_browser_desc
             )
         )
@@ -66,7 +72,7 @@ class DialogSearchables @Inject constructor() : SearchableProvider {
             SearchableItem.Dialog(
                 dialogKey = "setup_wizard",
                 dialogTitleResId = CoreUiR.string.nav_setupwizard,
-                dialogIconResId = CoreUiR.drawable.ic_settings,
+                dialogIcon = Icons.Default.Settings,
                 dialogSummaryResId = CoreUiR.string.nav_setupwizard_desc
             )
         )
@@ -99,7 +105,7 @@ class DialogSearchables @Inject constructor() : SearchableProvider {
             SearchableItem.Dialog(
                 dialogKey = "quick_wizard_management",
                 dialogTitleResId = CoreUiR.string.quickwizard_managemnt,
-                dialogIconResId = CoreObjectsR.drawable.ic_quick_wizard,
+                dialogIcon = IcQuickwizard,
                 dialogSummaryResId = CoreUiR.string.manage_quickwizard_desc
             )
         )
