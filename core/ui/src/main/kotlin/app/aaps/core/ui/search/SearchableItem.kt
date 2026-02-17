@@ -131,4 +131,23 @@ sealed class SearchableItem {
         override val summaryResId: Int? = pluginRef.pluginDescription.description.takeIf { it != -1 }
         override val plugin: PluginBase = pluginRef
     }
+
+    /**
+     * A wiki/documentation search result from ReadTheDocs.
+     * Clicking opens the URL in the default browser.
+     *
+     * @param url Full URL to the documentation page (with anchor)
+     * @param wikiTitle Page/section title from the API
+     * @param snippet Content snippet with search term context
+     */
+    data class Wiki(
+        val url: String,
+        val wikiTitle: String,
+        val snippet: String?
+    ) : SearchableItem() {
+
+        override val key: String = url
+        override val titleResId: Int = 0 // not used — title is dynamic
+        override val iconResId: Int? = null
+    }
 }

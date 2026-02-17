@@ -274,6 +274,7 @@ class SearchIndexBuilder @Inject constructor(
             is SearchableItem.Category   -> SearchCategory.CATEGORY
             is SearchableItem.Preference -> SearchCategory.PREFERENCE
             is SearchableItem.Dialog     -> SearchCategory.DIALOG
+            is SearchableItem.Wiki       -> SearchCategory.WIKI
         }
 
         val localizedTitle = safeGetString(item.titleResId)

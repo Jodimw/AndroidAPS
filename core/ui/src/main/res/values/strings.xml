@@ -812,6 +812,8 @@
     <string name="search_category_preferences">Preferences</string>
     <string name="search_category_dialogs">Dialogs</string>
     <string name="search_category_plugins">Plugins</string>
+    <string name="search_category_wiki">Documentation</string>
+    <string name="wiki_search_offline">Documentation search requires internet connection</string>
     <string name="no_search_results">No results found</string>
     <string name="search_plugin_disabled">Plugin %1$s disabled</string>
 

@@ -41,6 +41,8 @@ dependencies {
     api(libs.androidx.core)
     api(libs.kotlinx.datetime)
 
+    api(libs.com.squareup.okhttp3.okhttp)
+
     ksp(libs.com.google.dagger.compiler)
     ksp(libs.com.google.dagger.android.processor)
 }

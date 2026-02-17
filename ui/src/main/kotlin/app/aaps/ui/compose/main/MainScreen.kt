@@ -223,7 +223,10 @@ fun MainScreen(
                 if (searchUiState.isSearchActive) {
                     SearchResults(
                         results = searchUiState.results,
+                        wikiResults = searchUiState.wikiResults,
                         isSearching = searchUiState.isSearching,
+                        isSearchingWiki = searchUiState.isSearchingWiki,
+                        wikiOffline = searchUiState.wikiOffline,
                         onResultClick = onSearchResultClick,
                         modifier = Modifier
                             .fillMaxSize()

@@ -30,5 +30,6 @@ enum class SearchCategory {
     PLUGIN,
     DIALOG,
     CATEGORY,
-    PREFERENCE
+    PREFERENCE,
+    WIKI
 }

@@ -2,6 +2,7 @@ package app.aaps
 
 import android.content.ActivityNotFoundException
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.view.WindowManager
 import androidx.activity.compose.setContent
@@ -868,6 +869,12 @@ class ComposeMainActivity : DaggerAppCompatActivityWithResult() {
             is SearchableItem.Plugin -> {
                 // Handle plugin click - same as drawer plugin click
                 handlePluginClick(item.pluginRef)
+            }
+
+            is SearchableItem.Wiki -> {
+                // Open wiki page in default browser
+                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(item.url))
+                startActivity(intent)
             }
         }
     }

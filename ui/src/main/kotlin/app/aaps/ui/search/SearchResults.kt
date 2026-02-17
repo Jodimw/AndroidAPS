@@ -15,6 +15,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.MenuBook
+import androidx.compose.material.icons.filled.WifiOff
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -30,35 +33,43 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import app.aaps.core.ui.R
+import app.aaps.core.ui.search.SearchableItem
 
 /**
  * Displays search results in a categorized list.
  *
- * @param results List of search result entries
- * @param isSearching Whether a search is in progress
+ * @param results List of local search result entries
+ * @param wikiResults List of wiki search result entries
+ * @param isSearching Whether local search is in progress
+ * @param isSearchingWiki Whether wiki search is in progress
  * @param onResultClick Called when a result item is clicked (only for enabled items)
  * @param modifier Modifier for the component
  */
 @Composable
 fun SearchResults(
     results: List<SearchIndexEntry>,
+    wikiResults: List<SearchIndexEntry>,
     isSearching: Boolean,
+    isSearchingWiki: Boolean,
+    wikiOffline: Boolean,
     onResultClick: (SearchIndexEntry) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val allResults = results + wikiResults
+
     Surface(
         modifier = modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
             when {
-                isSearching       -> {
+                isSearching                                  -> {
                     CircularProgressIndicator(
                         modifier = Modifier.align(Alignment.Center)
                     )
                 }
 
-                results.isEmpty() -> {
+                allResults.isEmpty() && !isSearchingWiki -> {
                     Text(
                         text = stringResource(R.string.no_search_results),
                         style = MaterialTheme.typography.bodyLarge,
@@ -69,9 +80,9 @@ fun SearchResults(
                     )
                 }
 
-                else              -> {
+                else                                         -> {
                     // Group results by category
-                    val groupedResults = results.groupBy { it.category }
+                    val groupedResults = allResults.groupBy { it.category }
 
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
@@ -98,6 +109,17 @@ fun SearchResults(
                                 }
                             }
                         }
+
+                        // Show wiki loading indicator or offline notice
+                        if (isSearchingWiki) {
+                            item(key = "wiki_loading") {
+                                WikiLoadingIndicator()
+                            }
+                        } else if (wikiOffline) {
+                            item(key = "wiki_offline") {
+                                WikiOfflineIndicator()
+                            }
+                        }
                     }
                 }
             }
@@ -118,6 +140,7 @@ private fun CategoryHeader(
         SearchCategory.CATEGORY   -> R.string.search_category_categories
         SearchCategory.PREFERENCE -> R.string.search_category_preferences
         SearchCategory.DIALOG     -> R.string.search_category_dialogs
+        SearchCategory.WIKI       -> R.string.search_category_wiki
     }
 
     Column(modifier = modifier) {
@@ -163,8 +186,9 @@ private fun SearchResultItem(
             .alpha(contentAlpha),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Icon (prefer ImageVector over drawable resource)
-        val icon = entry.item.icon
+        // Icon: wiki items get book icon, others prefer ImageVector over drawable resource
+        val isWiki = entry.item is SearchableItem.Wiki
+        val icon = if (isWiki) Icons.AutoMirrored.Filled.MenuBook else entry.item.icon
         val iconResId = entry.item.iconResId
         if (icon != null) {
             Icon(
@@ -222,5 +246,52 @@ private fun SearchResultItem(
                 }
             }
         }
+    }
+}
+
+/**
+ * Loading indicator shown while wiki search is in progress.
+ */
+@Composable
+private fun WikiLoadingIndicator(modifier: Modifier = Modifier) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp)
+        Spacer(modifier = Modifier.width(12.dp))
+        Text(
+            text = stringResource(R.string.search_category_wiki) + "\u2026",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
+}
+
+/**
+ * Indicator shown when wiki search is unavailable due to no internet connection.
+ */
+@Composable
+private fun WikiOfflineIndicator(modifier: Modifier = Modifier) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            imageVector = Icons.Filled.WifiOff,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.size(16.dp)
+        )
+        Spacer(modifier = Modifier.width(12.dp))
+        Text(
+            text = stringResource(R.string.wiki_search_offline),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
     }
 }
