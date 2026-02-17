@@ -342,7 +342,8 @@ fun IobGraphCompose(
 
     // Now line decoration
     val nowLineColor = MaterialTheme.colorScheme.onSurface
-    val nowLine = rememberNowLine(minTimestamp, nowLineColor)
+    val nowTimestamp by viewModel.nowTimestamp.collectAsState()
+    val nowLine = rememberNowLine(minTimestamp, nowTimestamp, nowLineColor)
     val decorations = remember(nowLine) { listOf(nowLine) }
 
     CartesianChartHost(

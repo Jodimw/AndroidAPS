@@ -410,7 +410,8 @@ fun BgGraphCompose(
         )
     }
     val nowLineColor = MaterialTheme.colorScheme.onSurface
-    val nowLine = rememberNowLine(minTimestamp, nowLineColor)
+    val nowTimestamp by viewModel.nowTimestamp.collectAsState()
+    val nowLine = rememberNowLine(minTimestamp, nowTimestamp, nowLineColor)
     val decorations = remember(targetRangeBox, nowLine) { listOf(targetRangeBox, nowLine) }
 
     // =========================================================================

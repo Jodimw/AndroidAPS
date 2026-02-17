@@ -282,12 +282,11 @@ class NowLine(
 
 /**
  * Remember a [NowLine] decoration for the current time.
- * Updates when minTimestamp changes (time range shifts).
+ * @param nowTimestamp current time in millis — pass a ticker value so the line updates periodically
  */
 @Composable
-fun rememberNowLine(minTimestamp: Long, color: Color): NowLine {
-    return remember(minTimestamp, color) {
-        val nowX = timestampToX(System.currentTimeMillis(), minTimestamp)
-        NowLine(nowX = nowX, color = color)
+fun rememberNowLine(minTimestamp: Long, nowTimestamp: Long, color: Color): NowLine {
+    return remember(minTimestamp, nowTimestamp, color) {
+        NowLine(nowX = timestampToX(nowTimestamp, minTimestamp), color = color)
     }
 }

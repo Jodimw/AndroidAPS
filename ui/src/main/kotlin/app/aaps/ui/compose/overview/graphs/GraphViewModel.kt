@@ -132,18 +132,25 @@ class GraphViewModel @Inject constructor(
     // BG Info Section (Overview info display)
     // =========================================================================
 
-    // Ticker flow for periodic timeAgo updates (every 30 seconds)
-    private val timeAgoTicker = flow {
+    // Ticker flow for periodic updates (every 30 seconds) — used for timeAgo text and now line
+    private val ticker30s = flow {
         while (true) {
-            emit(Unit)
+            emit(System.currentTimeMillis())
             delay(30_000L)
         }
     }
 
+    /** Current time updated every 30s — use as key for now line position */
+    val nowTimestamp: StateFlow<Long> = ticker30s.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = System.currentTimeMillis()
+    )
+
     // BG info UI state - combines bgInfo with periodic timeAgo updates
     val bgInfoState: StateFlow<BgInfoUiState> = combine(
         cache.bgInfoFlow,
-        timeAgoTicker
+        ticker30s
     ) { bgInfo, _ ->
         BgInfoUiState(
             bgInfo = bgInfo,

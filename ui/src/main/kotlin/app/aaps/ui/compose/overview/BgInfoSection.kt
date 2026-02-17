@@ -14,8 +14,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import kotlin.math.cos
+import kotlin.math.sin
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
@@ -82,25 +85,48 @@ fun BgInfoSection(
                 style = Stroke(width = strokeWidth, cap = StrokeCap.Round)
             )
 
-            // Trend arc indicator (bright segment showing trend direction)
+            // Trend arc indicator (bright segment + outward triangles)
             bgInfo.trendArrow?.let { trend ->
                 trend.toArcIndicator()?.let { indicator ->
-                    val segments = if (indicator.markCount > 0) indicator.markCount else 1
-                    val totalSweep = indicator.sweepAngle
-                    val gapAngle = if (segments > 1) 10f else 0f
-                    val segmentSweep = (totalSweep - (segments - 1) * gapAngle) / segments
-                    val arcStart = indicator.centerAngle - totalSweep / 2
+                    // Single bright arc segment
+                    val arcStart = indicator.centerAngle - indicator.sweepAngle / 2
+                    drawArc(
+                        color = bgColor,
+                        startAngle = arcStart,
+                        sweepAngle = indicator.sweepAngle,
+                        useCenter = false,
+                        topLeft = topLeft,
+                        size = arcSize,
+                        style = Stroke(width = strokeWidth, cap = StrokeCap.Round)
+                    )
 
-                    for (i in 0 until segments) {
-                        val segStart = arcStart + i * (segmentSweep + gapAngle)
-                        drawArc(
-                            color = bgColor,
-                            startAngle = segStart,
-                            sweepAngle = segmentSweep,
-                            useCenter = false,
-                            topLeft = topLeft,
-                            size = arcSize,
-                            style = Stroke(width = strokeWidth, cap = StrokeCap.Round)
+                    // Triangles pointing outward at arc center
+                    val centerRad = Math.toRadians(indicator.centerAngle.toDouble())
+                    val ringCenterX = topLeft.x + arcSize.width / 2
+                    val ringCenterY = topLeft.y + arcSize.height / 2
+                    val ringRadius = arcSize.width / 2
+                    val dirX = cos(centerRad).toFloat()
+                    val dirY = sin(centerRad).toFloat()
+                    val perpX = -dirY
+                    val perpY = dirX
+                    val triHeight = strokeWidth * 1.3f
+                    val triHalfBase = strokeWidth * 0.7f
+                    val triSpacing = triHeight * 0.7f
+
+                    for (i in 0 until indicator.triangleCount) {
+                        val baseDist = ringRadius + strokeWidth / 2 + i * triSpacing
+                        val baseX = ringCenterX + baseDist * dirX
+                        val baseY = ringCenterY + baseDist * dirY
+                        val tipX = baseX + triHeight * dirX
+                        val tipY = baseY + triHeight * dirY
+                        drawPath(
+                            path = Path().apply {
+                                moveTo(tipX, tipY)
+                                lineTo(baseX + triHalfBase * perpX, baseY + triHalfBase * perpY)
+                                lineTo(baseX - triHalfBase * perpX, baseY - triHalfBase * perpY)
+                                close()
+                            },
+                            color = bgColor
                         )
                     }
                 }
@@ -155,37 +181,37 @@ private fun BgRange.toColor(): Color = when (this) {
 }
 
 /**
- * Arc indicator describing position and intensity marks.
+ * Arc indicator describing position and triangle count.
  * @param centerAngle center of the arc in degrees (0° = right/3 o'clock, -90° = top, 90° = bottom)
  * @param sweepAngle arc length in degrees
- * @param markCount number of perpendicular tick marks (0 = none, 2 = double, 3 = triple)
+ * @param triangleCount number of outward-pointing triangles (1-3)
  */
 private data class ArcIndicator(
     val centerAngle: Float,
     val sweepAngle: Float,
-    val markCount: Int
+    val triangleCount: Int
 )
 
 /**
- * Maps TrendArrow to arc indicator with 5 fixed positions and intensity marks.
+ * Maps TrendArrow to arc indicator with 5 fixed positions and 1-3 triangles.
  * Returns null for NONE (no arc drawn).
  *
  * Positions: Up (-90°), 45°-up (-45°), Flat (0°), 45°-down (45°), Down (90°)
- * Double/Triple use same position as single but add 2 or 3 tick marks.
+ * Double/Triple use same position but show 2 or 3 triangles.
  */
 private fun TrendArrow.toArcIndicator(): ArcIndicator? {
     val sweepAngle = 40f
     return when (this) {
         TrendArrow.NONE            -> null
-        TrendArrow.FLAT            -> ArcIndicator(centerAngle = 0f, sweepAngle = sweepAngle, markCount = 0)
-        TrendArrow.FORTY_FIVE_UP   -> ArcIndicator(centerAngle = -45f, sweepAngle = sweepAngle, markCount = 0)
-        TrendArrow.FORTY_FIVE_DOWN -> ArcIndicator(centerAngle = 45f, sweepAngle = sweepAngle, markCount = 0)
-        TrendArrow.SINGLE_UP       -> ArcIndicator(centerAngle = -90f, sweepAngle = sweepAngle, markCount = 0)
-        TrendArrow.SINGLE_DOWN     -> ArcIndicator(centerAngle = 90f, sweepAngle = sweepAngle, markCount = 0)
-        TrendArrow.DOUBLE_UP       -> ArcIndicator(centerAngle = -90f, sweepAngle = sweepAngle, markCount = 2)
-        TrendArrow.DOUBLE_DOWN     -> ArcIndicator(centerAngle = 90f, sweepAngle = sweepAngle, markCount = 2)
-        TrendArrow.TRIPLE_UP       -> ArcIndicator(centerAngle = -90f, sweepAngle = sweepAngle, markCount = 3)
-        TrendArrow.TRIPLE_DOWN     -> ArcIndicator(centerAngle = 90f, sweepAngle = sweepAngle, markCount = 3)
+        TrendArrow.FLAT            -> ArcIndicator(centerAngle = 0f, sweepAngle = sweepAngle, triangleCount = 1)
+        TrendArrow.FORTY_FIVE_UP   -> ArcIndicator(centerAngle = -45f, sweepAngle = sweepAngle, triangleCount = 1)
+        TrendArrow.FORTY_FIVE_DOWN -> ArcIndicator(centerAngle = 45f, sweepAngle = sweepAngle, triangleCount = 1)
+        TrendArrow.SINGLE_UP       -> ArcIndicator(centerAngle = -90f, sweepAngle = sweepAngle, triangleCount = 1)
+        TrendArrow.SINGLE_DOWN     -> ArcIndicator(centerAngle = 90f, sweepAngle = sweepAngle, triangleCount = 1)
+        TrendArrow.DOUBLE_UP       -> ArcIndicator(centerAngle = -90f, sweepAngle = sweepAngle, triangleCount = 2)
+        TrendArrow.DOUBLE_DOWN     -> ArcIndicator(centerAngle = 90f, sweepAngle = sweepAngle, triangleCount = 2)
+        TrendArrow.TRIPLE_UP       -> ArcIndicator(centerAngle = -90f, sweepAngle = sweepAngle, triangleCount = 3)
+        TrendArrow.TRIPLE_DOWN     -> ArcIndicator(centerAngle = 90f, sweepAngle = sweepAngle, triangleCount = 3)
     }
 }
 
