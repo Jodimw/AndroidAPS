@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import app.aaps.core.graph.vico.Square
 import app.aaps.core.interfaces.overview.graph.BasalGraphData
 import app.aaps.core.interfaces.overview.graph.BgDataPoint
+import app.aaps.core.interfaces.overview.graph.BgType
 import app.aaps.core.interfaces.overview.graph.EpsGraphPoint
 import app.aaps.core.interfaces.overview.graph.TargetLineData
 import app.aaps.core.ui.compose.AapsTheme
@@ -46,6 +47,14 @@ import com.patrykandpatrick.vico.compose.cartesian.axis.Axis
 /** Series identifiers */
 private const val SERIES_REGULAR = "regular"
 private const val SERIES_BUCKETED = "bucketed"
+private const val SERIES_PRED_IOB = "pred_iob"
+private const val SERIES_PRED_COB = "pred_cob"
+private const val SERIES_PRED_ACOB = "pred_acob"
+private const val SERIES_PRED_UAM = "pred_uam"
+private const val SERIES_PRED_ZT = "pred_zt"
+
+/** All prediction series identifiers */
+private val PREDICTION_SERIES = listOf(SERIES_PRED_IOB, SERIES_PRED_COB, SERIES_PRED_ACOB, SERIES_PRED_UAM, SERIES_PRED_ZT)
 
 /**
  * BG Graph using Vico — dual-layer chart.
@@ -69,6 +78,7 @@ fun BgGraphCompose(
     // Collect flows independently - each triggers recomposition only when it changes
     val bgReadings by viewModel.bgReadingsFlow.collectAsState()
     val bucketedData by viewModel.bucketedDataFlow.collectAsState()
+    val predictions by viewModel.predictionsFlow.collectAsState()
     val derivedTimeRange by viewModel.derivedTimeRange.collectAsState()
     val chartConfig by viewModel.chartConfigFlow.collectAsState()
     val basalData by viewModel.basalGraphFlow.collectAsState()
@@ -95,6 +105,13 @@ fun BgGraphCompose(
     val highColor = AapsTheme.generalColors.bgHigh
     val basalColor = AapsTheme.elementColors.tempBasal
     val targetLineColor = AapsTheme.elementColors.tempTarget
+
+    // Prediction colors
+    val iobPredColor = AapsTheme.generalColors.iobPrediction
+    val cobPredColor = AapsTheme.generalColors.cobPrediction
+    val aCobPredColor = AapsTheme.generalColors.aCobPrediction
+    val uamPredColor = AapsTheme.generalColors.uamPrediction
+    val ztPredColor = AapsTheme.generalColors.ztPrediction
 
     // Calculate x-axis range (must match COB graph for alignment)
     val minX = 0.0
@@ -143,6 +160,18 @@ fun BgGraphCompose(
                         .sortedBy { it.first }
                     series(x = dataPoints.map { it.first }, y = dataPoints.map { it.second })
                     activeSeries.add(SERIES_BUCKETED)
+                }
+
+                // Prediction series - each type as a separate line
+                for (predSeries in PREDICTION_SERIES) {
+                    val predPoints = seriesRegistry[predSeries]
+                    if (predPoints != null && predPoints.isNotEmpty()) {
+                        val dataPoints = predPoints
+                            .map { timestampToX(it.timestamp, minTimestamp) to it.value }
+                            .sortedBy { it.first }
+                        series(x = dataPoints.map { it.first }, y = dataPoints.map { it.second })
+                        activeSeries.add(predSeries)
+                    }
                 }
 
                 // Normalizer series
@@ -202,10 +231,24 @@ fun BgGraphCompose(
         }
     }
 
+    // Split predictions by type into registry
+    val predictionsByType = remember(predictions) {
+        mapOf(
+            SERIES_PRED_IOB to predictions.filter { it.type == BgType.IOB_PREDICTION },
+            SERIES_PRED_COB to predictions.filter { it.type == BgType.COB_PREDICTION },
+            SERIES_PRED_ACOB to predictions.filter { it.type == BgType.A_COB_PREDICTION },
+            SERIES_PRED_UAM to predictions.filter { it.type == BgType.UAM_PREDICTION },
+            SERIES_PRED_ZT to predictions.filter { it.type == BgType.ZT_PREDICTION }
+        )
+    }
+
     // Single LaunchedEffect for all data - ensures atomic updates
-    LaunchedEffect(bgReadings, bucketedData, basalData, targetData, epsPoints, stableTimeRange) {
+    LaunchedEffect(bgReadings, bucketedData, predictionsByType, basalData, targetData, epsPoints, stableTimeRange) {
         seriesRegistry[SERIES_REGULAR] = bgReadings
         seriesRegistry[SERIES_BUCKETED] = bucketedData
+        for ((key, points) in predictionsByType) {
+            seriesRegistry[key] = points
+        }
         rebuildChart(basalData, targetData, epsPoints)
     }
 
@@ -254,11 +297,23 @@ fun BgGraphCompose(
 
     val normalizerLine = remember { createNormalizerLine() }
 
+    // Prediction lines - transparent connecting line with small filled circle points
+    val iobPredLine = remember(iobPredColor) { createPredictionLine(iobPredColor) }
+    val cobPredLine = remember(cobPredColor) { createPredictionLine(cobPredColor) }
+    val aCobPredLine = remember(aCobPredColor) { createPredictionLine(aCobPredColor) }
+    val uamPredLine = remember(uamPredColor) { createPredictionLine(uamPredColor) }
+    val ztPredLine = remember(ztPredColor) { createPredictionLine(ztPredColor) }
+
     val activeSeries by activeSeriesState
-    val bgLines = remember(activeSeries, regularLine, bucketedLine, normalizerLine) {
+    val bgLines = remember(activeSeries, regularLine, bucketedLine, iobPredLine, cobPredLine, aCobPredLine, uamPredLine, ztPredLine, normalizerLine) {
         buildList {
             if (SERIES_REGULAR in activeSeries) add(regularLine)
             if (SERIES_BUCKETED in activeSeries) add(bucketedLine)
+            if (SERIES_PRED_IOB in activeSeries) add(iobPredLine)
+            if (SERIES_PRED_COB in activeSeries) add(cobPredLine)
+            if (SERIES_PRED_ACOB in activeSeries) add(aCobPredLine)
+            if (SERIES_PRED_UAM in activeSeries) add(uamPredLine)
+            if (SERIES_PRED_ZT in activeSeries) add(ztPredLine)
             add(normalizerLine)
         }
     }
@@ -356,7 +411,9 @@ fun BgGraphCompose(
             box = targetRangeBoxComponent
         )
     }
-    val decorations = remember(targetRangeBox) { listOf(targetRangeBox) }
+    val nowLineColor = MaterialTheme.colorScheme.onSurface
+    val nowLine = rememberNowLine(minTimestamp, nowLineColor)
+    val decorations = remember(targetRangeBox, nowLine) { listOf(targetRangeBox, nowLine) }
 
     // =========================================================================
     // Chart — dual layer

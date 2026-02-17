@@ -336,6 +336,11 @@ fun IobGraphCompose(
         }
     }
 
+    // Now line decoration
+    val nowLineColor = MaterialTheme.colorScheme.onSurface
+    val nowLine = rememberNowLine(minTimestamp, nowLineColor)
+    val decorations = remember(nowLine) { listOf(nowLine) }
+
     CartesianChartHost(
         chart = rememberCartesianChart(
             rememberLineCartesianLayer(
@@ -355,6 +360,7 @@ fun IobGraphCompose(
                     style = TextStyle(color = MaterialTheme.colorScheme.onSurface)
                 )
             ),
+            decorations = decorations,
             getXStep = { 1.0 }
         ),
         modelProducer = modelProducer,

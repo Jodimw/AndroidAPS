@@ -117,6 +117,7 @@ class GraphViewModel @Inject constructor(
     // Individual series flows - each can trigger independent recomposition
     val bgReadingsFlow: StateFlow<List<BgDataPoint>> = cache.bgReadingsFlow
     val bucketedDataFlow: StateFlow<List<BgDataPoint>> = cache.bucketedDataFlow
+    val predictionsFlow: StateFlow<List<BgDataPoint>> = cache.predictionsFlow
 
     // Secondary graph flows
     val iobGraphFlow = cache.iobGraphFlow
@@ -204,21 +205,25 @@ class GraphViewModel @Inject constructor(
     )
 
     // Derived time range from actual data (recalculates as series arrive)
+    // Includes prediction timestamps so the x-axis extends into the future
     val derivedTimeRange: StateFlow<Pair<Long, Long>?> = combine(
         cache.bgReadingsFlow,
         cache.bucketedDataFlow,
+        cache.predictionsFlow,
         cache.timeRangeFlow
-    ) { bgReadings, bucketedData, cacheTimeRange ->
-        // Combine all timestamps from all series
-        val allTimestamps = (bgReadings + bucketedData).map { it.timestamp }
+    ) { bgReadings, bucketedData, predictions, cacheTimeRange ->
+        // Combine all timestamps from all series including predictions
+        val allTimestamps = (bgReadings + bucketedData + predictions).map { it.timestamp }
 
         if (allTimestamps.isEmpty()) {
-            // Fall back to cache time range if no data yet
-            cacheTimeRange?.let { Pair(it.fromTime, it.toTime) }
+            // Fall back to cache time range if no data yet (use endTime for predictions)
+            cacheTimeRange?.let { Pair(it.fromTime, it.endTime) }
         } else {
             val minTime = allTimestamps.minOrNull() ?: return@combine null
             val maxTime = allTimestamps.maxOrNull() ?: return@combine null
-            Pair(minTime, maxTime)
+            // Also consider endTime from cache (may extend beyond prediction points)
+            val effectiveMax = if (cacheTimeRange != null) maxOf(maxTime, cacheTimeRange.endTime) else maxTime
+            Pair(minTime, effectiveMax)
         }
     }.stateIn(
         scope = viewModelScope,

@@ -104,10 +104,12 @@ class OverviewDataCacheImpl @Inject constructor(
     // BG data flows
     private val _bgReadingsFlow = MutableStateFlow<List<BgDataPoint>>(emptyList())
     private val _bucketedDataFlow = MutableStateFlow<List<BgDataPoint>>(emptyList())
+    private val _predictionsFlow = MutableStateFlow<List<BgDataPoint>>(emptyList())
     private val _bgInfoFlow = MutableStateFlow<BgInfoData?>(null)
 
     override val bgReadingsFlow: StateFlow<List<BgDataPoint>> = _bgReadingsFlow.asStateFlow()
     override val bucketedDataFlow: StateFlow<List<BgDataPoint>> = _bucketedDataFlow.asStateFlow()
+    override val predictionsFlow: StateFlow<List<BgDataPoint>> = _predictionsFlow.asStateFlow()
     override val bgInfoFlow: StateFlow<BgInfoData?> = _bgInfoFlow.asStateFlow()
 
     // Overview chip flows
@@ -383,6 +385,10 @@ class OverviewDataCacheImpl @Inject constructor(
         _bucketedDataFlow.value = data
     }
 
+    override fun updatePredictions(data: List<BgDataPoint>) {
+        _predictionsFlow.value = data
+    }
+
     override fun updateBgInfo(data: BgInfoData?) {
         _bgInfoFlow.value = data
     }
@@ -443,6 +449,7 @@ class OverviewDataCacheImpl @Inject constructor(
         _timeRangeFlow.value = null
         _bgReadingsFlow.value = emptyList()
         _bucketedDataFlow.value = emptyList()
+        _predictionsFlow.value = emptyList()
         _bgInfoFlow.value = null
         _tempTargetFlow.value = null
         _profileFlow.value = null

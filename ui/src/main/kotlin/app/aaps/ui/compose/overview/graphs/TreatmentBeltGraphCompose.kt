@@ -468,6 +468,11 @@ fun TreatmentBeltGraphCompose(
     val modeNameMap = rememberModeNameMap()
     val beltMarker = rememberBeltMarker(modeNameMap)
 
+    // Now line decoration
+    val nowLineColor = MaterialTheme.colorScheme.onSurface
+    val nowLine = rememberNowLine(minTimestamp, nowLineColor)
+    val beltDecorations = remember(nowLine) { listOf(nowLine) }
+
     CartesianChartHost(
         chart = rememberCartesianChart(
             rememberLineCartesianLayer(
@@ -478,6 +483,7 @@ fun TreatmentBeltGraphCompose(
             ),
             marker = beltMarker,
             markerController = CartesianMarkerController.rememberToggleOnTap(),
+            decorations = beltDecorations,
             startAxis = VerticalAxis.rememberStart(
                 label = rememberTextComponent(
                     style = TextStyle(color = Color.Transparent),

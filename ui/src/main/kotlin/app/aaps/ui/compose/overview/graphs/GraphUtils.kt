@@ -5,11 +5,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.GenericShape
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.patrykandpatrick.vico.compose.cartesian.CartesianDrawingContext
 import com.patrykandpatrick.vico.compose.cartesian.axis.HorizontalAxis
 import com.patrykandpatrick.vico.compose.cartesian.data.CartesianValueFormatter
+import com.patrykandpatrick.vico.compose.cartesian.decoration.Decoration
 import com.patrykandpatrick.vico.compose.cartesian.layer.LineCartesianLayer
 import com.patrykandpatrick.vico.compose.common.Fill
 import com.patrykandpatrick.vico.compose.common.component.ShapeComponent
@@ -192,4 +196,98 @@ val InvertedTriangleShape: Shape = GenericShape { size, _ ->
     lineTo(cx + baseHalf, 0f)               // Top right (base)
     lineTo(cx, size.height / 2f)            // Bottom center (apex)
     close()
+}
+
+/**
+ * Creates a line for BG prediction series.
+ * Transparent connecting line with small filled circle points in the given color.
+ * Each prediction type (IOB, COB, UAM, ZT, aCOB) uses a different color.
+ */
+fun createPredictionLine(color: Color): LineCartesianLayer.Line =
+    LineCartesianLayer.Line(
+        fill = LineCartesianLayer.LineFill.single(Fill(Color.Transparent)),
+        areaFill = null,
+        pointProvider = LineCartesianLayer.PointProvider.single(
+            LineCartesianLayer.Point(
+                component = ShapeComponent(
+                    fill = Fill(color),
+                    shape = CircleShape
+                ),
+                size = 4.dp
+            )
+        )
+    )
+
+/**
+ * "Now" vertical dotted line decoration for Vico charts.
+ * Draws a dotted vertical line at the current time position across the full chart height.
+ * Shared across all graphs (BG, IOB, COB, Treatment Belt) for consistent "now" indication.
+ *
+ * @param nowX The x-value for "now" (minutes from minTimestamp, via [timestampToX])
+ * @param color The line color
+ * @param strokeWidthPx Line stroke width in pixels
+ * @param dashLengthPx Dash segment length in pixels
+ * @param gapLengthPx Gap between dashes in pixels
+ */
+class NowLine(
+    private val nowX: Double,
+    private val color: Color,
+    private val strokeWidthPx: Float = 2f,
+    private val dashLengthPx: Float = 6f,
+    private val gapLengthPx: Float = 4f
+) : Decoration {
+
+    override fun drawOverLayers(context: CartesianDrawingContext) {
+        with(context) {
+            val xStep = ranges.xStep
+            if (xStep == 0.0) return
+
+            // Convert x-value to canvas coordinate (mirrors Vico's internal getDrawX logic)
+            val canvasX = layerBounds.left +
+                layerDimensions.startPadding +
+                layerDimensions.xSpacing * ((nowX - ranges.minX) / xStep).toFloat() -
+                scroll
+
+            // Skip if outside visible area
+            if (canvasX < layerBounds.left || canvasX > layerBounds.right) return
+
+            with(mutableDrawScope) {
+                drawLine(
+                    color = this@NowLine.color,
+                    start = Offset(canvasX, layerBounds.top),
+                    end = Offset(canvasX, layerBounds.bottom),
+                    strokeWidth = strokeWidthPx,
+                    pathEffect = PathEffect.dashPathEffect(
+                        floatArrayOf(dashLengthPx, gapLengthPx), 0f
+                    )
+                )
+            }
+        }
+    }
+
+    override fun equals(other: Any?): Boolean =
+        this === other ||
+            other is NowLine &&
+            nowX == other.nowX &&
+            color == other.color &&
+            strokeWidthPx == other.strokeWidthPx
+
+    override fun hashCode(): Int {
+        var result = nowX.hashCode()
+        result = 31 * result + color.hashCode()
+        result = 31 * result + strokeWidthPx.hashCode()
+        return result
+    }
+}
+
+/**
+ * Remember a [NowLine] decoration for the current time.
+ * Updates when minTimestamp changes (time range shifts).
+ */
+@Composable
+fun rememberNowLine(minTimestamp: Long, color: Color): NowLine {
+    return remember(minTimestamp, color) {
+        val nowX = timestampToX(System.currentTimeMillis(), minTimestamp)
+        NowLine(nowX = nowX, color = color)
+    }
 }
