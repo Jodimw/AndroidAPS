@@ -96,7 +96,7 @@ class MaintenanceFragment : DaggerFragment() {
         }
         binding.navResetApsResults.setOnClickListener {
             activity?.let { activity ->
-                uiInteraction.showOkCancelDialog(context = activity, title = R.string.maintenance, message = R.string.reset_aps_results_confirm, ok = {
+                uiInteraction.showOkCancelDialog(context = activity, title = app.aaps.core.ui.R.string.maintenance, message = app.aaps.core.ui.R.string.reset_aps_results_confirm, ok = {
                     disposable +=
                         Completable.fromAction {
                             persistenceLayer.clearApsResults()
@@ -112,7 +112,7 @@ class MaintenanceFragment : DaggerFragment() {
         }
         binding.navResetdb.setOnClickListener {
             activity?.let { activity ->
-                uiInteraction.showOkCancelDialog(context = activity, title = R.string.maintenance, message = R.string.reset_db_confirm, ok = {
+                uiInteraction.showOkCancelDialog(context = activity, title = app.aaps.core.ui.R.string.maintenance, message = app.aaps.core.ui.R.string.reset_db_confirm, ok = {
                     lifecycleScope.launch {
                         try {
                             withContext(Dispatchers.IO) {
@@ -139,7 +139,7 @@ class MaintenanceFragment : DaggerFragment() {
             }
         }
         binding.cleanupDb.setOnClickListener {
-            uiInteraction.showOkCancelDialog(context = requireActivity(), title = R.string.maintenance, message = app.aaps.core.ui.R.string.cleanup_db_confirm, ok = {
+            uiInteraction.showOkCancelDialog(context = requireActivity(), title = app.aaps.core.ui.R.string.maintenance, message = app.aaps.core.ui.R.string.cleanup_db_confirm, ok = {
                 lifecycleScope.launch {
                     try {
                         val result = persistenceLayer.cleanupDatabase(93, deleteTrackedChanges = true)

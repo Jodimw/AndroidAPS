@@ -429,6 +429,10 @@ class MainViewModel @Inject constructor(
         uiState.update { it.copy(showAboutDialog = show) }
     }
 
+    fun setShowMaintenanceSheet(show: Boolean) {
+        uiState.update { it.copy(showMaintenanceSheet = show) }
+    }
+
     // Plugin toggle
     fun togglePluginEnabled(plugin: PluginBase, type: PluginType, enabled: Boolean) {
         configBuilder.performPluginSwitch(plugin, enabled, type)

@@ -215,7 +215,7 @@ class SWDefinition @Inject constructor(
             .add(swInfoTextProvider.get().label(rh.gs(R.string.select_aaps_directory)))
             .add(
                 swButtonProvider.get()
-                    .text(R.string.aaps_directory)
+                    .text(app.aaps.core.ui.R.string.aaps_directory)
                     .visibility { preferences.getIfExists(StringKey.AapsDirectoryUri) == null }
                     .action { maintenancePlugin.selectAapsDirectory(requireActivity() as DaggerAppCompatActivityWithResult) })
             .add(swBreakProvider.get())
@@ -256,10 +256,10 @@ class SWDefinition @Inject constructor(
             .validator { !androidPermission.permissionNotGranted(requireActivity(), Manifest.permission.ACCESS_FINE_LOCATION) && !androidPermission.permissionNotGranted(requireActivity(), Manifest.permission.ACCESS_BACKGROUND_LOCATION) }
 
     private val screenImport
-        get() = swScreenProvider.get().with(R.string.import_setting)
+        get() = swScreenProvider.get().with(app.aaps.core.ui.R.string.import_setting)
             .add(swInfoTextProvider.get().label(R.string.storedsettingsfound))
             .add(swBreakProvider.get())
-            .add(swButtonProvider.get().text(R.string.import_setting).action { importExportPrefs.importSharedPreferences(requireActivity()) })
+            .add(swButtonProvider.get().text(app.aaps.core.ui.R.string.import_setting).action { importExportPrefs.importSharedPreferences(requireActivity()) })
             .visibility { importExportPrefs.prefsFileExists() && !androidPermission.permissionNotGranted(requireActivity(), Manifest.permission.READ_EXTERNAL_STORAGE) }
 
     private val screenNsClient

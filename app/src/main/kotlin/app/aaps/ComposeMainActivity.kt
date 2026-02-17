@@ -2,7 +2,6 @@ package app.aaps
 
 import android.content.ActivityNotFoundException
 import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
 import android.view.WindowManager
 import androidx.activity.compose.setContent
@@ -13,6 +12,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.core.net.toUri
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
@@ -43,40 +43,36 @@ import app.aaps.core.objects.crypto.CryptoUtil
 import app.aaps.core.ui.compose.AapsTheme
 import app.aaps.core.ui.compose.LocalPreferences
 import app.aaps.core.ui.compose.LocalRxBus
+import app.aaps.core.ui.compose.ProtectionHost
 import app.aaps.core.ui.compose.preference.LocalCheckPassword
 import app.aaps.core.ui.compose.preference.LocalHashPassword
 import app.aaps.core.ui.compose.preference.LocalVisibilityContext
-import app.aaps.core.ui.compose.ProtectionHost
 import app.aaps.core.ui.compose.preference.PluginPreferencesScreen
 import app.aaps.core.ui.compose.preference.PreferenceSubScreenDef
+import app.aaps.core.ui.search.SearchableItem
 import app.aaps.implementation.protection.BiometricCheck
 import app.aaps.plugins.configuration.activities.DaggerAppCompatActivityWithResult
 import app.aaps.plugins.configuration.activities.SingleFragmentActivity
 import app.aaps.plugins.configuration.setupwizard.SetupWizardActivity
-import app.aaps.ui.compose.overview.manage.ManageViewModel
-import app.aaps.ui.compose.overview.statusLights.StatusViewModel
-import app.aaps.ui.compose.overview.treatments.TreatmentViewModel
 import app.aaps.ui.compose.carbsDialog.CarbsDialogScreen
 import app.aaps.ui.compose.carbsDialog.CarbsDialogViewModel
-import app.aaps.ui.compose.insulinDialog.InsulinDialogScreen
-import app.aaps.ui.compose.insulinDialog.InsulinDialogViewModel
-import app.aaps.ui.compose.treatmentDialog.TreatmentDialogScreen
-import app.aaps.ui.compose.treatmentDialog.TreatmentDialogViewModel
 import app.aaps.ui.compose.careDialog.CareDialogScreen
 import app.aaps.ui.compose.careDialog.CareDialogViewModel
 import app.aaps.ui.compose.fillDialog.FillDialogScreen
 import app.aaps.ui.compose.fillDialog.FillDialogViewModel
 import app.aaps.ui.compose.fillDialog.FillPreselect
-import app.aaps.ui.compose.overview.graphs.GraphViewModel
+import app.aaps.ui.compose.insulinDialog.InsulinDialogScreen
+import app.aaps.ui.compose.insulinDialog.InsulinDialogViewModel
 import app.aaps.ui.compose.main.MainMenuItem
 import app.aaps.ui.compose.main.MainScreen
 import app.aaps.ui.compose.main.MainViewModel
+import app.aaps.ui.compose.management.MaintenanceViewModel
+import app.aaps.ui.compose.overview.graphs.GraphViewModel
+import app.aaps.ui.compose.overview.manage.ManageViewModel
+import app.aaps.ui.compose.overview.statusLights.StatusViewModel
+import app.aaps.ui.compose.overview.treatments.TreatmentViewModel
 import app.aaps.ui.compose.preferences.AllPreferencesScreen
 import app.aaps.ui.compose.preferences.PreferenceScreenView
-import app.aaps.ui.search.BuiltInSearchables
-import app.aaps.ui.search.SearchIndexEntry
-import app.aaps.ui.search.SearchViewModel
-import app.aaps.core.ui.search.SearchableItem
 import app.aaps.ui.compose.profileHelper.ProfileHelperScreen
 import app.aaps.ui.compose.profileManagement.ProfileActivationScreen
 import app.aaps.ui.compose.profileManagement.ProfileEditorScreen
@@ -84,16 +80,21 @@ import app.aaps.ui.compose.profileManagement.ProfileManagementScreen
 import app.aaps.ui.compose.profileManagement.viewmodels.ProfileEditorViewModel
 import app.aaps.ui.compose.profileManagement.viewmodels.ProfileHelperViewModel
 import app.aaps.ui.compose.profileManagement.viewmodels.ProfileManagementViewModel
+import app.aaps.ui.compose.quickWizard.QuickWizardManagementScreen
+import app.aaps.ui.compose.quickWizard.viewmodels.QuickWizardManagementViewModel
 import app.aaps.ui.compose.runningMode.RunningModeManagementViewModel
 import app.aaps.ui.compose.runningMode.RunningModeScreen
 import app.aaps.ui.compose.stats.StatsScreen
 import app.aaps.ui.compose.stats.viewmodels.StatsViewModel
 import app.aaps.ui.compose.tempTarget.TempTargetManagementScreen
 import app.aaps.ui.compose.tempTarget.TempTargetManagementViewModel
-import app.aaps.ui.compose.quickWizard.QuickWizardManagementScreen
-import app.aaps.ui.compose.quickWizard.viewmodels.QuickWizardManagementViewModel
+import app.aaps.ui.compose.treatmentDialog.TreatmentDialogScreen
+import app.aaps.ui.compose.treatmentDialog.TreatmentDialogViewModel
 import app.aaps.ui.compose.treatments.TreatmentsScreen
 import app.aaps.ui.compose.treatments.viewmodels.TreatmentsViewModel
+import app.aaps.ui.search.BuiltInSearchables
+import app.aaps.ui.search.SearchIndexEntry
+import app.aaps.ui.search.SearchViewModel
 import io.reactivex.rxjava3.disposables.CompositeDisposable
 import io.reactivex.rxjava3.kotlin.plusAssign
 import kotlinx.coroutines.launch
@@ -120,6 +121,7 @@ class ComposeMainActivity : DaggerAppCompatActivityWithResult() {
     // ViewModels
     @Inject lateinit var mainViewModel: MainViewModel
     @Inject lateinit var manageViewModel: ManageViewModel
+    @Inject lateinit var maintenanceViewModel: MaintenanceViewModel
     @Inject lateinit var statusViewModel: StatusViewModel
     @Inject lateinit var treatmentViewModel: TreatmentViewModel
     @Inject lateinit var graphViewModel: GraphViewModel
@@ -190,6 +192,7 @@ class ComposeMainActivity : DaggerAppCompatActivityWithResult() {
                                 mainViewModel.buildAboutDialogData(getString(R.string.app_name))
                             } else null,
                             manageViewModel = manageViewModel,
+                            maintenanceViewModel = maintenanceViewModel,
                             statusViewModel = statusViewModel,
                             treatmentViewModel = treatmentViewModel,
                             // Search
@@ -242,6 +245,18 @@ class ComposeMainActivity : DaggerAppCompatActivityWithResult() {
                             onDrawerClosed = { mainViewModel.closeDrawer() },
                             onSwitchToClassicUi = { switchToClassicUi() },
                             onAboutDialogDismiss = { mainViewModel.setShowAboutDialog(false) },
+                            onMaintenanceSheetDismiss = { mainViewModel.setShowMaintenanceSheet(false) },
+                            onDirectoryClick = {
+                                try {
+                                    accessTree?.launch(null)
+                                } catch (_: Exception) {
+                                    maintenanceViewModel.emitError("Unable to launch activity. This is an Android issue")
+                                }
+                            },
+                            onExportCsvExecute = {
+                                importExportPrefs.exportUserEntriesCsv(this@ComposeMainActivity)
+                            },
+                            onRecreateActivity = { recreate() },
                             // Overview status callbacks
                             onSensorInsertClick = {
                                 navController.navigate(AppRoute.CareDialog.createRoute(UiInteraction.EventType.SENSOR_INSERT.ordinal))
@@ -732,6 +747,15 @@ class ComposeMainActivity : DaggerAppCompatActivityWithResult() {
 
             is MainMenuItem.Stats             -> navController.navigate(AppRoute.Stats.route)
             is MainMenuItem.ProfileHelper     -> navController.navigate(AppRoute.ProfileHelper.route)
+
+            is MainMenuItem.Maintenance       -> {
+                protectionCheck.requestProtection(ProtectionCheck.Protection.PREFERENCES) { result ->
+                    if (result == ProtectionResult.GRANTED) {
+                        mainViewModel.setShowMaintenanceSheet(true)
+                    }
+                }
+            }
+
             is MainMenuItem.About             -> mainViewModel.setShowAboutDialog(true)
 
             is MainMenuItem.Exit              -> {
@@ -755,7 +779,7 @@ class ComposeMainActivity : DaggerAppCompatActivityWithResult() {
         // Keep search active so user can return to results with back button
 
         when (val item = entry.item) {
-            is SearchableItem.Category -> {
+            is SearchableItem.Category   -> {
                 // Navigate to the specific preference screen
                 protectionCheck.requestProtection(ProtectionCheck.Protection.PREFERENCES) { result ->
                     if (result == ProtectionResult.GRANTED) {
@@ -783,40 +807,45 @@ class ComposeMainActivity : DaggerAppCompatActivityWithResult() {
                 }
             }
 
-            is SearchableItem.Dialog -> {
+            is SearchableItem.Dialog     -> {
                 // Handle dialog navigation based on dialog key
                 when (item.dialogKey) {
                     // Drawer menu screens
-                    "treatments" -> navController.navigate(AppRoute.Treatments.route)
-                    "stats" -> navController.navigate(AppRoute.Stats.route)
-                    "profile_helper" -> navController.navigate(AppRoute.ProfileHelper.route)
-                    "history_browser" -> {
+                    "treatments"              -> navController.navigate(AppRoute.Treatments.route)
+                    "stats"                   -> navController.navigate(AppRoute.Stats.route)
+                    "profile_helper"          -> navController.navigate(AppRoute.ProfileHelper.route)
+
+                    "history_browser"         -> {
                         startActivity(Intent(this@ComposeMainActivity, uiInteraction.historyBrowseActivity))
                     }
-                    "setup_wizard" -> {
+
+                    "setup_wizard"            -> {
                         protectionCheck.requestProtection(ProtectionCheck.Protection.PREFERENCES) { result ->
                             if (result == ProtectionResult.GRANTED) {
                                 startActivity(Intent(this@ComposeMainActivity, SetupWizardActivity::class.java))
                             }
                         }
                     }
-                    "about" -> mainViewModel.setShowAboutDialog(true)
+
+                    "about"                   -> mainViewModel.setShowAboutDialog(true)
 
                     // Action screens
-                    "running_mode" -> {
+                    "running_mode"            -> {
                         protectionCheck.requestProtection(ProtectionCheck.Protection.BOLUS) { result ->
                             if (result == ProtectionResult.GRANTED) {
                                 navController.navigate(AppRoute.RunningMode.route)
                             }
                         }
                     }
-                    "temp_target_management" -> {
+
+                    "temp_target_management"  -> {
                         protectionCheck.requestProtection(ProtectionCheck.Protection.BOLUS) { result ->
                             if (result == ProtectionResult.GRANTED) {
                                 navController.navigate(AppRoute.TempTargetManagement.route)
                             }
                         }
                     }
+
                     "quick_wizard_management" -> {
                         protectionCheck.requestProtection(ProtectionCheck.Protection.BOLUS) { result ->
                             if (result == ProtectionResult.GRANTED) {
@@ -826,28 +855,31 @@ class ComposeMainActivity : DaggerAppCompatActivityWithResult() {
                     }
 
                     // Dialogs
-                    "carbs_dialog" -> {
+                    "carbs_dialog"            -> {
                         protectionCheck.requestProtection(ProtectionCheck.Protection.BOLUS) { result ->
                             if (result == ProtectionResult.GRANTED) {
                                 navController.navigate(AppRoute.CarbsDialog.route)
                             }
                         }
                     }
-                    "insulin_dialog" -> {
+
+                    "insulin_dialog"          -> {
                         protectionCheck.requestProtection(ProtectionCheck.Protection.BOLUS) { result ->
                             if (result == ProtectionResult.GRANTED) {
                                 navController.navigate(AppRoute.InsulinDialog.route)
                             }
                         }
                     }
-                    "treatment_dialog" -> {
+
+                    "treatment_dialog"        -> {
                         protectionCheck.requestProtection(ProtectionCheck.Protection.BOLUS) { result ->
                             if (result == ProtectionResult.GRANTED) {
                                 navController.navigate(AppRoute.TreatmentDialog.route)
                             }
                         }
                     }
-                    "fill_dialog" -> {
+
+                    "fill_dialog"             -> {
                         protectionCheck.requestProtection(ProtectionCheck.Protection.BOLUS) { result ->
                             if (result == ProtectionResult.GRANTED) {
                                 navController.navigate(AppRoute.FillDialog.createRoute(0))
@@ -856,24 +888,24 @@ class ComposeMainActivity : DaggerAppCompatActivityWithResult() {
                     }
 
                     // CareDialog events
-                    "care_bgcheck" -> navController.navigate(AppRoute.CareDialog.createRoute(UiInteraction.EventType.BGCHECK.ordinal))
-                    "care_sensor_insert" -> navController.navigate(AppRoute.CareDialog.createRoute(UiInteraction.EventType.SENSOR_INSERT.ordinal))
-                    "care_battery_change" -> navController.navigate(AppRoute.CareDialog.createRoute(UiInteraction.EventType.BATTERY_CHANGE.ordinal))
-                    "care_note" -> navController.navigate(AppRoute.CareDialog.createRoute(UiInteraction.EventType.NOTE.ordinal))
-                    "care_exercise" -> navController.navigate(AppRoute.CareDialog.createRoute(UiInteraction.EventType.EXERCISE.ordinal))
-                    "care_question" -> navController.navigate(AppRoute.CareDialog.createRoute(UiInteraction.EventType.QUESTION.ordinal))
-                    "care_announcement" -> navController.navigate(AppRoute.CareDialog.createRoute(UiInteraction.EventType.ANNOUNCEMENT.ordinal))
+                    "care_bgcheck"            -> navController.navigate(AppRoute.CareDialog.createRoute(UiInteraction.EventType.BGCHECK.ordinal))
+                    "care_sensor_insert"      -> navController.navigate(AppRoute.CareDialog.createRoute(UiInteraction.EventType.SENSOR_INSERT.ordinal))
+                    "care_battery_change"     -> navController.navigate(AppRoute.CareDialog.createRoute(UiInteraction.EventType.BATTERY_CHANGE.ordinal))
+                    "care_note"               -> navController.navigate(AppRoute.CareDialog.createRoute(UiInteraction.EventType.NOTE.ordinal))
+                    "care_exercise"           -> navController.navigate(AppRoute.CareDialog.createRoute(UiInteraction.EventType.EXERCISE.ordinal))
+                    "care_question"           -> navController.navigate(AppRoute.CareDialog.createRoute(UiInteraction.EventType.QUESTION.ordinal))
+                    "care_announcement"       -> navController.navigate(AppRoute.CareDialog.createRoute(UiInteraction.EventType.ANNOUNCEMENT.ordinal))
                 }
             }
 
-            is SearchableItem.Plugin -> {
+            is SearchableItem.Plugin     -> {
                 // Handle plugin click - same as drawer plugin click
                 handlePluginClick(item.pluginRef)
             }
 
-            is SearchableItem.Wiki -> {
+            is SearchableItem.Wiki       -> {
                 // Open wiki page in default browser
-                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(item.url))
+                val intent = Intent(Intent.ACTION_VIEW, item.url.toUri())
                 startActivity(intent)
             }
         }

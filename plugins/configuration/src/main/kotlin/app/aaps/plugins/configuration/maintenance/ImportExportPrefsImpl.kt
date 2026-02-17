@@ -67,7 +67,6 @@ import app.aaps.plugins.configuration.maintenance.dialogs.PrefImportSummaryDialo
 import app.aaps.plugins.configuration.maintenance.formats.EncryptedPrefsFormat
 import app.aaps.shared.impl.weardata.ZipWatchfaceFormat
 import dagger.Reusable
-import io.reactivex.rxjava3.disposables.CompositeDisposable
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -107,7 +106,6 @@ class ImportExportPrefsImpl @Inject constructor(
     override var selectedImportFile: PrefsFile? = null
 
     override fun prefsFileExists(): Boolean = prefFileList.listPreferenceFiles().isNotEmpty()
-    private val disposable = CompositeDisposable()
 
     override fun exportSharedPreferences(f: Fragment) {
         f.activity?.let { exportSharedPreferences(it) }
@@ -237,9 +235,9 @@ class ImportExportPrefsImpl @Inject constructor(
     }
 
     private fun askToConfirmImport(activity: FragmentActivity, fileToImport: PrefsFile, then: ((password: String) -> Unit)) {
-        if (!assureMasterPasswordSet(activity, R.string.import_setting)) return
+        if (!assureMasterPasswordSet(activity, app.aaps.core.ui.R.string.import_setting)) return
         uiInteraction.showOkCancelDialog(
-            context = activity, title = rh.gs(R.string.import_setting),
+            context = activity, title = rh.gs(app.aaps.core.ui.R.string.import_setting),
             message = rh.gs(R.string.import_from) + " " + fileToImport.name + "?",
             secondMessage = rh.gs(app.aaps.core.ui.R.string.password_preferences_decrypt_prompt), ok = {
                 askForMasterPass(activity, R.string.preferences_import_canceled, then)

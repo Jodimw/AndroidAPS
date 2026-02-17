@@ -753,6 +753,8 @@
     <string name="cleanup_db_confirm">Do you want to cleanup the database?\nIt will remove tracked changes and historic data older than 3 months.</string>
     <string name="cleanup_db_confirm_sync">Do you want to cleanup the database?\nIt will remove tracked changes and historic data older than 3 months.\nDoing it will speedup full synchronization dramatically.</string>
     <string name="cleared_entries">Cleared entries</string>
+    <string name="reset_db_confirm">Do you really want to reset the databases?</string>
+    <string name="reset_aps_results_confirm">Do you really want to reset stored APS results?</string>
 
     <!--    Weekday-->
     <string name="weekday_sunday_short">Sun</string>
@@ -816,5 +818,23 @@
     <string name="wiki_search_offline">Documentation search requires internet connection</string>
     <string name="no_search_results">No results found</string>
     <string name="search_plugin_disabled">Plugin %1$s disabled</string>
+
+    <!--    Log Settings-->
+    <string name="nav_logsettings">Log settings</string>
+    <string name="resettodefaults">Reset to defaults</string>
+
+    <!--    Maintenance-->
+    <string name="maintenance">Maintenance</string>
+    <string name="description_maintenance">Provides several functions for maintenance (eg. log sending, log deletion).</string>
+    <string name="log_files">Log files</string>
+    <string name="send_all_logs">Send Logs by Email</string>
+    <string name="delete_logs">Delete Logs</string>
+    <string name="logs_deleted">Logs deleted</string>
+    <string name="aaps_directory">AAPS directory</string>
+    <string name="import_setting">Import settings</string>
+    <string name="miscellaneous">Miscellaneous</string>
+    <string name="reset_aps_results">Reset APS results</string>
+    <string name="database_cleanup">Database cleanup</string>
+    <string name="nav_resetdb">Reset Databases</string>
 
 </resources>

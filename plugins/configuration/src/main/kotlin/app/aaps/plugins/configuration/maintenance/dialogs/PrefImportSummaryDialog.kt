@@ -132,7 +132,7 @@ class PrefImportSummaryDialog @Inject constructor(
                 ) {
                     AapsTheme {
                         ImportSummaryDialog(
-                            title = context.getString(R.string.import_setting),
+                            title = context.getString(app.aaps.core.ui.R.string.import_setting),
                             message = context.getString(messageRes),
                             headerIcon = headerIcon,
                             importOk = importOk,

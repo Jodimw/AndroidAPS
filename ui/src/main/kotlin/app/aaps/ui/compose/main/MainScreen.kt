@@ -8,6 +8,8 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
@@ -19,11 +21,18 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.SwapHoriz
 import app.aaps.core.data.plugin.PluginType
 import app.aaps.core.interfaces.plugin.PluginBase
 import app.aaps.core.ui.compose.AapsFab
+import app.aaps.core.ui.compose.OkCancelDialog
+import app.aaps.core.ui.compose.OkDialog
+import app.aaps.ui.compose.management.LogSettingBottomSheet
+import app.aaps.ui.compose.management.MaintenanceBottomSheet
+import app.aaps.ui.compose.management.MaintenanceEvent
+import app.aaps.ui.compose.management.MaintenanceViewModel
 import app.aaps.ui.compose.overview.manage.ManageViewModel
 import app.aaps.ui.compose.alertDialogs.AboutAlertDialog
 import app.aaps.ui.compose.alertDialogs.AboutDialogData
@@ -36,6 +45,7 @@ import app.aaps.ui.search.SearchIndexEntry
 import app.aaps.ui.search.SearchResults
 import app.aaps.ui.search.SearchUiState
 import kotlinx.coroutines.launch
+import app.aaps.core.ui.R as CoreUiR
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -45,6 +55,7 @@ fun MainScreen(
     appIcon: Int,
     aboutDialogData: AboutDialogData?,
     manageViewModel: ManageViewModel,
+    maintenanceViewModel: MaintenanceViewModel,
     statusViewModel: StatusViewModel,
     treatmentViewModel: app.aaps.ui.compose.overview.treatments.TreatmentViewModel,
     // Search
@@ -67,6 +78,10 @@ fun MainScreen(
     onDrawerClosed: () -> Unit,
     onSwitchToClassicUi: () -> Unit,
     onAboutDialogDismiss: () -> Unit,
+    onMaintenanceSheetDismiss: () -> Unit,
+    onDirectoryClick: () -> Unit,
+    onExportCsvExecute: () -> Unit,
+    onRecreateActivity: () -> Unit,
     // Overview status callbacks
     onSensorInsertClick: () -> Unit,
     onFillClick: () -> Unit,
@@ -105,6 +120,27 @@ fun MainScreen(
     val scope = rememberCoroutineScope()
     var showTreatmentSheet by remember { mutableStateOf(false) }
     var showManageSheet by remember { mutableStateOf(false) }
+    var showLogSettings by remember { mutableStateOf(false) }
+
+    // Confirmation dialog states for maintenance destructive actions
+    var showConfirmResetAps by remember { mutableStateOf(false) }
+    var showConfirmResetDb by remember { mutableStateOf(false) }
+    var showConfirmCleanupDb by remember { mutableStateOf(false) }
+    var showConfirmExportCsv by remember { mutableStateOf(false) }
+    var cleanupResultText by remember { mutableStateOf<String?>(null) }
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    // Collect maintenance events
+    LaunchedEffect(Unit) {
+        maintenanceViewModel.events.collect { event ->
+            when (event) {
+                is MaintenanceEvent.RecreateActivity -> onRecreateActivity()
+                is MaintenanceEvent.CleanupResult -> cleanupResultText = event.result
+                is MaintenanceEvent.Snackbar -> snackbarHostState.showSnackbar(event.message)
+                is MaintenanceEvent.Error -> snackbarHostState.showSnackbar(event.message)
+            }
+        }
+    }
 
     // Sync drawer state with ui state
     LaunchedEffect(uiState.isDrawerOpen) {
@@ -159,6 +195,7 @@ fun MainScreen(
         modifier = modifier
     ) {
         Scaffold(
+            snackbarHost = { SnackbarHost(snackbarHostState) },
             topBar = {
                 MainTopBar(
                     searchUiState = searchUiState,
@@ -327,11 +364,99 @@ fun MainScreen(
         )
     }
 
+    // Maintenance bottom sheet
+    if (uiState.showMaintenanceSheet) {
+        MaintenanceBottomSheet(
+            onDismiss = onMaintenanceSheetDismiss,
+            onLogSettingsClick = { showLogSettings = true },
+            onSendLogsClick = { maintenanceViewModel.sendLogs() },
+            onDeleteLogsClick = { maintenanceViewModel.deleteLogs() },
+            onDirectoryClick = {
+                maintenanceViewModel.logSelectDirectory()
+                onDirectoryClick()
+            },
+            onExportSettingsClick = { maintenanceViewModel.logExportSettings() },
+            onImportSettingsClick = { maintenanceViewModel.logImportSettings() },
+            onExportCsvClick = { showConfirmExportCsv = true },
+            onResetApsResultsClick = { showConfirmResetAps = true },
+            onCleanupDbClick = { showConfirmCleanupDb = true },
+            onResetDbClick = { showConfirmResetDb = true }
+        )
+    }
+
+    // Log settings bottom sheet
+    if (showLogSettings) {
+        LogSettingBottomSheet(
+            logElements = maintenanceViewModel.logElements,
+            onDismiss = { showLogSettings = false },
+            onToggle = { element, enabled -> maintenanceViewModel.toggleLogElement(element, enabled) },
+            onResetToDefaults = { maintenanceViewModel.resetLogDefaults() }
+        )
+    }
+
     // About dialog
     if (uiState.showAboutDialog && aboutDialogData != null) {
         AboutAlertDialog(
             data = aboutDialogData,
             onDismiss = onAboutDialogDismiss
+        )
+    }
+
+    // Maintenance confirmation dialogs
+    if (showConfirmResetAps) {
+        OkCancelDialog(
+            title = stringResource(CoreUiR.string.maintenance),
+            message = stringResource(CoreUiR.string.reset_aps_results_confirm),
+            onConfirm = {
+                showConfirmResetAps = false
+                maintenanceViewModel.resetApsResults()
+            },
+            onDismiss = { showConfirmResetAps = false }
+        )
+    }
+
+    if (showConfirmResetDb) {
+        OkCancelDialog(
+            title = stringResource(CoreUiR.string.maintenance),
+            message = stringResource(CoreUiR.string.reset_db_confirm),
+            onConfirm = {
+                showConfirmResetDb = false
+                maintenanceViewModel.resetDatabases()
+            },
+            onDismiss = { showConfirmResetDb = false }
+        )
+    }
+
+    if (showConfirmCleanupDb) {
+        OkCancelDialog(
+            title = stringResource(CoreUiR.string.maintenance),
+            message = stringResource(CoreUiR.string.cleanup_db_confirm),
+            onConfirm = {
+                showConfirmCleanupDb = false
+                maintenanceViewModel.cleanupDatabases()
+            },
+            onDismiss = { showConfirmCleanupDb = false }
+        )
+    }
+
+    if (showConfirmExportCsv) {
+        OkCancelDialog(
+            message = stringResource(CoreUiR.string.ue_export_to_csv) + "?",
+            onConfirm = {
+                showConfirmExportCsv = false
+                maintenanceViewModel.logExportCsv()
+                onExportCsvExecute()
+            },
+            onDismiss = { showConfirmExportCsv = false }
+        )
+    }
+
+    // Cleanup result dialog (result contains HTML with <br> tags)
+    cleanupResultText?.let { result ->
+        OkDialog(
+            title = stringResource(CoreUiR.string.result),
+            message = "<b>" + stringResource(CoreUiR.string.cleared_entries) + "</b><br>" + result,
+            onDismiss = { cleanupResultText = null }
         )
     }
 }

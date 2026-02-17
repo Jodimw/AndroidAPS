@@ -4,6 +4,7 @@ import app.aaps.core.interfaces.androidPermissions.AndroidPermission
 import app.aaps.core.interfaces.configuration.ConfigBuilder
 import app.aaps.core.interfaces.maintenance.FileListProvider
 import app.aaps.core.interfaces.maintenance.ImportExportPrefs
+import app.aaps.core.interfaces.maintenance.Maintenance
 import app.aaps.core.nssdk.interfaces.RunningConfiguration
 import app.aaps.plugins.configuration.AndroidPermissionImpl
 import app.aaps.plugins.configuration.activities.SingleFragmentActivity
@@ -13,6 +14,7 @@ import app.aaps.plugins.configuration.configBuilder.RunningConfigurationImpl
 import app.aaps.plugins.configuration.maintenance.FileListProviderImpl
 import app.aaps.plugins.configuration.maintenance.ImportExportPrefsImpl
 import app.aaps.plugins.configuration.maintenance.MaintenanceFragment
+import app.aaps.plugins.configuration.maintenance.MaintenancePlugin
 import app.aaps.plugins.configuration.maintenance.activities.CustomWatchfaceImportListActivity
 import app.aaps.plugins.configuration.maintenance.activities.LogSettingActivity
 import app.aaps.plugins.configuration.maintenance.activities.PrefImportListActivity
@@ -49,5 +51,6 @@ abstract class ConfigurationModule {
         @Binds fun bindRunningConfiguration(runningConfigurationImpl: RunningConfigurationImpl): RunningConfiguration
         @Binds fun bindConfigBuilderInterface(configBuilderPlugin: ConfigBuilderPlugin): ConfigBuilder
         @Binds fun bindImportExportPrefsInterface(importExportPrefs: ImportExportPrefsImpl): ImportExportPrefs
+        @Binds fun bindMaintenanceInterface(maintenancePlugin: MaintenancePlugin): Maintenance
     }
 }

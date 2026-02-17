@@ -78,7 +78,7 @@ fun TreatmentBottomSheet(
     preferences: Preferences? = null,
     config: Config? = null
 ) {
-    val sheetState = rememberModalBottomSheetState()
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var showSettings by remember { mutableStateOf(false) }
 
     ModalBottomSheet(

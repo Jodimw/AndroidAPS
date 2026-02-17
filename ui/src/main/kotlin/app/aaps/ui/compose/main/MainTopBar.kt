@@ -28,6 +28,7 @@ sealed class MainMenuItem(val id: String) {
     data object SetupWizard : MainMenuItem("setup_wizard")
     data object Stats : MainMenuItem("stats")
     data object ProfileHelper : MainMenuItem("profile_helper")
+    data object Maintenance : MainMenuItem("maintenance")
     data object About : MainMenuItem("about")
     data object Exit : MainMenuItem("exit")
 }

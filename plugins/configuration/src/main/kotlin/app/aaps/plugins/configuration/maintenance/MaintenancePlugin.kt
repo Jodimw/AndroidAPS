@@ -62,15 +62,15 @@ class MaintenancePlugin @Inject constructor(
         .fragmentClass(MaintenanceFragment::class.java.name)
         .alwaysEnabled(true)
         .pluginIcon(app.aaps.core.ui.R.drawable.ic_maintenance)
-        .pluginName(R.string.maintenance)
+        .pluginName(app.aaps.core.ui.R.string.maintenance)
         .shortName(R.string.maintenance_shortname)
         .preferencesId(PluginDescription.PREFERENCE_SCREEN)
         .preferencesVisibleInSimpleMode(false)
-        .description(R.string.description_maintenance),
+        .description(app.aaps.core.ui.R.string.description_maintenance),
     aapsLogger, rh
 ), Maintenance {
 
-    fun sendLogs() {
+    override fun sendLogs() {
         val recipient = preferences.get(StringKey.MaintenanceEmail)
         val amount = preferences.get(IntKey.MaintenanceLogsAmount)
         val logs = getLogFiles(amount)
@@ -83,7 +83,7 @@ class MaintenancePlugin @Inject constructor(
         context.startActivity(emailIntent)
     }
 
-    fun deleteLogs(keep: Int) {
+    override fun deleteLogs(keep: Int) {
         val logDir = File(loggerUtils.logDirectory)
         val files = logDir.listFiles { _: File?, name: String ->
             (name.startsWith("AndroidAPS") && name.endsWith(".zip"))
@@ -248,7 +248,7 @@ class MaintenancePlugin @Inject constructor(
 
     override fun getPreferenceScreenContent() = PreferenceSubScreenDef(
         key = "maintenance_settings",
-        titleResId = R.string.maintenance,
+        titleResId = app.aaps.core.ui.R.string.maintenance,
         items = listOf(
             StringKey.MaintenanceEmail,
             IntKey.MaintenanceLogsAmount,

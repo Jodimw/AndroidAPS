@@ -81,8 +81,6 @@
     <string name="check_preferences_details_title">Import issues details</string>
     <string name="check_preferences_import_btn">Import</string>
     <string name="check_preferences_import_anyway_btn">Import anyway (DANGEROUS!)</string>
-    <string name="import_setting">Import settings</string>
-    <string name="aaps_directory">AAPS directory</string>
     <string name="select_aaps_directory">Select AAPS directory for storing exports, configurations etc.</string>
     <string name="check_preferences_before_import">Please check preferences before importing:</string>
     <string name="check_preferences_cannot_import">Preferences cannot be imported!</string>
@@ -103,22 +101,10 @@
 
 
     <!--    Maintenance-->
-    <string name="maintenance">Maintenance</string>
     <string name="maintenance_shortname">MAINT</string>
-    <string name="description_maintenance">Provides several functions for maintenance (eg. log sending, log deletion).</string>
-    <string name="database_cleanup">Database cleanup</string>
-    <string name="reset_db_confirm">Do you really want to reset the databases?</string>
-    <string name="reset_aps_results_confirm">Do you really want to reset stored APS results?</string>
     <string name="maintenance_settings">Maintenance Settings</string>
     <string name="maintenance_email">Email recipient</string>
     <string name="maintenance_amount">No of Logs to send</string>
-    <string name="send_all_logs">Send Logs by Email</string>
-    <string name="delete_logs">Delete Logs</string>
-    <string name="log_files">Log files</string>
-    <string name="nav_logsettings">Log settings</string>
-    <string name="miscellaneous">Miscellaneous</string>
-    <string name="nav_resetdb">Reset Databases</string>
-    <string name="resettodefaults">Reset to defaults</string>
 
     <!-- Maintenance -->
     <string name="exported_ago" comment="at placeholder we add pluralized number of hours/minutes">exported %1$s ago</string>
@@ -156,7 +142,6 @@
     <string name="metadata_label_encryption">File encryption</string>
     <string name="metadata_format_new">New encrypted format</string>
     <string name="metadata_format_other">Unknown export format</string>
-    <string name="reset_aps_results">Reset APS results</string>
     <string name="error_accessing_filesystem_select_aaps_directory_properly">Error accessing filesystem. Select AAPS directory properly.</string>
     <!-- maintenance_email moved to core:keys module -->
 

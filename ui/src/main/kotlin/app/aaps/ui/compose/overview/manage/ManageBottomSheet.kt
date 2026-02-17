@@ -74,7 +74,7 @@ fun ManageBottomSheet(
     onQuickWizardClick: () -> Unit,
     onCustomActionClick: (CustomAction) -> Unit
 ) {
-    val sheetState = rememberModalBottomSheetState()
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,

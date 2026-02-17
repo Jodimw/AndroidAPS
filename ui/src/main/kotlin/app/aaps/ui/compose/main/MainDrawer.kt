@@ -33,6 +33,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import app.aaps.core.ui.compose.icons.IcClinicalNotes
 import app.aaps.core.ui.compose.icons.IcHistory
+import app.aaps.core.ui.compose.icons.IcPluginMaintenance
 import app.aaps.core.ui.compose.icons.IcProfile
 import app.aaps.core.ui.compose.icons.IcStats
 
@@ -113,6 +114,13 @@ fun MainDrawer(
                 label = stringResource(app.aaps.ui.R.string.nav_profile_helper),
                 description = stringResource(app.aaps.ui.R.string.nav_profile_helper_desc),
                 onClick = { onMenuItemClick(MainMenuItem.ProfileHelper) }
+            )
+
+            DrawerMenuItem(
+                icon = IcPluginMaintenance,
+                label = stringResource(app.aaps.core.ui.R.string.maintenance),
+                description = stringResource(app.aaps.core.ui.R.string.description_maintenance),
+                onClick = { onMenuItemClick(MainMenuItem.Maintenance) }
             )
 
             Spacer(modifier = Modifier.height(8.dp))

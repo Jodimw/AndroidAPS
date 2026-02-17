@@ -23,7 +23,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.AlertDialog
+import app.aaps.core.ui.compose.OkCancelDialog
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -33,7 +33,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -209,7 +208,7 @@ private fun OverviewStatusSection(
 
     var expanded by rememberSaveable { mutableStateOf(false) }
     var showSettingsSheet by rememberSaveable { mutableStateOf(false) }
-    val sheetState = rememberModalBottomSheetState()
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     ElevatedCard(
         modifier = Modifier
@@ -385,27 +384,14 @@ private fun StatusLightsSettingsContent(
 
     // Confirmation dialog
     if (showCopyDialog) {
-        AlertDialog(
-            onDismissRequest = { showCopyDialog = false },
-            title = { Text(stringResource(app.aaps.core.ui.R.string.statuslights)) },
-            text = { Text(stringResource(app.aaps.core.ui.R.string.copy_existing_values)) },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        onCopyFromNightscout()
-                        showCopyDialog = false
-                    }
-                ) {
-                    Text(stringResource(app.aaps.core.ui.R.string.ok))
-                }
+        OkCancelDialog(
+            title = stringResource(app.aaps.core.ui.R.string.statuslights),
+            message = stringResource(app.aaps.core.ui.R.string.copy_existing_values),
+            onConfirm = {
+                onCopyFromNightscout()
+                showCopyDialog = false
             },
-            dismissButton = {
-                TextButton(
-                    onClick = { showCopyDialog = false }
-                ) {
-                    Text(stringResource(app.aaps.core.ui.R.string.cancel))
-                }
-            }
+            onDismiss = { showCopyDialog = false }
         )
     }
 }
