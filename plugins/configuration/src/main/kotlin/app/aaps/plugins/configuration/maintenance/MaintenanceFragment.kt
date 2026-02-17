@@ -160,17 +160,11 @@ class MaintenanceFragment : DaggerFragment() {
         }
         binding.navExport.setOnClickListener {
             uel.log(Action.EXPORT_SETTINGS, Sources.Maintenance)
-            // start activity for checking permissions...
-            importExportPrefs.verifyStoragePermissions(this) {
-                importExportPrefs.exportSharedPreferences(this)
-            }
+            importExportPrefs.exportSharedPreferences(requireActivity())
         }
         binding.navImport.setOnClickListener {
             uel.log(Action.IMPORT_SETTINGS, Sources.Maintenance)
-            // start activity for checking permissions...
-            importExportPrefs.verifyStoragePermissions(this) {
-                importExportPrefs.importSharedPreferences(activity as FragmentActivity)
-            }
+            importExportPrefs.importSharedPreferences(requireActivity())
         }
         binding.directory.setOnClickListener {
             maintenancePlugin.selectAapsDirectory(requireActivity() as DaggerAppCompatActivityWithResult)

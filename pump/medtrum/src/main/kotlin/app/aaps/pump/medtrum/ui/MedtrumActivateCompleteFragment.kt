@@ -52,9 +52,7 @@ class MedtrumActivateCompleteFragment : MedtrumBaseFragment<FragmentMedtrumActiv
         binding.navExport.setOnClickListener {
             uel.log(Action.EXPORT_SETTINGS, Sources.Maintenance)
             // start activity for checking permissions...
-            importExportPrefs.verifyStoragePermissions(this) {
-                importExportPrefs.exportSharedPreferences(this)
-            }
+            importExportPrefs.exportSharedPreferences(requireActivity())
         }
     }
 }

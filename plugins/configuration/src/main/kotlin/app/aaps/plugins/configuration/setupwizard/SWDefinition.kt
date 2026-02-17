@@ -205,13 +205,6 @@ class SWDefinition @Inject constructor(
                     .visibility { androidPermission.permissionNotGranted(context, Manifest.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS) }
                     .action { androidPermission.askForPermission(requireActivity(), Manifest.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS) })
             .add(swBreakProvider.get())
-            .add(swInfoTextProvider.get().label(rh.gs(R.string.need_storage_permission)))
-            .add(
-                swButtonProvider.get()
-                    .text(R.string.askforpermission)
-                    .visibility { androidPermission.permissionNotGranted(requireActivity(), Manifest.permission.READ_EXTERNAL_STORAGE) }
-                    .action { androidPermission.askForPermission(requireActivity(), Manifest.permission.READ_EXTERNAL_STORAGE) })
-            .add(swBreakProvider.get())
             .add(swInfoTextProvider.get().label(rh.gs(R.string.select_aaps_directory)))
             .add(
                 swButtonProvider.get()
@@ -224,13 +217,11 @@ class SWDefinition @Inject constructor(
             .visibility {
                 !Settings.canDrawOverlays(requireActivity()) ||
                     androidPermission.permissionNotGranted(requireActivity(), Manifest.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS) ||
-                    androidPermission.permissionNotGranted(requireActivity(), Manifest.permission.READ_EXTERNAL_STORAGE) ||
                     preferences.getIfExists(StringKey.AapsDirectoryUri) == null
             }
             .validator {
                 Settings.canDrawOverlays(requireActivity()) &&
                     !androidPermission.permissionNotGranted(requireActivity(), Manifest.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS) &&
-                    !androidPermission.permissionNotGranted(requireActivity(), Manifest.permission.READ_EXTERNAL_STORAGE) &&
                     preferences.getIfExists(StringKey.AapsDirectoryUri) != null
             }
 
@@ -260,7 +251,7 @@ class SWDefinition @Inject constructor(
             .add(swInfoTextProvider.get().label(R.string.storedsettingsfound))
             .add(swBreakProvider.get())
             .add(swButtonProvider.get().text(app.aaps.core.ui.R.string.import_setting).action { importExportPrefs.importSharedPreferences(requireActivity()) })
-            .visibility { importExportPrefs.prefsFileExists() && !androidPermission.permissionNotGranted(requireActivity(), Manifest.permission.READ_EXTERNAL_STORAGE) }
+            .visibility { importExportPrefs.prefsFileExists() }
 
     private val screenNsClient
         get() = swScreenProvider.get().with(app.aaps.core.ui.R.string.configbuilder_sync)

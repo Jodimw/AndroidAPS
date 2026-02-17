@@ -9,9 +9,7 @@ import android.provider.Settings
 import androidx.annotation.StringRes
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
 import androidx.documentfile.provider.DocumentFile
-import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequest
@@ -23,7 +21,6 @@ import app.aaps.core.data.model.UE
 import app.aaps.core.data.time.T
 import app.aaps.core.data.ue.Action
 import app.aaps.core.data.ue.Sources
-import app.aaps.core.interfaces.androidPermissions.AndroidPermission
 import app.aaps.core.interfaces.configuration.Config
 import app.aaps.core.interfaces.configuration.ConfigBuilder
 import app.aaps.core.interfaces.db.PersistenceLayer
@@ -90,7 +87,6 @@ class ImportExportPrefsImpl @Inject constructor(
     private val rxBus: RxBus,
     private val passwordCheck: PasswordCheck,
     private val exportPasswordDataStore: ExportPasswordDataStore,
-    private val androidPermission: AndroidPermission,
     private val encryptedPrefsFormat: EncryptedPrefsFormat,
     private val prefFileList: FileListProvider,
     private val dateUtil: DateUtil,
@@ -107,21 +103,9 @@ class ImportExportPrefsImpl @Inject constructor(
 
     override fun prefsFileExists(): Boolean = prefFileList.listPreferenceFiles().isNotEmpty()
 
-    override fun exportSharedPreferences(f: Fragment) {
-        f.activity?.let { exportSharedPreferences(it) }
-    }
+    override fun exportSharedPreferences(activity: FragmentActivity) = exportSharedPreferencesInternal(activity)
 
-    override fun verifyStoragePermissions(fragment: Fragment, onGranted: Runnable) {
-        fragment.context?.let { ctx ->
-            val permission = ContextCompat.checkSelfPermission(ctx, Manifest.permission.READ_EXTERNAL_STORAGE)
-            if (permission != PackageManager.PERMISSION_GRANTED) {
-                // We don't have permission so prompt the user
-                fragment.activity?.let {
-                    androidPermission.askForPermission(it, arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE))
-                }
-            } else onGranted.run()
-        }
-    }
+
 
     private fun prepareMetadata(context: Context): Map<PrefsMetadataKey, PrefMetadata> {
 
@@ -303,7 +287,7 @@ class ImportExportPrefsImpl @Inject constructor(
         return resultOk
     }
 
-    private fun exportSharedPreferences(activity: FragmentActivity) {
+    private fun exportSharedPreferencesInternal(activity: FragmentActivity) {
         prefFileList.ensureExportDirExists()
         val newFile = prefFileList.newPreferenceFile() ?: return
 
@@ -350,10 +334,6 @@ class ImportExportPrefsImpl @Inject constructor(
             ToastUtils.errorToast(activity, rh.gs(R.string.goto_main_try_again))
             aapsLogger.error(LTag.CORE, "Internal android framework exception", e)
         }
-    }
-
-    override fun importCustomWatchface(fragment: Fragment) {
-        fragment.activity?.let { importCustomWatchface(it) }
     }
 
     override fun importCustomWatchface(activity: FragmentActivity) {

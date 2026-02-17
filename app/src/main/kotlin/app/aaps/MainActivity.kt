@@ -202,7 +202,6 @@ class MainActivity : DaggerAppCompatActivityWithResult() {
                 startActivity(Intent(this, SetupWizardActivity::class.java).setAction("info.nightscout.androidaps.MainActivity"))
             })
         }
-        androidPermission.notifyForStoragePermission(this)
         androidPermission.notifyForBatteryOptimizationPermission(this)
         if (!config.AAPSCLIENT) androidPermission.notifyForLocationPermissions(this)
         if (config.PUMPDRIVERS) {

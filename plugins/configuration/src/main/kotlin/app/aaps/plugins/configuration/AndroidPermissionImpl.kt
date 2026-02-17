@@ -136,19 +136,6 @@ class AndroidPermissionImpl @Inject constructor(
         else uiInteraction.dismissNotification(Notification.PERMISSION_BATTERY)
     }
 
-    @Synchronized override fun notifyForStoragePermission(activity: FragmentActivity) {
-        if (permissionNotGranted(activity, Manifest.permission.READ_EXTERNAL_STORAGE))
-            uiInteraction.addNotification(
-                id = Notification.PERMISSION_STORAGE,
-                text = rh.gs(R.string.need_storage_permission),
-                level = Notification.URGENT,
-                actionButtonId = R.string.request,
-                action = { askForPermission(activity, arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE)) },
-                validityCheck = { permissionNotGranted(activity, Manifest.permission.READ_EXTERNAL_STORAGE) }
-            )
-        else uiInteraction.dismissNotification(Notification.PERMISSION_STORAGE)
-    }
-
     @Synchronized override fun notifyForLocationPermissions(activity: FragmentActivity) {
         if (permissionNotGranted(activity, Manifest.permission.ACCESS_FINE_LOCATION) ||
             permissionNotGranted(activity, Manifest.permission.ACCESS_COARSE_LOCATION)
