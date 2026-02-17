@@ -223,13 +223,11 @@ private fun DrawerCategoryItem(
 
     // Use plugin compose icon if only one enabled, fall back to resource icon, then settings icon
     val plugin = if (category.enabledCount == 1) category.enabledPlugins.firstOrNull() else null
-    val composeIcon = plugin?.pluginDescription?.icon
-    val iconPainter = if (composeIcon != null) {
-        rememberVectorPainter(composeIcon)
-    } else {
-        val pluginIcon = plugin?.menuIcon ?: -1
-        painterResource(if (pluginIcon != -1) pluginIcon else app.aaps.core.ui.R.drawable.ic_settings)
-    }
+    val composeIcon: ImageVector? = plugin?.pluginDescription?.icon
+    val iconPainter =
+        if (composeIcon != null) rememberVectorPainter(composeIcon)
+        else if (plugin?.menuIcon != null && plugin.menuIcon != -1) painterResource(plugin.menuIcon)
+        else rememberVectorPainter(Icons.Default.Settings)
 
     Row(
         verticalAlignment = Alignment.CenterVertically,

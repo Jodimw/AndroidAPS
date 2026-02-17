@@ -13,16 +13,19 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
+import androidx.compose.foundation.layout.offset
 import androidx.compose.ui.unit.dp
 import app.aaps.ui.compose.overview.graphs.BgGraphCompose
 import app.aaps.ui.compose.overview.graphs.CobGraphCompose
 import app.aaps.ui.compose.overview.graphs.DEFAULT_GRAPH_ZOOM_MINUTES
 import app.aaps.ui.compose.overview.graphs.IobGraphCompose
 import app.aaps.ui.compose.overview.graphs.GraphViewModel
+import app.aaps.ui.compose.overview.graphs.TreatmentBeltGraphCompose
 import com.patrykandpatrick.vico.compose.cartesian.Scroll
 import com.patrykandpatrick.vico.compose.cartesian.Zoom
 import com.patrykandpatrick.vico.compose.cartesian.rememberVicoScrollState
 import com.patrykandpatrick.vico.compose.cartesian.rememberVicoZoomState
+import kotlin.math.abs
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.debounce
@@ -82,15 +85,27 @@ fun OverviewGraphsSection(
         initialZoom = Zoom.x(DEFAULT_GRAPH_ZOOM_MINUTES)
     )
 
-    // Observe BG graph scroll/zoom and sync to IOB/COB graphs
-    LaunchedEffect(bgScrollState, bgZoomState, iobScrollState, iobZoomState, cobScrollState, cobZoomState) {
+    // Treatment belt graph - non-interactive, synced from BG
+    val beltScrollState = rememberVicoScrollState(
+        scrollEnabled = false,
+        initialScroll = Scroll.Absolute.End
+    )
+    val beltZoomState = rememberVicoZoomState(
+        zoomEnabled = false,
+        initialZoom = Zoom.x(DEFAULT_GRAPH_ZOOM_MINUTES)
+    )
+
+    // Observe BG graph scroll/zoom and sync to belt/IOB/COB graphs
+    LaunchedEffect(bgScrollState, bgZoomState, beltScrollState, beltZoomState, iobScrollState, iobZoomState, cobScrollState, cobZoomState) {
         snapshotFlow { bgScrollState.value to bgZoomState.value }
             .debounce(30) // Wait for gesture to settle
             .collect { (scroll, zoom) ->
                 // Sync zoom first, then scroll (order matters for proper positioning)
+                beltZoomState.zoom(Zoom.fixed(zoom))
                 iobZoomState.zoom(Zoom.fixed(zoom))
                 cobZoomState.zoom(Zoom.fixed(zoom))
                 delay(10)
+                beltScrollState.scroll(Scroll.Absolute.pixels(scroll))
                 iobScrollState.scroll(Scroll.Absolute.pixels(scroll))
                 cobScrollState.scroll(Scroll.Absolute.pixels(scroll))
             }
@@ -109,34 +124,73 @@ fun OverviewGraphsSection(
         lastBgTimestamp = newTimestamp
     }
 
+    // Correct secondary graph scroll drift — Vico may internally adjust scroll
+    // when model producers fire. Watch for any divergence and re-sync to BG.
+    LaunchedEffect(Unit) {
+        snapshotFlow {
+            Triple(
+                beltScrollState.value to beltZoomState.value,
+                iobScrollState.value to iobZoomState.value,
+                cobScrollState.value to cobZoomState.value
+            )
+        }
+            .debounce(100) // Let Vico settle after model update
+            .collect { (belt, iob, cob) ->
+                val bgScroll = bgScrollState.value
+                val bgZoom = bgZoomState.value
+                val threshold = 1f
+                val needsSync =
+                    abs(belt.first - bgScroll) > threshold ||
+                        abs(iob.first - bgScroll) > threshold ||
+                        abs(cob.first - bgScroll) > threshold ||
+                        abs(belt.second - bgZoom) > 0.001f ||
+                        abs(iob.second - bgZoom) > 0.001f ||
+                        abs(cob.second - bgZoom) > 0.001f
+                if (needsSync) {
+                    beltZoomState.zoom(Zoom.fixed(bgZoom))
+                    iobZoomState.zoom(Zoom.fixed(bgZoom))
+                    cobZoomState.zoom(Zoom.fixed(bgZoom))
+                    delay(10)
+                    beltScrollState.scroll(Scroll.Absolute.pixels(bgScroll))
+                    iobScrollState.scroll(Scroll.Absolute.pixels(bgScroll))
+                    cobScrollState.scroll(Scroll.Absolute.pixels(bgScroll))
+                }
+            }
+    }
+
     Column(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
+        // Treatment Belt Graph - running mode background + therapy events
+        TreatmentBeltGraphCompose(
+            viewModel = graphViewModel,
+            scrollState = beltScrollState,
+            zoomState = beltZoomState,
+            modifier = Modifier.fillMaxWidth()
+        )
         // BG Graph - primary interactive graph
         BgGraphCompose(
             viewModel = graphViewModel,
             scrollState = bgScrollState,
             zoomState = bgZoomState,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth().offset(y = (-24).dp)
         )
-
         // IOB Graph - non-interactive, synced from BG graph
         IobGraphCompose(
             viewModel = graphViewModel,
             scrollState = iobScrollState,
             zoomState = iobZoomState,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth().offset(y = (-24).dp)
         )
-
         // COB Graph - non-interactive, synced from BG graph
         CobGraphCompose(
             viewModel = graphViewModel,
             scrollState = cobScrollState,
             zoomState = cobZoomState,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth().offset(y = (-24).dp)
         )
     }
 }

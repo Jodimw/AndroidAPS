@@ -30,6 +30,7 @@ import app.aaps.core.interfaces.overview.graph.OverviewDataCache
 import app.aaps.core.interfaces.overview.graph.ProfileDisplayData
 import app.aaps.core.interfaces.overview.graph.RatioGraphData
 import app.aaps.core.interfaces.overview.graph.RunningModeDisplayData
+import app.aaps.core.interfaces.overview.graph.RunningModeGraphData
 import app.aaps.core.interfaces.overview.graph.TempTargetDisplayData
 import app.aaps.core.interfaces.overview.graph.TempTargetState
 import app.aaps.core.interfaces.overview.graph.TimeRange
@@ -135,6 +136,7 @@ class OverviewDataCacheImpl @Inject constructor(
     private val _treatmentGraphFlow = MutableStateFlow(TreatmentGraphData(emptyList(), emptyList(), emptyList(), emptyList()))
     private val _basalGraphFlow = MutableStateFlow(BasalGraphData(emptyList(), emptyList(), 0.0))
     private val _targetLineFlow = MutableStateFlow(TargetLineData(emptyList()))
+    private val _runningModeGraphFlow = MutableStateFlow(RunningModeGraphData(emptyList()))
 
     override val iobGraphFlow: StateFlow<IobGraphData> = _iobGraphFlow.asStateFlow()
     override val absIobGraphFlow: StateFlow<AbsIobGraphData> = _absIobGraphFlow.asStateFlow()
@@ -148,6 +150,7 @@ class OverviewDataCacheImpl @Inject constructor(
     override val treatmentGraphFlow: StateFlow<TreatmentGraphData> = _treatmentGraphFlow.asStateFlow()
     override val basalGraphFlow: StateFlow<BasalGraphData> = _basalGraphFlow.asStateFlow()
     override val targetLineFlow: StateFlow<TargetLineData> = _targetLineFlow.asStateFlow()
+    override val runningModeGraphFlow: StateFlow<RunningModeGraphData> = _runningModeGraphFlow.asStateFlow()
 
     init {
         // Load initial data from database
@@ -432,6 +435,10 @@ class OverviewDataCacheImpl @Inject constructor(
         _targetLineFlow.value = data
     }
 
+    override fun updateRunningModeGraph(data: RunningModeGraphData) {
+        _runningModeGraphFlow.value = data
+    }
+
     override fun reset() {
         _timeRangeFlow.value = null
         _bgReadingsFlow.value = emptyList()
@@ -453,6 +460,7 @@ class OverviewDataCacheImpl @Inject constructor(
         _treatmentGraphFlow.value = TreatmentGraphData(emptyList(), emptyList(), emptyList(), emptyList())
         _basalGraphFlow.value = BasalGraphData(emptyList(), emptyList(), 0.0)
         _targetLineFlow.value = TargetLineData(emptyList())
+        _runningModeGraphFlow.value = RunningModeGraphData(emptyList())
         calcProgressPct = 100
     }
 }

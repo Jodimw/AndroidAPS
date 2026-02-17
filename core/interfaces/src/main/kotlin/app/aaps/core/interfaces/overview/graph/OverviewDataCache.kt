@@ -102,5 +102,9 @@ interface OverviewDataCache {
     val targetLineFlow: StateFlow<TargetLineData>
     fun updateTargetLine(data: TargetLineData)
 
+    // Running mode graph: time segments for treatment belt background coloring
+    val runningModeGraphFlow: StateFlow<RunningModeGraphData>
+    fun updateRunningModeGraph(data: RunningModeGraphData)
+
     fun reset()
 }

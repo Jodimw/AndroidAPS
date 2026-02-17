@@ -9,6 +9,9 @@ import app.aaps.core.graph.data.RunningModeDataPoint
 import app.aaps.core.interfaces.aps.Loop
 import app.aaps.core.interfaces.db.PersistenceLayer
 import app.aaps.core.interfaces.overview.OverviewData
+import app.aaps.core.interfaces.overview.graph.OverviewDataCache
+import app.aaps.core.interfaces.overview.graph.RunningModeGraphData
+import app.aaps.core.interfaces.overview.graph.RunningModeSegment
 import app.aaps.core.interfaces.profile.ProfileFunction
 import app.aaps.core.interfaces.profile.ProfileUtil
 import app.aaps.core.interfaces.resources.ResourceHelper
@@ -33,6 +36,7 @@ class PrepareRunningModeDataWorker(
     @Inject lateinit var persistenceLayer: PersistenceLayer
     @Inject lateinit var loop: Loop
     @Inject lateinit var rxBus: RxBus
+    @Inject lateinit var overviewDataCache: OverviewDataCache
 
     class PrepareRunningModeData(
         val overviewData: OverviewData
@@ -67,6 +71,24 @@ class PrepareRunningModeDataWorker(
         modesSeriesArray.add(RunningModeDataPoint(lastMode, lastModeChange, time, rh))
         // create series
         data.overviewData.runningModesSeries = PointsWithLabelGraphSeries(Array(modesSeriesArray.size) { i -> modesSeriesArray[i] })
+
+        // Populate Compose cache for treatment belt graph.
+        // Build full segments list including the initial period that the legacy graph skips.
+        // The legacy graph drops the initial RESUME sentinel segment (line 64 check above),
+        // but the belt graph needs full coverage so all time is colored.
+        val composeSegments = mutableListOf<RunningModeSegment>()
+        // If the first segment doesn't start at fromTime, add an initial segment
+        val firstSegmentStart = modesSeriesArray.firstOrNull()?.startTime ?: fromTime
+        if (firstSegmentStart > fromTime) {
+            // Fill gap from fromTime to first segment with the mode active at fromTime
+            val initialMode = persistenceLayer.getRunningModeActiveAt(fromTime)
+            composeSegments.add(RunningModeSegment(initialMode.mode, fromTime, firstSegmentStart))
+        }
+        composeSegments.addAll(modesSeriesArray.map {
+            RunningModeSegment(it.mode, it.startTime, it.endTime)
+        })
+        overviewDataCache.updateRunningModeGraph(RunningModeGraphData(segments = composeSegments))
+
         rxBus.send(EventIobCalculationProgress(CalculationWorkflow.ProgressData.PREPARE_RUNNING_MODE_DATA, 100, null))
         return Result.success()
     }

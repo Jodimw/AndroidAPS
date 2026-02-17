@@ -35,9 +35,11 @@ import app.aaps.core.ui.compose.icons.IcProfile
 import app.aaps.core.ui.compose.icons.IcQuestion
 import app.aaps.core.ui.compose.icons.IcQuickwizard
 import app.aaps.core.ui.compose.icons.IcSiteRotation
+import app.aaps.core.ui.compose.icons.IcStats
+import app.aaps.core.ui.compose.icons.IcTbrCancel
+import app.aaps.core.ui.compose.icons.IcTbrHigh
 import app.aaps.core.ui.compose.icons.IcTtHigh
 import app.aaps.core.ui.R as CoreUiR
-import app.aaps.core.objects.R as ObjectsR
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -181,7 +183,7 @@ internal fun ManageBottomSheetContent(
             ManageItem(
                 text = cancelTempBasalText,
                 description = null,
-                iconPainter = painterResource(CoreUiR.drawable.ic_cancel_basal),
+                iconPainter = rememberVectorPainter(IcTbrCancel),
                 color = AapsTheme.elementColors.tempBasal,
                 onDismiss = onDismiss,
                 onClick = onCancelTempBasalClick
@@ -190,7 +192,7 @@ internal fun ManageBottomSheetContent(
             ManageItem(
                 text = stringResource(CoreUiR.string.tempbasal_button),
                 description = stringResource(CoreUiR.string.manage_temp_basal_desc),
-                iconPainter = painterResource(ObjectsR.drawable.ic_actions_start_temp_basal),
+                iconPainter = rememberVectorPainter(IcTbrHigh),
                 color = AapsTheme.elementColors.tempBasal,
                 onDismiss = onDismiss,
                 onClick = onTempBasalClick
@@ -279,7 +281,7 @@ internal fun ManageBottomSheetContent(
         if (showTddStats) {
             ManageItem(
                 text = stringResource(CoreUiR.string.tdd_short),
-                iconPainter = painterResource(ObjectsR.drawable.ic_cp_stats),
+                iconPainter = rememberVectorPainter(IcStats),
                 color = toolsColor,
                 onDismiss = onDismiss,
                 onClick = onTddStatsClick

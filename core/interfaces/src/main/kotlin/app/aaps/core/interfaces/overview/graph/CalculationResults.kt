@@ -342,3 +342,25 @@ data class RunningModeDisplayData(
     val timestamp: Long,                 // When mode started (for progress calculation)
     val duration: Long                   // Mode duration in ms (0 if permanent)
 )
+
+// ============================================================================
+// Treatment Belt Graph Data (running mode segments for belt graph overlay)
+// ============================================================================
+
+/**
+ * A single running mode time segment for the treatment belt graph.
+ */
+data class RunningModeSegment(
+    val mode: RM.Mode,
+    val startTime: Long,
+    val endTime: Long
+)
+
+/**
+ * Running mode graph data: time-ordered segments for belt background coloring.
+ * Each segment represents a contiguous period where the loop was in a specific mode.
+ * CLOSED_LOOP and RESUME segments are transparent (no colored rectangle drawn).
+ */
+data class RunningModeGraphData(
+    val segments: List<RunningModeSegment>
+)

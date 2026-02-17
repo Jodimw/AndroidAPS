@@ -52,7 +52,15 @@ data class ElementColors(
     val bgCheck: Color,
     val exercise: Color,
     val announcement: Color,
-    val cob: Color
+    val cob: Color,
+    // Running mode belt graph background colors
+    val loopClosed: Color,
+    val loopOpened: Color,
+    val loopLgs: Color,
+    val loopDisabled: Color,
+    val loopSuperBolus: Color,
+    val loopDisconnected: Color,
+    val loopSuspended: Color
 )
 
 /**
@@ -79,7 +87,15 @@ internal val LightElementColors = ElementColors(
     bgCheck = Color(0xFFE93057),         // calibrationButtonColor
     exercise = Color(0xFF42A5F5),        // exercise
     announcement = Color(0xFFCF8BFE),    // announcement
-    cob = Color(0xFFFF5722)       // deep orange — distinct from COB line (#FB8C00)
+    cob = Color(0xFFFF5722),      // deep orange — distinct from COB line (#FB8C00)
+    // Running mode belt graph background colors (semi-transparent for belt overlay)
+    loopClosed = Color(0xFF4CAF50),       // green — normal operating state
+    loopOpened = Color(0xFF4983D7),       // blue
+    loopLgs = Color(0xFF800080),          // purple
+    loopDisabled = Color(0xFFFF1313),     // red
+    loopSuperBolus = Color(0xFFFFA500),   // orange
+    loopDisconnected = Color(0xFF939393), // gray
+    loopSuspended = Color(0xFFF6CE22)     // yellow
 )
 
 /**
@@ -106,7 +122,15 @@ internal val DarkElementColors = ElementColors(
     bgCheck = Color(0xFFE93057),         // calibrationButtonColor (same both modes)
     exercise = Color(0xFF42A5F5),        // exercise (same both modes)
     announcement = Color(0xFFCF8BFE),    // announcement (same both modes)
-    cob = Color(0xFFFFAB91)       // soft salmon — distinct from COB line (#FFB74D)
+    cob = Color(0xFFFFAB91),      // soft salmon — distinct from COB line (#FFB74D)
+    // Running mode belt graph background colors (same in both modes)
+    loopClosed = Color(0xFF4CAF50),       // green — normal operating state
+    loopOpened = Color(0xFF4983D7),       // blue
+    loopLgs = Color(0xFF800080),          // purple
+    loopDisabled = Color(0xFFFF1313),     // red
+    loopSuperBolus = Color(0xFFFFA500),   // orange
+    loopDisconnected = Color(0xFF939393), // gray
+    loopSuspended = Color(0xFFF6CE22)     // yellow
 )
 
 /**

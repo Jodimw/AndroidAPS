@@ -76,6 +76,10 @@
 - Can edit files and run commands freely without asking for permission
 - Can use internet/web search as needed
 - For compilation do not use gradle daemon
+- Do not decompile libraries, look for sources locally or ask first (especially Vico lib)
+- **Skip compilation for trivial changes** — Don't run a build to verify simple edits like changing
+  a number, string, color value, or dp size. Only compile when structural changes (new
+  imports, API changes, type changes, new files) could cause errors.
 - Avoid duplication while writing new code and resources. Prefer moving to another module. Elaborate
   if you think, it's necessary
 - When resource strings are affected, change only english version. Ignore translations
@@ -96,11 +100,13 @@
   }
   ```
   The modifier is in `app.aaps.core.ui.compose.clearFocusOnTap`.
-- **Avoid adding new module dependencies** - Adding dependencies between modules can significantly
-  slow down compilation time. Always discuss before adding dependencies. Prefer alternatives:
+- **Avoid adding new inter-module (project) dependencies** - Adding `implementation(project(":other:module"))`
+  between modules can significantly slow down compilation time. Always discuss before adding these.
+  Prefer alternatives:
     - Inline constants instead of importing from another module
     - Move shared code to existing common modules
     - Use interfaces defined in core modules
+  - Note: Adding external library dependencies via `api(libs.xxx)` or `implementation(libs.xxx)` is fine.
 
 ## Migration Procedures
 
