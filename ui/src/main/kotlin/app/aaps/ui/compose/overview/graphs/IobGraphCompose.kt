@@ -90,26 +90,18 @@ fun IobGraphCompose(
         lastTreatmentData.value = treatmentGraphData
     }
 
-    // Track which series are present (for dynamic line matching)
-    val hasIobDataState = remember { mutableStateOf(false) }
-    val hasSmallSmbsState = remember { mutableStateOf(false) }
-    val hasMediumSmbsState = remember { mutableStateOf(false) }
-    val hasLargeSmbsState = remember { mutableStateOf(false) }
-    val hasNormalBolusesState = remember { mutableStateOf(false) }
-    val extBolusCountState = remember { mutableIntStateOf(0) }
+    // Cache processed IOB data — only recomputes when IOB data or time range changes
+    val processedIob = remember(iobGraphData, stableTimeRange) {
+        if (!hasRealTimeRange) return@remember emptyList()
+        val pts = iobGraphData.iob.map { timestampToX(it.timestamp, minTimestamp) to it.value }
+        filterToRange(pts, minX, maxX)
+    }
 
-    LaunchedEffect(iobGraphData, treatmentGraphData, stableTimeRange) {
-        // Skip model building when derivedTimeRange is null (fallback 24h range).
-        // The fallback range differs from BG graph's range, causing scroll sync misalignment
-        // because pixel-based sync maps to different time windows with different data ranges.
-        if (!hasRealTimeRange) return@LaunchedEffect
-
-        val iobPoints = iobGraphData.iob
-        val activeTreatmentData = lastTreatmentData.value
-        val allBoluses = activeTreatmentData.boluses
-        val smbs = allBoluses.filter { it.bolusType == BolusType.SMB }
-        val normalBoluses = allBoluses.filter { it.bolusType == BolusType.NORMAL }
-        val extendedBoluses = activeTreatmentData.extendedBoluses
+    // Cache processed treatment data — only recomputes when treatments or time range change
+    val processedTreatments = remember(lastTreatmentData.value, stableTimeRange) {
+        if (!hasRealTimeRange) return@remember ProcessedIobTreatments.EMPTY
+        val data = lastTreatmentData.value
+        val smbs = data.boluses.filter { it.bolusType == BolusType.SMB }
 
         // Split SMBs into 3 size categories
         var smallSmbs: List<Pair<Double, Double>> = emptyList()
@@ -143,17 +135,40 @@ fun IobGraphCompose(
             }
         }
 
-        // Build extended bolus series data: each EB = list of 2 points (startX, endX) at y=amount
-        val extBolusSeriesData = extendedBoluses.mapNotNull { eb ->
+        val normalBoluses = data.boluses.filter { it.bolusType == BolusType.NORMAL }
+        val bolusFiltered = if (normalBoluses.isNotEmpty()) {
+            val pts = normalBoluses.map { timestampToX(it.timestamp, minTimestamp) to it.amount }
+            filterToRange(pts, minX, maxX)
+        } else emptyList()
+
+        val extBoluses = data.extendedBoluses.mapNotNull { eb ->
             val startX = timestampToX(eb.timestamp, minTimestamp)
             val endX = timestampToX(eb.timestamp + eb.duration, minTimestamp)
-            // Keep if any part overlaps the visible range
             if (endX < minX || startX > maxX) return@mapNotNull null
             val clampedStart = startX.coerceIn(minX, maxX)
             val clampedEnd = endX.coerceIn(minX, maxX)
             if (clampedStart == clampedEnd) return@mapNotNull null
             Triple(clampedStart, clampedEnd, eb.amount)
         }
+
+        ProcessedIobTreatments(
+            filterToRange(smallSmbs, minX, maxX),
+            filterToRange(mediumSmbs, minX, maxX),
+            filterToRange(largeSmbs, minX, maxX),
+            bolusFiltered, extBoluses
+        )
+    }
+
+    // Track which series are present (for dynamic line matching)
+    val hasIobDataState = remember { mutableStateOf(false) }
+    val hasSmallSmbsState = remember { mutableStateOf(false) }
+    val hasMediumSmbsState = remember { mutableStateOf(false) }
+    val hasLargeSmbsState = remember { mutableStateOf(false) }
+    val hasNormalBolusesState = remember { mutableStateOf(false) }
+    val extBolusCountState = remember { mutableIntStateOf(0) }
+
+    LaunchedEffect(processedIob, processedTreatments) {
+        if (!hasRealTimeRange) return@LaunchedEffect
 
         var hasIob = false
         var hasSmall = false
@@ -164,44 +179,33 @@ fun IobGraphCompose(
         modelProducer.runTransaction {
             lineSeries {
                 // IOB data
-                val iobFiltered = if (iobPoints.isNotEmpty()) {
-                    val pts = iobPoints.map { timestampToX(it.timestamp, minTimestamp) to it.value }
-                    filterToRange(pts, minX, maxX)
-                } else emptyList()
-                if (iobFiltered.isNotEmpty()) {
-                    series(x = iobFiltered.map { it.first }, y = iobFiltered.map { it.second })
+                if (processedIob.isNotEmpty()) {
+                    series(x = processedIob.map { it.first }, y = processedIob.map { it.second })
                     hasIob = true
                 }
 
                 // SMBs by size (small, medium, large)
-                val smallFiltered = filterToRange(smallSmbs, minX, maxX)
-                if (smallFiltered.isNotEmpty()) {
-                    series(x = smallFiltered.map { it.first }, y = smallFiltered.map { it.second })
+                if (processedTreatments.smallSmbs.isNotEmpty()) {
+                    series(x = processedTreatments.smallSmbs.map { it.first }, y = processedTreatments.smallSmbs.map { it.second })
                     hasSmall = true
                 }
-                val mediumFiltered = filterToRange(mediumSmbs, minX, maxX)
-                if (mediumFiltered.isNotEmpty()) {
-                    series(x = mediumFiltered.map { it.first }, y = mediumFiltered.map { it.second })
+                if (processedTreatments.mediumSmbs.isNotEmpty()) {
+                    series(x = processedTreatments.mediumSmbs.map { it.first }, y = processedTreatments.mediumSmbs.map { it.second })
                     hasMedium = true
                 }
-                val largeFiltered = filterToRange(largeSmbs, minX, maxX)
-                if (largeFiltered.isNotEmpty()) {
-                    series(x = largeFiltered.map { it.first }, y = largeFiltered.map { it.second })
+                if (processedTreatments.largeSmbs.isNotEmpty()) {
+                    series(x = processedTreatments.largeSmbs.map { it.first }, y = processedTreatments.largeSmbs.map { it.second })
                     hasLarge = true
                 }
 
                 // Normal boluses
-                val bolusFiltered = if (normalBoluses.isNotEmpty()) {
-                    val pts = normalBoluses.map { timestampToX(it.timestamp, minTimestamp) to it.amount }
-                    filterToRange(pts, minX, maxX)
-                } else emptyList()
-                if (bolusFiltered.isNotEmpty()) {
-                    series(x = bolusFiltered.map { it.first }, y = bolusFiltered.map { it.second })
+                if (processedTreatments.normalBoluses.isNotEmpty()) {
+                    series(x = processedTreatments.normalBoluses.map { it.first }, y = processedTreatments.normalBoluses.map { it.second })
                     hasBoluses = true
                 }
 
                 // Extended boluses — one 2-point series per extended bolus
-                for ((start, end, amount) in extBolusSeriesData) {
+                for ((start, end, amount) in processedTreatments.extBoluses) {
                     series(x = listOf(start, end), y = listOf(amount, amount))
                 }
 
@@ -216,7 +220,7 @@ fun IobGraphCompose(
         hasMediumSmbsState.value = hasMedium
         hasLargeSmbsState.value = hasLarge
         hasNormalBolusesState.value = hasBoluses
-        extBolusCountState.intValue = extBolusSeriesData.size
+        extBolusCountState.intValue = processedTreatments.extBoluses.size
     }
 
     // Time formatter and axis configuration
@@ -370,6 +374,19 @@ fun IobGraphCompose(
         scrollState = scrollState,
         zoomState = zoomState
     )
+}
+
+/** Cached processed treatment data for IOB graph — avoids reprocessing when only IOB changes */
+private data class ProcessedIobTreatments(
+    val smallSmbs: List<Pair<Double, Double>>,
+    val mediumSmbs: List<Pair<Double, Double>>,
+    val largeSmbs: List<Pair<Double, Double>>,
+    val normalBoluses: List<Pair<Double, Double>>,
+    val extBoluses: List<Triple<Double, Double, Double>>
+) {
+    companion object {
+        val EMPTY = ProcessedIobTreatments(emptyList(), emptyList(), emptyList(), emptyList(), emptyList())
+    }
 }
 
 /** Formats bolus amount: 1.0→"1", 1.2→"1.2", 0.8→".8" (drop leading zero) */

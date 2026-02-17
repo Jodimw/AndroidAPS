@@ -3,15 +3,10 @@ package app.aaps.workflow
 import android.content.Context
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
-import app.aaps.core.data.configuration.Constants
-import app.aaps.core.data.time.T
 import app.aaps.core.graph.data.LineGraphSeries
 import app.aaps.core.interfaces.aps.Loop
 import app.aaps.core.interfaces.db.PersistenceLayer
 import app.aaps.core.interfaces.overview.OverviewData
-import app.aaps.core.interfaces.overview.graph.GraphDataPoint
-import app.aaps.core.interfaces.overview.graph.OverviewDataCache
-import app.aaps.core.interfaces.overview.graph.TargetLineData
 import app.aaps.core.interfaces.profile.ProfileFunction
 import app.aaps.core.interfaces.profile.ProfileUtil
 import app.aaps.core.interfaces.resources.ResourceHelper
@@ -25,7 +20,6 @@ import com.jjoe64.graphview.series.DataPoint
 import kotlinx.coroutines.Dispatchers
 import javax.inject.Inject
 import kotlin.math.max
-import kotlin.math.min
 
 class PrepareTemporaryTargetDataWorker(
     context: Context,
@@ -39,7 +33,6 @@ class PrepareTemporaryTargetDataWorker(
     @Inject lateinit var persistenceLayer: PersistenceLayer
     @Inject lateinit var loop: Loop
     @Inject lateinit var rxBus: RxBus
-    @Inject lateinit var overviewDataCache: OverviewDataCache
     private var ctx: Context = rh.getThemedCtx(context)
 
     class PrepareTemporaryTargetData(
@@ -54,15 +47,10 @@ class PrepareTemporaryTargetDataWorker(
         rxBus.send(EventIobCalculationProgress(CalculationWorkflow.ProgressData.PREPARE_TEMPORARY_TARGET_DATA, 0, null))
         val profile = profileFunction.getProfile() ?: return Result.success(workDataOf("Error" to "missing profile"))
         var endTime = data.overviewData.endTime
-        val fromTimeOld = data.overviewData.fromTime
+        val fromTime = data.overviewData.fromTime
         val targetsSeriesArray: MutableList<DataPoint> = ArrayList()
         var lastTarget = -1.0
         loop.lastRun?.constraintsProcessed?.let { endTime = max(it.latestPredictionsTime, endTime) }
-        // Compose target line data collection
-        val fromTimeNew = endTime - T.hours(Constants.GRAPH_TIME_RANGE_HOURS.toLong()).msecs()
-        val fromTime = min(fromTimeOld, fromTimeNew)
-        val composeTargets = mutableListOf<GraphDataPoint>()
-        var composeLastTarget = -1.0
         var time = fromTime
         while (time < endTime) {
             if (isStopped) return Result.failure(workDataOf("Error" to "stopped"))
@@ -79,18 +67,10 @@ class PrepareTemporaryTargetDataWorker(
                 targetsSeriesArray.add(DataPoint(time.toDouble(), value))
             }
             lastTarget = value
-            // Compose: collect transition points only
-            if (value != composeLastTarget) {
-                composeTargets.add(GraphDataPoint(time, value))
-                composeLastTarget = value
-            }
             time += 5 * 60 * 1000L
         }
         // final point
         targetsSeriesArray.add(DataPoint(endTime.toDouble(), lastTarget))
-        // Compose: final point at endTime
-        if (composeLastTarget >= 0.0) composeTargets.add(GraphDataPoint(endTime, composeLastTarget))
-        overviewDataCache.updateTargetLine(TargetLineData(composeTargets))
         // create series
         data.overviewData.temporaryTargetSeries = LineGraphSeries(Array(targetsSeriesArray.size) { i -> targetsSeriesArray[i] }).also {
             it.isDrawBackground = false

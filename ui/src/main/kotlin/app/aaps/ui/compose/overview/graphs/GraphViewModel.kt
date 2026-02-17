@@ -123,6 +123,7 @@ class GraphViewModel @Inject constructor(
     val iobGraphFlow = cache.iobGraphFlow
     val cobGraphFlow = cache.cobGraphFlow
     val treatmentGraphFlow = cache.treatmentGraphFlow
+    val epsGraphFlow = cache.epsGraphFlow
     val basalGraphFlow = cache.basalGraphFlow
     val targetLineFlow = cache.targetLineFlow
     val runningModeGraphFlow = cache.runningModeGraphFlow

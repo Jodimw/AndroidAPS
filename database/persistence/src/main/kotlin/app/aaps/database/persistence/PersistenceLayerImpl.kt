@@ -36,7 +36,9 @@ import app.aaps.database.entities.Carbs
 import app.aaps.database.entities.EffectiveProfileSwitch
 import app.aaps.database.entities.ExtendedBolus
 import app.aaps.database.entities.GlucoseValue
+import app.aaps.database.entities.HeartRate
 import app.aaps.database.entities.ProfileSwitch
+import app.aaps.database.entities.StepsCount
 import app.aaps.database.entities.RunningMode
 import app.aaps.database.entities.TemporaryBasal
 import app.aaps.database.entities.TemporaryTarget
@@ -189,6 +191,12 @@ class PersistenceLayerImpl @Inject constructor(
                 .map { list -> list.map { it.fromDb() } }
 
             RM::class.java -> repository.changesOfType<RunningMode>()
+                .map { list -> list.map { it.fromDb() } }
+
+            HR::class.java -> repository.changesOfType<HeartRate>()
+                .map { list -> list.map { it.fromDb() } }
+
+            SC::class.java -> repository.changesOfType<StepsCount>()
                 .map { list -> list.map { it.fromDb() } }
 
             else -> throw IllegalArgumentException("Unsupported observation type: ${type.simpleName}")

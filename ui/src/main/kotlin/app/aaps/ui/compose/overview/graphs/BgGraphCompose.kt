@@ -84,6 +84,7 @@ fun BgGraphCompose(
     val basalData by viewModel.basalGraphFlow.collectAsState()
     val targetData by viewModel.targetLineFlow.collectAsState()
     val treatmentData by viewModel.treatmentGraphFlow.collectAsState()
+    val epsPoints by viewModel.epsGraphFlow.collectAsState()
 
     // Use derived time range or fall back to default (last 24 hours)
     val (minTimestamp, maxTimestamp) = derivedTimeRange ?: run {
@@ -126,9 +127,6 @@ fun BgGraphCompose(
     val stableTimeRange = remember(minTimestamp / 60000, maxTimestamp / 60000) {
         minTimestamp to maxTimestamp
     }
-
-    // EPS data from treatment flow
-    val epsPoints = remember(treatmentData) { treatmentData.effectiveProfileSwitches }
 
     // Function to rebuild chart from registry
     suspend fun rebuildChart(

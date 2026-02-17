@@ -90,23 +90,23 @@ interface OverviewDataCache {
 
     // =========================================================================
     // Treatment graph flows (main graph overlays)
+    // Populated reactively by observing database changes — no worker needed.
     // =========================================================================
 
     // Treatments: boluses, SMBs, carbs, extended boluses, therapy events
     val treatmentGraphFlow: StateFlow<TreatmentGraphData>
-    fun updateTreatmentGraph(data: TreatmentGraphData)
+
+    // Effective profile switches (separate graph from treatments)
+    val epsGraphFlow: StateFlow<List<EpsGraphPoint>>
 
     // Basal graph: profile basal (dashed) + actual delivered basal (solid + fill)
     val basalGraphFlow: StateFlow<BasalGraphData>
-    fun updateBasalGraph(data: BasalGraphData)
 
     // Target line: step-function showing target midpoint (TT or profile default)
     val targetLineFlow: StateFlow<TargetLineData>
-    fun updateTargetLine(data: TargetLineData)
 
     // Running mode graph: time segments for treatment belt background coloring
     val runningModeGraphFlow: StateFlow<RunningModeGraphData>
-    fun updateRunningModeGraph(data: RunningModeGraphData)
 
     fun reset()
 }

@@ -227,7 +227,6 @@ data class BolusGraphPoint(
     val timestamp: Long,
     val amount: Double,        // Insulin amount in units
     val bolusType: BolusType,  // NORMAL or SMB
-    val yValue: Double,        // Y position (nearest BG in user units; SMB at low mark)
     val isValid: Boolean,
     val label: String          // Pre-formatted amount string (pump-supported step)
 )
@@ -238,7 +237,6 @@ data class BolusGraphPoint(
 data class CarbsGraphPoint(
     val timestamp: Long,
     val amount: Double,        // Carbs amount in grams
-    val yValue: Double,        // Y position (nearest BG in user units)
     val isValid: Boolean,
     val label: String          // Pre-formatted carbs string (e.g., "45 g")
 )
@@ -251,7 +249,6 @@ data class ExtendedBolusGraphPoint(
     val amount: Double,        // Total insulin amount
     val rate: Double,          // Rate per hour
     val duration: Long,        // Duration in ms
-    val yValue: Double,        // Y position (nearest BG in user units)
     val label: String          // Pre-formatted string (e.g., "1.5U/h 2.0U")
 )
 
@@ -274,7 +271,6 @@ enum class TherapyEventType {
 data class TherapyEventGraphPoint(
     val timestamp: Long,
     val eventType: TherapyEventType,
-    val yValue: Double,        // Y position (glucose value or nearest BG)
     val label: String,         // Note or translated type name
     val duration: Long         // Duration in ms (0 if no duration)
 )
@@ -292,14 +288,13 @@ data class EpsGraphPoint(
 
 /**
  * Container for all treatment graph data (overlaid on main BG graph).
- * All lists are computed together in PrepareTreatmentsDataWorker.
+ * Populated reactively by OverviewDataCacheImpl observing DB changes.
  */
 data class TreatmentGraphData(
     val boluses: List<BolusGraphPoint>,
     val carbs: List<CarbsGraphPoint>,
     val extendedBoluses: List<ExtendedBolusGraphPoint>,
-    val therapyEvents: List<TherapyEventGraphPoint>,
-    val effectiveProfileSwitches: List<EpsGraphPoint> = emptyList()
+    val therapyEvents: List<TherapyEventGraphPoint>
 )
 
 // ============================================================================

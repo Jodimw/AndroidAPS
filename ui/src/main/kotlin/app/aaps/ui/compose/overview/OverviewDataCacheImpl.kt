@@ -1,11 +1,20 @@
 package app.aaps.ui.compose.overview
 
+import app.aaps.core.data.configuration.Constants
 import app.aaps.core.data.iob.InMemoryGlucoseValue
+import app.aaps.core.data.model.BS
+import app.aaps.core.data.model.CA
+import app.aaps.core.data.model.EB
 import app.aaps.core.data.model.EPS
 import app.aaps.core.data.model.GV
 import app.aaps.core.data.model.GlucoseUnit
+import app.aaps.core.data.model.HR
 import app.aaps.core.data.model.RM
+import app.aaps.core.data.model.SC
+import app.aaps.core.data.model.TB
+import app.aaps.core.data.model.TE
 import app.aaps.core.data.model.TT
+import app.aaps.core.data.time.T
 import app.aaps.core.interfaces.aps.Loop
 import app.aaps.core.interfaces.configuration.Config
 import app.aaps.core.interfaces.db.PersistenceLayer
@@ -16,36 +25,50 @@ import app.aaps.core.interfaces.logging.LTag
 import app.aaps.core.interfaces.nsclient.ProcessedDeviceStatusData
 import app.aaps.core.interfaces.overview.graph.AbsIobGraphData
 import app.aaps.core.interfaces.overview.graph.BasalGraphData
-import app.aaps.core.interfaces.overview.graph.TargetLineData
-import app.aaps.core.interfaces.overview.graph.ActivityGraphData
 import app.aaps.core.interfaces.overview.graph.BgDataPoint
 import app.aaps.core.interfaces.overview.graph.BgInfoData
 import app.aaps.core.interfaces.overview.graph.BgRange
 import app.aaps.core.interfaces.overview.graph.BgiGraphData
+import app.aaps.core.interfaces.overview.graph.BolusGraphPoint
+import app.aaps.core.interfaces.overview.graph.BolusType
+import app.aaps.core.interfaces.overview.graph.CarbsGraphPoint
 import app.aaps.core.interfaces.overview.graph.CobGraphData
 import app.aaps.core.interfaces.overview.graph.DevSlopeGraphData
 import app.aaps.core.interfaces.overview.graph.DeviationsGraphData
+import app.aaps.core.interfaces.overview.graph.EpsGraphPoint
+import app.aaps.core.interfaces.overview.graph.ExtendedBolusGraphPoint
+import app.aaps.core.interfaces.overview.graph.GraphDataPoint
+import app.aaps.core.interfaces.overview.graph.ActivityGraphData
 import app.aaps.core.interfaces.overview.graph.IobGraphData
 import app.aaps.core.interfaces.overview.graph.OverviewDataCache
 import app.aaps.core.interfaces.overview.graph.ProfileDisplayData
 import app.aaps.core.interfaces.overview.graph.RatioGraphData
 import app.aaps.core.interfaces.overview.graph.RunningModeDisplayData
 import app.aaps.core.interfaces.overview.graph.RunningModeGraphData
+import app.aaps.core.interfaces.overview.graph.RunningModeSegment
+import app.aaps.core.interfaces.overview.graph.TargetLineData
 import app.aaps.core.interfaces.overview.graph.TempTargetDisplayData
 import app.aaps.core.interfaces.overview.graph.TempTargetState
+import app.aaps.core.interfaces.overview.graph.TherapyEventGraphPoint
+import app.aaps.core.interfaces.overview.graph.TherapyEventType
 import app.aaps.core.interfaces.overview.graph.TimeRange
 import app.aaps.core.interfaces.overview.graph.TreatmentGraphData
 import app.aaps.core.interfaces.overview.graph.VarSensGraphData
+import app.aaps.core.interfaces.plugin.ActivePlugin
 import app.aaps.core.interfaces.profile.ProfileFunction
 import app.aaps.core.interfaces.profile.ProfileUtil
+import app.aaps.core.interfaces.resources.ResourceHelper
 import app.aaps.core.interfaces.rx.bus.RxBus
 import app.aaps.core.interfaces.rx.events.EventBucketedDataCreated
 import app.aaps.core.interfaces.utils.DateUtil
+import app.aaps.core.interfaces.utils.DecimalFormatter
 import app.aaps.core.interfaces.utils.TrendCalculator
+import app.aaps.core.interfaces.utils.Translator
 import app.aaps.core.keys.StringKey
 import app.aaps.core.keys.UnitDoubleKey
 import app.aaps.core.keys.interfaces.Preferences
 import app.aaps.core.objects.extensions.fromGv
+import app.aaps.core.objects.extensions.target
 import app.aaps.core.objects.profile.ProfileSealed
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -54,10 +77,13 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.math.abs
+import kotlin.math.max
 
 /**
  * Implementation of OverviewDataCache using MutableStateFlow.
@@ -86,7 +112,11 @@ class OverviewDataCacheImpl @Inject constructor(
     private val loop: Loop,
     private val config: Config,
     private val processedDeviceStatusData: ProcessedDeviceStatusData,
-    private val rxBus: RxBus
+    private val rxBus: RxBus,
+    private val activePlugin: ActivePlugin,
+    private val decimalFormatter: DecimalFormatter,
+    private val translator: Translator,
+    private val rh: ResourceHelper
 ) : OverviewDataCache {
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
@@ -103,22 +133,20 @@ class OverviewDataCacheImpl @Inject constructor(
 
     // BG data flows
     private val _bgReadingsFlow = MutableStateFlow<List<BgDataPoint>>(emptyList())
-    private val _bucketedDataFlow = MutableStateFlow<List<BgDataPoint>>(emptyList())
-    private val _predictionsFlow = MutableStateFlow<List<BgDataPoint>>(emptyList())
-    private val _bgInfoFlow = MutableStateFlow<BgInfoData?>(null)
-
     override val bgReadingsFlow: StateFlow<List<BgDataPoint>> = _bgReadingsFlow.asStateFlow()
+    private val _bucketedDataFlow = MutableStateFlow<List<BgDataPoint>>(emptyList())
     override val bucketedDataFlow: StateFlow<List<BgDataPoint>> = _bucketedDataFlow.asStateFlow()
+    private val _predictionsFlow = MutableStateFlow<List<BgDataPoint>>(emptyList())
     override val predictionsFlow: StateFlow<List<BgDataPoint>> = _predictionsFlow.asStateFlow()
+    private val _bgInfoFlow = MutableStateFlow<BgInfoData?>(null)
     override val bgInfoFlow: StateFlow<BgInfoData?> = _bgInfoFlow.asStateFlow()
 
     // Overview chip flows
     private val _tempTargetFlow = MutableStateFlow<TempTargetDisplayData?>(null)
-    private val _profileFlow = MutableStateFlow<ProfileDisplayData?>(null)
-    private val _runningModeFlow = MutableStateFlow<RunningModeDisplayData?>(null)
-
     override val tempTargetFlow: StateFlow<TempTargetDisplayData?> = _tempTargetFlow.asStateFlow()
+    private val _profileFlow = MutableStateFlow<ProfileDisplayData?>(null)
     override val profileFlow: StateFlow<ProfileDisplayData?> = _profileFlow.asStateFlow()
+    private val _runningModeFlow = MutableStateFlow<RunningModeDisplayData?>(null)
     override val runningModeFlow: StateFlow<RunningModeDisplayData?> = _runningModeFlow.asStateFlow()
 
     override fun refreshTempTarget() {
@@ -127,31 +155,32 @@ class OverviewDataCacheImpl @Inject constructor(
 
     // Secondary graph flows
     private val _iobGraphFlow = MutableStateFlow(IobGraphData(emptyList(), emptyList()))
-    private val _absIobGraphFlow = MutableStateFlow(AbsIobGraphData(emptyList()))
-    private val _cobGraphFlow = MutableStateFlow(CobGraphData(emptyList(), emptyList()))
-    private val _activityGraphFlow = MutableStateFlow(ActivityGraphData(emptyList(), emptyList()))
-    private val _bgiGraphFlow = MutableStateFlow(BgiGraphData(emptyList(), emptyList()))
-    private val _deviationsGraphFlow = MutableStateFlow(DeviationsGraphData(emptyList()))
-    private val _ratioGraphFlow = MutableStateFlow(RatioGraphData(emptyList()))
-    private val _devSlopeGraphFlow = MutableStateFlow(DevSlopeGraphData(emptyList(), emptyList()))
-    private val _varSensGraphFlow = MutableStateFlow(VarSensGraphData(emptyList()))
-    private val _treatmentGraphFlow = MutableStateFlow(TreatmentGraphData(emptyList(), emptyList(), emptyList(), emptyList()))
-    private val _basalGraphFlow = MutableStateFlow(BasalGraphData(emptyList(), emptyList(), 0.0))
-    private val _targetLineFlow = MutableStateFlow(TargetLineData(emptyList()))
-    private val _runningModeGraphFlow = MutableStateFlow(RunningModeGraphData(emptyList()))
-
     override val iobGraphFlow: StateFlow<IobGraphData> = _iobGraphFlow.asStateFlow()
+    private val _absIobGraphFlow = MutableStateFlow(AbsIobGraphData(emptyList()))
     override val absIobGraphFlow: StateFlow<AbsIobGraphData> = _absIobGraphFlow.asStateFlow()
+    private val _cobGraphFlow = MutableStateFlow(CobGraphData(emptyList(), emptyList()))
     override val cobGraphFlow: StateFlow<CobGraphData> = _cobGraphFlow.asStateFlow()
+    private val _activityGraphFlow = MutableStateFlow(ActivityGraphData(emptyList(), emptyList()))
     override val activityGraphFlow: StateFlow<ActivityGraphData> = _activityGraphFlow.asStateFlow()
+    private val _bgiGraphFlow = MutableStateFlow(BgiGraphData(emptyList(), emptyList()))
     override val bgiGraphFlow: StateFlow<BgiGraphData> = _bgiGraphFlow.asStateFlow()
+    private val _deviationsGraphFlow = MutableStateFlow(DeviationsGraphData(emptyList()))
     override val deviationsGraphFlow: StateFlow<DeviationsGraphData> = _deviationsGraphFlow.asStateFlow()
+    private val _ratioGraphFlow = MutableStateFlow(RatioGraphData(emptyList()))
     override val ratioGraphFlow: StateFlow<RatioGraphData> = _ratioGraphFlow.asStateFlow()
+    private val _devSlopeGraphFlow = MutableStateFlow(DevSlopeGraphData(emptyList(), emptyList()))
     override val devSlopeGraphFlow: StateFlow<DevSlopeGraphData> = _devSlopeGraphFlow.asStateFlow()
+    private val _varSensGraphFlow = MutableStateFlow(VarSensGraphData(emptyList()))
     override val varSensGraphFlow: StateFlow<VarSensGraphData> = _varSensGraphFlow.asStateFlow()
+    private val _treatmentGraphFlow = MutableStateFlow(TreatmentGraphData(emptyList(), emptyList(), emptyList(), emptyList()))
     override val treatmentGraphFlow: StateFlow<TreatmentGraphData> = _treatmentGraphFlow.asStateFlow()
+    private val _epsGraphFlow = MutableStateFlow<List<EpsGraphPoint>>(emptyList())
+    override val epsGraphFlow: StateFlow<List<EpsGraphPoint>> = _epsGraphFlow.asStateFlow()
+    private val _basalGraphFlow = MutableStateFlow(BasalGraphData(emptyList(), emptyList(), 0.0))
     override val basalGraphFlow: StateFlow<BasalGraphData> = _basalGraphFlow.asStateFlow()
+    private val _targetLineFlow = MutableStateFlow(TargetLineData(emptyList()))
     override val targetLineFlow: StateFlow<TargetLineData> = _targetLineFlow.asStateFlow()
+    private val _runningModeGraphFlow = MutableStateFlow(RunningModeGraphData(emptyList()))
     override val runningModeGraphFlow: StateFlow<RunningModeGraphData> = _runningModeGraphFlow.asStateFlow()
 
     init {
@@ -172,34 +201,8 @@ class OverviewDataCacheImpl @Inject constructor(
             }
         }
 
-        // Observe TempTarget changes
-        scope.launch {
-            persistenceLayer.observeChanges(TT::class.java).collect {
-                aapsLogger.debug(LTag.UI, "TT change detected, updating TempTarget state")
-                updateTempTargetFromDatabase()
-            }
-        }
-
-        // Observe EffectiveProfileSwitch changes
-        // Delay allows ProfileFunctionImpl cache to be invalidated via RxJava path
-        // (EventEffectiveProfileSwitchChanged) before we read the profile
-        scope.launch {
-            persistenceLayer.observeChanges(EPS::class.java).collect {
-                aapsLogger.debug(LTag.UI, "EPS change detected, updating Profile state")
-                delay(500)
-                updateProfileFromDatabase()
-                // TT display depends on profile being loaded (for default target)
-                updateTempTargetFromDatabase()
-            }
-        }
-
-        // Observe RunningMode changes
-        scope.launch {
-            persistenceLayer.observeChanges(RM::class.java).collect {
-                aapsLogger.debug(LTag.UI, "RM change detected, updating RunningMode state")
-                updateRunningModeFromDatabase()
-            }
-        }
+        // TT and EPS chip observers are handled below in Category B reactive graph observers
+        // RM chip observer is also handled below in Category B
 
         // Refresh trend arrow after bucketed data is created (bucketed data is ready after this event)
         scope.launch {
@@ -230,6 +233,78 @@ class OverviewDataCacheImpl @Inject constructor(
                 aapsLogger.debug(LTag.UI, "Low mark changed, refreshing BgInfo")
                 updateBgInfoFromDatabase()
             }
+        }
+
+        // =========================================================================
+        // Category B reactive graph observers (treatments, RM, TT, basal)
+        // =========================================================================
+
+        // Observe treatment-related DB changes
+        for (type in listOf(BS::class.java, CA::class.java, EB::class.java,
+                            TE::class.java, HR::class.java, SC::class.java)) {
+            scope.launch {
+                persistenceLayer.observeChanges(type)
+                    .debounce(300)
+                    .collect { rebuildTreatmentGraph() }
+            }
+        }
+        // Rebuild all Category B graphs when time range changes
+        scope.launch {
+            timeRangeFlow
+                .filterNotNull()
+                .debounce(300)
+                .collect {
+                    rebuildTreatmentGraph()
+                    rebuildEpsGraph()
+                    rebuildRunningModeGraph()
+                    rebuildTargetLine()
+                    rebuildBasalGraph()
+                }
+        }
+
+        // Observe running mode changes for graph + chip
+        scope.launch {
+            persistenceLayer.observeChanges(RM::class.java)
+                .debounce(300)
+                .collect {
+                    updateRunningModeFromDatabase()
+                    rebuildRunningModeGraph()
+                }
+        }
+
+        // Observe TT changes for target line graph + chip
+        scope.launch {
+            persistenceLayer.observeChanges(TT::class.java)
+                .debounce(300)
+                .collect {
+                    updateTempTargetFromDatabase()
+                    rebuildTargetLine()
+                }
+        }
+        // EPS changes affect EPS graph, profile chip, TT chip, target line, and basal
+        scope.launch {
+            persistenceLayer.observeChanges(EPS::class.java)
+                .debounce(300)
+                .collect {
+                    rebuildEpsGraph()
+                    delay(500) // Allow ProfileFunctionImpl cache invalidation
+                    updateProfileFromDatabase()
+                    updateTempTargetFromDatabase()
+                    rebuildTargetLine()
+                    rebuildBasalGraph()
+                }
+        }
+
+        // Observe basal-related DB changes
+        scope.launch {
+            persistenceLayer.observeChanges(TB::class.java)
+                .debounce(300)
+                .collect { rebuildBasalGraph() }
+        }
+        scope.launch {
+            persistenceLayer.observeChanges(EB::class.java)
+                .debounce(300)
+                .collect { rebuildBasalGraph() }
         }
     }
 
@@ -429,20 +504,204 @@ class OverviewDataCacheImpl @Inject constructor(
         _varSensGraphFlow.value = data
     }
 
-    override fun updateTreatmentGraph(data: TreatmentGraphData) {
-        _treatmentGraphFlow.value = data
+    // =========================================================================
+    // Category B: Reactive graph builders (treatments, RM, TT, basal)
+    // =========================================================================
+
+    /** Compute graph time range from current timeRangeFlow */
+    private fun graphTimeRange(): Pair<Long, Long>? {
+        val range = timeRangeFlow.value ?: return null
+        val toTime = range.endTime
+        val fromTime = toTime - T.hours(Constants.GRAPH_TIME_RANGE_HOURS.toLong()).msecs()
+        return fromTime to toTime
     }
 
-    override fun updateBasalGraph(data: BasalGraphData) {
-        _basalGraphFlow.value = data
+    private suspend fun rebuildTreatmentGraph() {
+        val (fromTime, toTime) = graphTimeRange() ?: return
+        val bolusStep = activePlugin.activePump.pumpDescription.bolusStep
+
+        // Boluses and SMBs
+        val bolusPoints = persistenceLayer.getBolusesFromTimeToTime(fromTime, toTime, true)
+            .filter { it.type == BS.Type.NORMAL || it.type == BS.Type.SMB }
+            .map { bs ->
+                BolusGraphPoint(
+                    timestamp = bs.timestamp,
+                    amount = bs.amount,
+                    bolusType = if (bs.type == BS.Type.SMB) BolusType.SMB else BolusType.NORMAL,
+                    isValid = bs.isValid,
+                    label = decimalFormatter.toPumpSupportedBolus(bs.amount, bolusStep)
+                )
+            }
+
+        // Carbs
+        val carbsPoints = persistenceLayer.getCarbsFromTimeToTimeExpanded(fromTime, toTime, true)
+            .map { ca ->
+                CarbsGraphPoint(
+                    timestamp = ca.timestamp,
+                    amount = ca.amount,
+                    isValid = ca.isValid && ca.amount > 0,
+                    label = rh.gs(app.aaps.core.ui.R.string.format_carbs, ca.amount.toInt())
+                )
+            }
+
+        // Extended boluses
+        val extendedBolusPoints = if (!activePlugin.activePump.isFakingTempsByExtendedBoluses) {
+            persistenceLayer.getExtendedBolusesStartingFromTimeToTime(fromTime, toTime, true)
+                .filter { it.duration != 0L }
+                .map { eb ->
+                    ExtendedBolusGraphPoint(
+                        timestamp = eb.timestamp,
+                        amount = eb.amount,
+                        rate = eb.rate,
+                        duration = eb.duration,
+                        label = rh.gs(app.aaps.core.ui.R.string.extended_bolus_data_point_graph, eb.amount, eb.rate)
+                    )
+                }
+        } else emptyList()
+
+        // Therapy events
+        val therapyEventPoints = persistenceLayer.getTherapyEventDataFromToTime(fromTime - T.hours(6).msecs(), toTime)
+            .filter { te -> te.timestamp + te.duration >= fromTime && te.timestamp <= toTime }
+            .map { te ->
+                val teType = when {
+                    te.type == TE.Type.NS_MBG                -> TherapyEventType.MBG
+                    te.type == TE.Type.FINGER_STICK_BG_VALUE -> TherapyEventType.FINGER_STICK
+                    te.type == TE.Type.ANNOUNCEMENT          -> TherapyEventType.ANNOUNCEMENT
+                    te.type == TE.Type.SETTINGS_EXPORT       -> TherapyEventType.SETTINGS_EXPORT
+                    te.type == TE.Type.EXERCISE               -> TherapyEventType.EXERCISE
+                    te.duration > 0                          -> TherapyEventType.GENERAL_WITH_DURATION
+                    else                                     -> TherapyEventType.GENERAL
+                }
+                val teLabel = if (!te.note.isNullOrBlank()) te.note!! else translator.translate(te.type)
+                TherapyEventGraphPoint(
+                    timestamp = te.timestamp,
+                    eventType = teType,
+                    label = teLabel,
+                    duration = te.duration
+                )
+            }
+
+        _treatmentGraphFlow.value = TreatmentGraphData(
+            boluses = bolusPoints,
+            carbs = carbsPoints,
+            extendedBoluses = extendedBolusPoints,
+            therapyEvents = therapyEventPoints
+        )
     }
 
-    override fun updateTargetLine(data: TargetLineData) {
-        _targetLineFlow.value = data
+    private suspend fun rebuildEpsGraph() {
+        val (fromTime, toTime) = graphTimeRange() ?: return
+        _epsGraphFlow.value = persistenceLayer.getEffectiveProfileSwitchesFromTimeToTime(fromTime, toTime, true)
+            .map { eps ->
+                val label = buildString {
+                    if (eps.originalPercentage != 100) append("${eps.originalPercentage}%")
+                    if (eps.originalPercentage != 100 && eps.originalTimeshift != 0L) append(",")
+                    if (eps.originalTimeshift != 0L) append("${T.msecs(eps.originalTimeshift).hours()}${rh.gs(app.aaps.core.interfaces.R.string.shorthour)}")
+                }
+                EpsGraphPoint(
+                    timestamp = eps.timestamp,
+                    originalPercentage = eps.originalPercentage,
+                    originalTimeshift = eps.originalTimeshift,
+                    profileName = eps.originalCustomizedName,
+                    label = label
+                )
+            }
     }
 
-    override fun updateRunningModeGraph(data: RunningModeGraphData) {
-        _runningModeGraphFlow.value = data
+    private suspend fun rebuildRunningModeGraph() {
+        val (fromTime, toTime) = graphTimeRange() ?: return
+        var endTime = toTime
+        loop.lastRun?.constraintsProcessed?.let { endTime = max(it.latestPredictionsTime, endTime) }
+
+        // Batch query all RM records in range (instead of per-slot getRunningModeActiveAt)
+        val rmRecords = persistenceLayer.getRunningModesFromTimeToTime(fromTime, endTime, true)
+
+        // Get mode active at fromTime for the initial segment
+        val initialMode = persistenceLayer.getRunningModeActiveAt(fromTime)
+
+        // Build segments from sorted records
+        val segments = mutableListOf<RunningModeSegment>()
+        var currentMode = initialMode.mode
+        var segmentStart = fromTime
+
+        for (rm in rmRecords) {
+            if (rm.timestamp > segmentStart && rm.mode != currentMode) {
+                segments.add(RunningModeSegment(currentMode, segmentStart, rm.timestamp))
+                currentMode = rm.mode
+                segmentStart = rm.timestamp
+            }
+        }
+        // Final segment to endTime
+        segments.add(RunningModeSegment(currentMode, segmentStart, endTime))
+
+        _runningModeGraphFlow.value = RunningModeGraphData(segments = segments)
+    }
+
+    private suspend fun rebuildTargetLine() {
+        val (fromTime, toTime) = graphTimeRange() ?: return
+        val profile = profileFunction.getProfile() ?: return
+        var endTime = toTime
+        loop.lastRun?.constraintsProcessed?.let { endTime = max(it.latestPredictionsTime, endTime) }
+
+        val targets = mutableListOf<GraphDataPoint>()
+        var lastTarget = -1.0
+        var time = fromTime
+        while (time < endTime) {
+            val tt = persistenceLayer.getTemporaryTargetActiveAt(time)
+            val value = if (tt != null) {
+                profileUtil.fromMgdlToUnits(tt.target())
+            } else {
+                profileUtil.fromMgdlToUnits((profile.getTargetLowMgdl(time) + profile.getTargetHighMgdl(time)) / 2)
+            }
+            if (value != lastTarget) {
+                targets.add(GraphDataPoint(time, value))
+                lastTarget = value
+            }
+            time += 5 * 60 * 1000L
+        }
+        // Final point
+        if (lastTarget >= 0.0) targets.add(GraphDataPoint(endTime, lastTarget))
+
+        _targetLineFlow.value = TargetLineData(targets)
+    }
+
+    private suspend fun rebuildBasalGraph() {
+        val (fromTime, toTime) = graphTimeRange() ?: return
+        val profileBasal = mutableListOf<GraphDataPoint>()
+        val actualBasal = mutableListOf<GraphDataPoint>()
+        var lastProfileBasal = -1.0
+        var lastActualBasal = -1.0
+        var maxBasal = 0.0
+
+        var time = fromTime
+        while (time < toTime) {
+            val profile = profileFunction.getProfile(time)
+            if (profile == null) {
+                time += 60 * 1000L
+                continue
+            }
+            val basalData = iobCobCalculator.getBasalData(profile, time)
+            val profileBasalValue = basalData.basal
+            val actualBasalValue = if (basalData.isTempBasalRunning) basalData.tempBasalAbsolute else profileBasalValue
+
+            if (profileBasalValue != lastProfileBasal) {
+                profileBasal.add(GraphDataPoint(time, profileBasalValue))
+                lastProfileBasal = profileBasalValue
+            }
+            if (actualBasalValue != lastActualBasal) {
+                actualBasal.add(GraphDataPoint(time, actualBasalValue))
+                lastActualBasal = actualBasalValue
+            }
+            maxBasal = max(maxBasal, max(profileBasalValue, actualBasalValue))
+
+            time += 60 * 1000L
+        }
+
+        // Final points
+        if (lastProfileBasal >= 0.0) profileBasal.add(GraphDataPoint(toTime, lastProfileBasal))
+        if (lastActualBasal >= 0.0) actualBasal.add(GraphDataPoint(toTime, lastActualBasal))
+
+        _basalGraphFlow.value = BasalGraphData(profileBasal, actualBasal, maxBasal)
     }
 
     override fun reset() {
@@ -465,6 +724,7 @@ class OverviewDataCacheImpl @Inject constructor(
         _devSlopeGraphFlow.value = DevSlopeGraphData(emptyList(), emptyList())
         _varSensGraphFlow.value = VarSensGraphData(emptyList())
         _treatmentGraphFlow.value = TreatmentGraphData(emptyList(), emptyList(), emptyList(), emptyList())
+        _epsGraphFlow.value = emptyList()
         _basalGraphFlow.value = BasalGraphData(emptyList(), emptyList(), 0.0)
         _targetLineFlow.value = TargetLineData(emptyList())
         _runningModeGraphFlow.value = RunningModeGraphData(emptyList())
