@@ -12,6 +12,8 @@ import app.aaps.core.interfaces.logging.L
 import app.aaps.core.interfaces.logging.LTag
 import app.aaps.core.interfaces.logging.LogElement
 import app.aaps.core.interfaces.logging.UserEntryLogger
+import app.aaps.core.interfaces.maintenance.ExportPreparation
+import app.aaps.core.interfaces.maintenance.ImportExportPrefs
 import app.aaps.core.interfaces.maintenance.Maintenance
 import app.aaps.core.interfaces.resources.ResourceHelper
 import app.aaps.core.interfaces.utils.fabric.FabricPrivacy
@@ -26,7 +28,9 @@ import app.aaps.core.interfaces.sync.DataSyncSelectorXdrip
 import app.aaps.core.keys.StringKey
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -45,6 +49,7 @@ class MaintenanceViewModel @Inject constructor(
     private val rh: ResourceHelper,
     private val l: L,
     private val maintenance: Maintenance,
+    private val importExportPrefs: ImportExportPrefs,
     private val activePlugin: ActivePlugin,
     private val persistenceLayer: PersistenceLayer,
     private val fabricPrivacy: FabricPrivacy,
@@ -146,7 +151,7 @@ class MaintenanceViewModel @Inject constructor(
         uel.log(Action.RESET_DATABASES, Sources.Maintenance)
     }
 
-    // Export/Import (logged only, execution handled by caller with context)
+    // Export/Import
 
     fun logSelectDirectory() {
         uel.log(Action.SELECT_DIRECTORY, Sources.Maintenance)
@@ -158,15 +163,74 @@ class MaintenanceViewModel @Inject constructor(
         }
     }
 
-    fun logExportSettings() {
-        uel.log(Action.EXPORT_SETTINGS, Sources.Maintenance)
-    }
-
     fun logImportSettings() {
         uel.log(Action.IMPORT_SETTINGS, Sources.Maintenance)
     }
 
     fun logExportCsv() {
         uel.log(Action.EXPORT_CSV, Sources.Maintenance)
+    }
+
+    // Compose export flow
+
+    sealed interface ExportState {
+        data object Idle : ExportState
+        data object MasterPasswordMissing : ExportState
+        data class ConfirmExport(val fileName: String) : ExportState
+        data object AskPassword : ExportState
+    }
+
+    val exportState: StateFlow<ExportState>
+        field = MutableStateFlow<ExportState>(ExportState.Idle)
+
+    fun startExport() {
+        uel.log(Action.EXPORT_SETTINGS, Sources.Maintenance)
+
+        if (!importExportPrefs.isMasterPasswordSet()) {
+            exportState.value = ExportState.MasterPasswordMissing
+            return
+        }
+
+        val preparation = importExportPrefs.prepareExport()
+        if (preparation == null) {
+            viewModelScope.launch { _events.emit(MaintenanceEvent.Error(rh.gs(CoreUiR.string.error))) }
+            return
+        }
+
+        val cached = preparation.cachedPassword
+        if (cached != null) {
+            // Cached password available — export directly
+            doExport(cached)
+        } else {
+            // Need to show confirm + password dialogs
+            exportState.value = ExportState.ConfirmExport(preparation.fileName)
+        }
+    }
+
+    fun onExportConfirmed() {
+        exportState.value = ExportState.AskPassword
+    }
+
+    fun onExportPasswordEntered(password: String) {
+        exportState.value = ExportState.Idle
+        val cached = importExportPrefs.cacheExportPassword(password)
+        doExport(cached)
+    }
+
+    fun cancelExport() {
+        exportState.value = ExportState.Idle
+    }
+
+    private fun doExport(password: String) {
+        viewModelScope.launch {
+            val success = withContext(Dispatchers.IO) {
+                importExportPrefs.executeExport(password)
+            }
+            val message = if (success)
+                rh.gs(CoreUiR.string.export_result_message_exported)
+            else
+                rh.gs(CoreUiR.string.export_result_message_failed)
+            _events.emit(MaintenanceEvent.Snackbar(message))
+        }
     }
 }

@@ -34,6 +34,7 @@ import org.joda.time.format.DateTimeFormat
 import java.io.File
 import javax.inject.Inject
 import kotlin.math.abs
+import androidx.core.net.toUri
 
 @Suppress("SpellCheckingInspection")
 @Reusable
@@ -142,7 +143,7 @@ class FileListProviderImpl @Inject constructor(
 
     override fun ensureExportDirExists(): DocumentFile? {
         val prefUri = preferences.get().getIfExists(StringKey.AapsDirectoryUri) ?: return null
-        val uri = Uri.parse(prefUri)
+        val uri = prefUri.toUri()
         val baseDir = DocumentFile.fromTreeUri(context, uri)
         val files = baseDir?.listFiles()
         return files?.firstOrNull { it.name == exportsPath } ?: baseDir?.createDirectory(exportsPath)
@@ -150,7 +151,7 @@ class FileListProviderImpl @Inject constructor(
 
     override fun ensureTempDirExists(): DocumentFile? {
         val prefUri = preferences.get().getIfExists(StringKey.AapsDirectoryUri) ?: return null
-        val uri = Uri.parse(prefUri)
+        val uri = prefUri.toUri()
         val baseDir = DocumentFile.fromTreeUri(context, uri)
         val files = baseDir?.listFiles()
         return files?.firstOrNull { it.name == tempPath } ?: baseDir?.createDirectory(tempPath)
@@ -158,7 +159,7 @@ class FileListProviderImpl @Inject constructor(
 
     override fun ensureExtraDirExists(): DocumentFile? {
         val prefUri = preferences.get().getIfExists(StringKey.AapsDirectoryUri) ?: return null
-        val uri = Uri.parse(prefUri)
+        val uri = prefUri.toUri()
         val baseDir = DocumentFile.fromTreeUri(context, uri)
         val files = baseDir?.listFiles()
         return files?.firstOrNull { it.name == extraPath } ?: baseDir?.createDirectory(extraPath)

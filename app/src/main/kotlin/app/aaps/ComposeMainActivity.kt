@@ -351,6 +351,9 @@ class ComposeMainActivity : DaggerAppCompatActivityWithResult() {
                                     maintenanceViewModel.emitError("Unable to launch activity. This is an Android issue")
                                 }
                             },
+                            onImportSettingsExecute = {
+                                importExportPrefs.importSharedPreferences(this@ComposeMainActivity)
+                            },
                             onExportCsvExecute = {
                                 importExportPrefs.exportUserEntriesCsv(this@ComposeMainActivity)
                             },

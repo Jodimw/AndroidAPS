@@ -28,6 +28,7 @@ import app.aaps.core.interfaces.di.ApplicationScope
 import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.logging.LTag
 import app.aaps.core.interfaces.maintenance.FileListProvider
+import app.aaps.core.interfaces.maintenance.ExportPreparation
 import app.aaps.core.interfaces.maintenance.ImportExportPrefs
 import app.aaps.core.interfaces.maintenance.PrefMetadata
 import app.aaps.core.interfaces.maintenance.PrefsFile
@@ -100,12 +101,82 @@ class ImportExportPrefsImpl @Inject constructor(
 ) : ImportExportPrefs {
 
     override var selectedImportFile: PrefsFile? = null
+    private var pendingExportFile: DocumentFile? = null
 
     override fun prefsFileExists(): Boolean = prefFileList.listPreferenceFiles().isNotEmpty()
 
-    override fun exportSharedPreferences(activity: FragmentActivity) = exportSharedPreferencesInternal(activity)
+    // Compose export support — discrete steps
 
+    override fun isMasterPasswordSet(): Boolean =
+        !preferences.getIfExists(StringKey.ProtectionMasterPassword).isNullOrEmpty()
 
+    override fun prepareExport(): ExportPreparation? {
+        prefFileList.ensureExportDirExists()
+        val newFile = prefFileList.newPreferenceFile() ?: return null
+        pendingExportFile = newFile
+
+        val (password, isExpired, isAboutToExpire) = exportPasswordDataStore.getPasswordFromDataStore(context)
+        val cachedPassword = if (password.isNotEmpty() && !(isExpired || isAboutToExpire)) password else {
+            exportPasswordDataStore.clearPasswordDataStore(context)
+            null
+        }
+        return ExportPreparation(
+            fileName = newFile.name ?: "unknown",
+            cachedPassword = cachedPassword
+        )
+    }
+
+    override fun executeExport(password: String): Boolean {
+        val file = pendingExportFile ?: return false
+        pendingExportFile = null
+        val success = savePreferences(file, password)
+
+        val resultMessage = if (success) rh.gs(R.string.exported) else rh.gs(R.string.exported_failed)
+        appScope.launch {
+            persistenceLayer.insertPumpTherapyEventIfNewByTimestamp(
+                therapyEvent = TE.asSettingsExport(error = resultMessage),
+                timestamp = dateUtil.now(),
+                action = Action.EXPORT_SETTINGS,
+                source = Sources.Automation,
+                note = "Manual: $resultMessage",
+                listValues = listOf()
+            )
+        }
+        return success
+    }
+
+    override fun cacheExportPassword(password: String): String =
+        exportPasswordDataStore.putPasswordToDataStore(context, password)
+
+    // Legacy export — uses dialogs via uiInteraction (kept for old UI)
+
+    override fun exportSharedPreferences(activity: FragmentActivity) {
+        prefFileList.ensureExportDirExists()
+        val newFile = prefFileList.newPreferenceFile() ?: return
+
+        askToConfirmExport(activity, newFile) { password ->
+            // Save preferences
+            val exportResultMessage = if (savePreferences(newFile, password))
+                rh.gs(R.string.exported)
+            else
+                rh.gs(R.string.exported_failed)
+
+            // Send toast alert to overview
+            ToastUtils.okToast(activity, exportResultMessage)
+
+            // Register this event
+            appScope.launch {
+                persistenceLayer.insertPumpTherapyEventIfNewByTimestamp(
+                    therapyEvent = TE.asSettingsExport(error = exportResultMessage),
+                    timestamp = dateUtil.now(),
+                    action = Action.EXPORT_SETTINGS, // Signal export was done....
+                    source = Sources.Automation,
+                    note = "Manual: $exportResultMessage",
+                    listValues = listOf()
+                )
+            }
+        }
+    }
 
     private fun prepareMetadata(context: Context): Map<PrefsMetadataKey, PrefMetadata> {
 
@@ -175,7 +246,7 @@ class ImportExportPrefsImpl @Inject constructor(
             uiInteraction.showError(
                 context = activity,
                 title = rh.gs(wrongPwdTitle),
-                message = rh.gs(R.string.master_password_missing, rh.gs(app.aaps.core.ui.R.string.protection)),
+                message = rh.gs(app.aaps.core.ui.R.string.master_password_missing, rh.gs(app.aaps.core.ui.R.string.protection)),
                 positiveButton = R.string.nav_preferences,
                 ok = { activity.startActivity(Intent(activity, uiInteraction.preferencesActivity).putExtra(UiInteraction.PREFERENCE, UiInteraction.Preferences.PROTECTION)) }
             )
@@ -207,9 +278,9 @@ class ImportExportPrefsImpl @Inject constructor(
         // Ask for entering password and store when successfully entered
         uiInteraction.showOkCancelDialog(
             context = activity, title = rh.gs(app.aaps.core.ui.R.string.nav_export),
-            message = rh.gs(R.string.export_to) + " " + fileToExport.name + "?",
-            secondMessage = rh.gs(R.string.password_preferences_encrypt_prompt), ok = {
-                askForMasterPassIfNeeded(activity, R.string.preferences_export_canceled)
+            message = rh.gs(app.aaps.core.ui.R.string.export_to) + " " + fileToExport.name + "?",
+            secondMessage = rh.gs(app.aaps.core.ui.R.string.password_preferences_encrypt_prompt), ok = {
+                askForMasterPassIfNeeded(activity, app.aaps.core.ui.R.string.preferences_export_canceled)
                 { password ->
                     then(exportPasswordDataStore.putPasswordToDataStore(context, password))
                 }
@@ -285,34 +356,6 @@ class ImportExportPrefsImpl @Inject constructor(
         }
         aapsLogger.debug(LTag.CORE, "savePreferences: $resultOk")
         return resultOk
-    }
-
-    private fun exportSharedPreferencesInternal(activity: FragmentActivity) {
-        prefFileList.ensureExportDirExists()
-        val newFile = prefFileList.newPreferenceFile() ?: return
-
-        askToConfirmExport(activity, newFile) { password ->
-            // Save preferences
-            val exportResultMessage = if (savePreferences(newFile, password))
-                rh.gs(R.string.exported)
-            else
-                rh.gs(R.string.exported_failed)
-
-            // Send toast alert to overview
-            ToastUtils.okToast(activity, exportResultMessage)
-
-            // Register this event
-            appScope.launch {
-                persistenceLayer.insertPumpTherapyEventIfNewByTimestamp(
-                    therapyEvent = TE.asSettingsExport(error = exportResultMessage),
-                    timestamp = dateUtil.now(),
-                    action = Action.EXPORT_SETTINGS, // Signal export was done....
-                    source = Sources.Automation,
-                    note = "Manual: $exportResultMessage",
-                    listValues = listOf()
-                )
-            }
-        }
     }
 
     override fun exportSharedPreferencesNonInteractive(context: Context, password: String): Boolean {

@@ -663,6 +663,12 @@
     <string name="export_failed">Failed</string>
     <string name="export_alert">ALERT</string>
 
+    <!-- Export dialog strings -->
+    <string name="master_password_missing">Master password is not set!\n\nPlease set your Master password in Preferences (%1$s)</string>
+    <string name="export_to">Export settings to</string>
+    <string name="password_preferences_encrypt_prompt">You will be asked for master password, which will be used to encrypt exported preferences.</string>
+    <string name="preferences_export_canceled">Export canceled! Preferences were NOT exported!</string>
+
     <!-- <unattended_export result messages> -->
     <string name="export_result_message_exported">Settings exported</string>
     <string name="export_result_message_failed">Settings export FAILED!</string>

@@ -29,7 +29,9 @@ import app.aaps.core.interfaces.plugin.PluginBase
 import app.aaps.core.ui.compose.AapsFab
 import app.aaps.core.ui.compose.OkCancelDialog
 import app.aaps.core.ui.compose.OkDialog
+import app.aaps.core.ui.compose.QueryAnyPasswordDialog
 import app.aaps.ui.compose.alertDialogs.AboutAlertDialog
+import app.aaps.ui.compose.management.MaintenanceViewModel.ExportState
 import app.aaps.ui.compose.alertDialogs.AboutDialogData
 import app.aaps.ui.compose.management.LogSettingBottomSheet
 import app.aaps.ui.compose.management.MaintenanceBottomSheet
@@ -45,6 +47,7 @@ import app.aaps.ui.search.SearchIndexEntry
 import app.aaps.ui.search.SearchResults
 import app.aaps.ui.search.SearchUiState
 import kotlinx.coroutines.launch
+import app.aaps.core.keys.R as KeysR
 import app.aaps.core.ui.R as CoreUiR
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -80,6 +83,7 @@ fun MainScreen(
     onAboutDialogDismiss: () -> Unit,
     onMaintenanceSheetDismiss: () -> Unit,
     onDirectoryClick: () -> Unit,
+    onImportSettingsExecute: () -> Unit,
     onExportCsvExecute: () -> Unit,
     onRecreateActivity: () -> Unit,
     // Overview status callbacks
@@ -132,6 +136,9 @@ fun MainScreen(
     var showConfirmExportCsv by remember { mutableStateOf(false) }
     var cleanupResultText by remember { mutableStateOf<String?>(null) }
     val snackbarHostState = remember { SnackbarHostState() }
+
+    // Export dialog state
+    val exportState by maintenanceViewModel.exportState.collectAsState()
 
     // Collect maintenance events
     LaunchedEffect(Unit) {
@@ -380,8 +387,13 @@ fun MainScreen(
                 maintenanceViewModel.logSelectDirectory()
                 onDirectoryClick()
             },
-            onExportSettingsClick = { maintenanceViewModel.logExportSettings() },
-            onImportSettingsClick = { maintenanceViewModel.logImportSettings() },
+            onExportSettingsClick = {
+                maintenanceViewModel.startExport()
+            },
+            onImportSettingsClick = {
+                maintenanceViewModel.logImportSettings()
+                onImportSettingsExecute()
+            },
             onExportCsvClick = { showConfirmExportCsv = true },
             onResetApsResultsClick = { showConfirmResetAps = true },
             onCleanupDbClick = { showConfirmCleanupDb = true },
@@ -454,6 +466,38 @@ fun MainScreen(
             },
             onDismiss = { showConfirmExportCsv = false }
         )
+    }
+
+    // Export settings dialog chain
+    when (exportState) {
+        is ExportState.MasterPasswordMissing -> {
+            OkDialog(
+                title = stringResource(CoreUiR.string.nav_export),
+                message = stringResource(CoreUiR.string.master_password_missing, stringResource(CoreUiR.string.protection)),
+                onDismiss = { maintenanceViewModel.cancelExport() }
+            )
+        }
+
+        is ExportState.ConfirmExport         -> {
+            OkCancelDialog(
+                title = stringResource(CoreUiR.string.export_to),
+                message = (exportState as ExportState.ConfirmExport).fileName + "?\n\n" +
+                    stringResource(CoreUiR.string.password_preferences_encrypt_prompt),
+                onConfirm = { maintenanceViewModel.onExportConfirmed() },
+                onDismiss = { maintenanceViewModel.cancelExport() }
+            )
+        }
+
+        is ExportState.AskPassword           -> {
+            QueryAnyPasswordDialog(
+                title = stringResource(KeysR.string.master_password),
+                passwordExplanation = stringResource(CoreUiR.string.password_preferences_encrypt_prompt),
+                onConfirm = { password -> maintenanceViewModel.onExportPasswordEntered(password) },
+                onCancel = { maintenanceViewModel.cancelExport() }
+            )
+        }
+
+        is ExportState.Idle                  -> { /* no dialog */ }
     }
 
     // Cleanup result dialog (result contains HTML with <br> tags)
