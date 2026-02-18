@@ -83,6 +83,7 @@ fun MainScreen(
     onAboutDialogDismiss: () -> Unit,
     onMaintenanceSheetDismiss: () -> Unit,
     onDirectoryClick: () -> Unit,
+    onCloudDirectoryClick: () -> Unit,
     onImportSettingsExecute: () -> Unit,
     onExportCsvExecute: () -> Unit,
     onRecreateActivity: () -> Unit,
@@ -139,6 +140,9 @@ fun MainScreen(
 
     // Export dialog state
     val exportState by maintenanceViewModel.exportState.collectAsState()
+
+    // Export config for dynamic labels and cloud error badge
+    val exportConfig by maintenanceViewModel.exportConfig.collectAsState()
 
     // Collect maintenance events
     LaunchedEffect(Unit) {
@@ -378,6 +382,11 @@ fun MainScreen(
 
     // Maintenance bottom sheet
     if (uiState.showMaintenanceSheet) {
+        // Refresh export config when sheet opens
+        LaunchedEffect(Unit) {
+            maintenanceViewModel.refreshExportConfig()
+        }
+
         MaintenanceBottomSheet(
             onDismiss = onMaintenanceSheetDismiss,
             onLogSettingsClick = { showLogSettings = true },
@@ -387,6 +396,7 @@ fun MainScreen(
                 maintenanceViewModel.logSelectDirectory()
                 onDirectoryClick()
             },
+            onCloudDirectoryClick = onCloudDirectoryClick,
             onExportSettingsClick = {
                 maintenanceViewModel.startExport()
             },
@@ -397,7 +407,14 @@ fun MainScreen(
             onExportCsvClick = { showConfirmExportCsv = true },
             onResetApsResultsClick = { showConfirmResetAps = true },
             onCleanupDbClick = { showConfirmCleanupDb = true },
-            onResetDbClick = { showConfirmResetDb = true }
+            onResetDbClick = { showConfirmResetDb = true },
+            exportConfig = exportConfig,
+            onToggleSettingsLocal = { maintenanceViewModel.toggleSettingsLocal(it) },
+            onToggleSettingsCloud = { maintenanceViewModel.toggleSettingsCloud(it) },
+            onToggleLogEmail = { maintenanceViewModel.toggleLogEmail(it) },
+            onToggleLogCloud = { maintenanceViewModel.toggleLogCloud(it) },
+            onToggleCsvLocal = { maintenanceViewModel.toggleCsvLocal(it) },
+            onToggleCsvCloud = { maintenanceViewModel.toggleCsvCloud(it) }
         )
     }
 
@@ -479,9 +496,10 @@ fun MainScreen(
         }
 
         is ExportState.ConfirmExport         -> {
+            val confirmState = exportState as ExportState.ConfirmExport
             OkCancelDialog(
                 title = stringResource(CoreUiR.string.export_to),
-                message = (exportState as ExportState.ConfirmExport).fileName + "?\n\n" +
+                message = confirmState.fileName + "?\n\n" +
                     stringResource(CoreUiR.string.password_preferences_encrypt_prompt),
                 onConfirm = { maintenanceViewModel.onExportConfirmed() },
                 onDismiss = { maintenanceViewModel.cancelExport() }

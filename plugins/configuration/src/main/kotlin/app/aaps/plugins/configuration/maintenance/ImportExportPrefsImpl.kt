@@ -30,7 +30,10 @@ import app.aaps.core.interfaces.di.ApplicationScope
 import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.logging.LTag
 import app.aaps.core.interfaces.maintenance.FileListProvider
+import app.aaps.core.interfaces.maintenance.ExportConfig
+import app.aaps.core.interfaces.maintenance.ExportDestination
 import app.aaps.core.interfaces.maintenance.ExportPreparation
+import app.aaps.core.interfaces.maintenance.ExportResult
 import app.aaps.core.interfaces.maintenance.ImportExportPrefs
 import app.aaps.core.interfaces.maintenance.PrefMetadata
 import app.aaps.core.interfaces.maintenance.PrefsFile
@@ -132,39 +135,216 @@ class ImportExportPrefsImpl @Inject constructor(
     override fun isMasterPasswordSet(): Boolean =
         !preferences.getIfExists(StringKey.ProtectionMasterPassword).isNullOrEmpty()
 
+    override fun getExportConfig(): ExportConfig {
+        val isCloudActive = cloudStorageManager.isCloudStorageActive()
+        val provider = cloudStorageManager.getActiveProvider()
+        val hasCloudError = isCloudActive && (provider?.hasConnectionError() == true || provider?.hasValidCredentials() != true)
+        return ExportConfig(
+            isCloudActive = isCloudActive,
+            isCloudError = hasCloudError,
+            settingsLocal = exportOptionsDialog.isSettingsLocalEnabled(),
+            settingsCloud = exportOptionsDialog.isSettingsCloudEnabled(),
+            logEmail = sp.getBoolean(ExportOptionsDialog.PREF_LOG_EMAIL_ENABLED, true),
+            logCloud = exportOptionsDialog.isLogCloudEnabled(),
+            csvLocal = sp.getBoolean(ExportOptionsDialog.PREF_CSV_LOCAL_ENABLED, true),
+            csvCloud = exportOptionsDialog.isCsvCloudEnabled(),
+            cloudDisplayName = provider?.displayName
+        )
+    }
+
+    override fun setSettingsLocalEnabled(enabled: Boolean) {
+        sp.putBoolean(ExportOptionsDialog.PREF_SETTINGS_LOCAL_ENABLED, enabled)
+        // Ensure at least one destination is selected
+        if (!enabled && !sp.getBoolean(ExportOptionsDialog.PREF_SETTINGS_CLOUD_ENABLED, false)) {
+            sp.putBoolean(ExportOptionsDialog.PREF_SETTINGS_CLOUD_ENABLED, true)
+        }
+        sp.putBoolean(ExportOptionsDialog.PREF_ALL_CLOUD_ENABLED, false)
+    }
+
+    override fun setSettingsCloudEnabled(enabled: Boolean) {
+        sp.putBoolean(ExportOptionsDialog.PREF_SETTINGS_CLOUD_ENABLED, enabled)
+        // Ensure at least one destination is selected
+        if (!enabled && !sp.getBoolean(ExportOptionsDialog.PREF_SETTINGS_LOCAL_ENABLED, true)) {
+            sp.putBoolean(ExportOptionsDialog.PREF_SETTINGS_LOCAL_ENABLED, true)
+        }
+        sp.putBoolean(ExportOptionsDialog.PREF_ALL_CLOUD_ENABLED, false)
+    }
+
+    override fun setLogEmailEnabled(enabled: Boolean) {
+        sp.putBoolean(ExportOptionsDialog.PREF_LOG_EMAIL_ENABLED, enabled)
+        if (!enabled && !sp.getBoolean(ExportOptionsDialog.PREF_LOG_CLOUD_ENABLED, false)) {
+            sp.putBoolean(ExportOptionsDialog.PREF_LOG_CLOUD_ENABLED, true)
+        }
+        sp.putBoolean(ExportOptionsDialog.PREF_ALL_CLOUD_ENABLED, false)
+    }
+
+    override fun setLogCloudEnabled(enabled: Boolean) {
+        sp.putBoolean(ExportOptionsDialog.PREF_LOG_CLOUD_ENABLED, enabled)
+        if (!enabled && !sp.getBoolean(ExportOptionsDialog.PREF_LOG_EMAIL_ENABLED, true)) {
+            sp.putBoolean(ExportOptionsDialog.PREF_LOG_EMAIL_ENABLED, true)
+        }
+        sp.putBoolean(ExportOptionsDialog.PREF_ALL_CLOUD_ENABLED, false)
+    }
+
+    override fun setCsvLocalEnabled(enabled: Boolean) {
+        sp.putBoolean(ExportOptionsDialog.PREF_CSV_LOCAL_ENABLED, enabled)
+        if (!enabled && !sp.getBoolean(ExportOptionsDialog.PREF_CSV_CLOUD_ENABLED, false)) {
+            sp.putBoolean(ExportOptionsDialog.PREF_CSV_CLOUD_ENABLED, true)
+        }
+        sp.putBoolean(ExportOptionsDialog.PREF_ALL_CLOUD_ENABLED, false)
+    }
+
+    override fun setCsvCloudEnabled(enabled: Boolean) {
+        sp.putBoolean(ExportOptionsDialog.PREF_CSV_CLOUD_ENABLED, enabled)
+        if (!enabled && !sp.getBoolean(ExportOptionsDialog.PREF_CSV_LOCAL_ENABLED, true)) {
+            sp.putBoolean(ExportOptionsDialog.PREF_CSV_LOCAL_ENABLED, true)
+        }
+        sp.putBoolean(ExportOptionsDialog.PREF_ALL_CLOUD_ENABLED, false)
+    }
+
     override fun prepareExport(): ExportPreparation? {
-        prefFileList.ensureExportDirExists()
-        val newFile = prefFileList.newPreferenceFile() ?: return null
-        pendingExportFile = newFile
+        val config = getExportConfig()
+        val localEnabled = config.settingsLocal
+        val cloudEnabled = config.settingsCloud && config.isCloudActive
+
+        val destination = when {
+            localEnabled && cloudEnabled -> ExportDestination.BOTH
+            cloudEnabled                 -> ExportDestination.CLOUD
+            else                         -> ExportDestination.LOCAL
+        }
+
+        // For LOCAL / BOTH we need a local file
+        if (destination != ExportDestination.CLOUD) {
+            prefFileList.ensureExportDirExists()
+            val newFile = prefFileList.newPreferenceFile() ?: return null
+            pendingExportFile = newFile
+        }
 
         val (password, isExpired, isAboutToExpire) = exportPasswordDataStore.getPasswordFromDataStore(context)
         val cachedPassword = if (password.isNotEmpty() && !(isExpired || isAboutToExpire)) password else {
             exportPasswordDataStore.clearPasswordDataStore(context)
             null
         }
+
+        val displayFileName = when (destination) {
+            ExportDestination.CLOUD -> config.cloudDisplayName ?: "Cloud"
+            ExportDestination.BOTH  -> (pendingExportFile?.name ?: "unknown") + " + " + (config.cloudDisplayName ?: "Cloud")
+            ExportDestination.LOCAL -> pendingExportFile?.name ?: "unknown"
+        }
+
         return ExportPreparation(
-            fileName = newFile.name ?: "unknown",
-            cachedPassword = cachedPassword
+            fileName = displayFileName,
+            cachedPassword = cachedPassword,
+            destination = destination,
+            cloudDisplayName = config.cloudDisplayName
         )
     }
 
-    override fun executeExport(password: String): Boolean {
-        val file = pendingExportFile ?: return false
-        pendingExportFile = null
-        val success = savePreferences(file, password)
+    override suspend fun executeExport(password: String): ExportResult {
+        val config = getExportConfig()
+        val localEnabled = config.settingsLocal
+        val cloudEnabled = config.settingsCloud && config.isCloudActive
 
-        val resultMessage = if (success) rh.gs(R.string.exported) else rh.gs(R.string.exported_failed)
-        appScope.launch {
+        val destination = when {
+            localEnabled && cloudEnabled -> ExportDestination.BOTH
+            cloudEnabled                 -> ExportDestination.CLOUD
+            else                         -> ExportDestination.LOCAL
+        }
+
+        var localSuccess: Boolean? = null
+        var cloudSuccess: Boolean? = null
+
+        // Local export
+        if (destination == ExportDestination.LOCAL || destination == ExportDestination.BOTH) {
+            val file = pendingExportFile
+            if (file != null) {
+                pendingExportFile = null
+                localSuccess = savePreferences(file, password)
+                val resultMessage = if (localSuccess == true) rh.gs(R.string.exported) else rh.gs(R.string.exported_failed)
+                persistenceLayer.insertPumpTherapyEventIfNewByTimestamp(
+                    therapyEvent = TE.asSettingsExport(error = resultMessage),
+                    timestamp = dateUtil.now(),
+                    action = Action.EXPORT_SETTINGS,
+                    source = Sources.Automation,
+                    note = "Manual Local: $resultMessage",
+                    listValues = listOf()
+                )
+            } else {
+                localSuccess = false
+            }
+        }
+
+        // Cloud export
+        if (destination == ExportDestination.CLOUD || destination == ExportDestination.BOTH) {
+            cloudSuccess = performCloudExport(password)
+            val resultMessage = if (cloudSuccess == true) rh.gs(R.string.exported_to_cloud) else rh.gs(R.string.export_to_cloud_failed)
             persistenceLayer.insertPumpTherapyEventIfNewByTimestamp(
                 therapyEvent = TE.asSettingsExport(error = resultMessage),
                 timestamp = dateUtil.now(),
                 action = Action.EXPORT_SETTINGS,
                 source = Sources.Automation,
-                note = "Manual: $resultMessage",
+                note = "Manual Cloud: $resultMessage",
                 listValues = listOf()
             )
         }
-        return success
+
+        return ExportResult(localSuccess = localSuccess, cloudSuccess = cloudSuccess)
+    }
+
+    /**
+     * Perform cloud export without UI interaction.
+     * Reuses logic from doExportToCloud() but works without an Activity.
+     */
+    private suspend fun performCloudExport(password: String): Boolean {
+        try {
+            val provider = cloudStorageManager.getActiveProvider()
+            if (provider == null) {
+                aapsLogger.error(LTag.CORE, "${CloudConstants.LOG_PREFIX} COMPOSE_EXPORT_NO_PROVIDER")
+                return false
+            }
+            if (!provider.testConnection()) {
+                aapsLogger.error(LTag.CORE, "${CloudConstants.LOG_PREFIX} COMPOSE_EXPORT_CONN_FAIL")
+                return false
+            }
+            val tempDir = prefFileList.ensureTempDirExists()
+            if (tempDir == null) {
+                aapsLogger.error(LTag.CORE, "${CloudConstants.LOG_PREFIX} COMPOSE_EXPORT_NO_TEMP_DIR")
+                return false
+            }
+            val timeLocal = org.joda.time.LocalDateTime.now().toString(org.joda.time.format.DateTimeFormat.forPattern("yyyy-MM-dd'_'HHmmss"))
+            val exportFileName = "${timeLocal}_${config.FLAVOR}.json"
+            val tempDoc = tempDir.createFile("application/json", exportFileName)
+            if (tempDoc == null) {
+                aapsLogger.error(LTag.CORE, "${CloudConstants.LOG_PREFIX} COMPOSE_EXPORT_CREATE_TEMP_FAIL")
+                return false
+            }
+            val saved = savePreferences(tempDoc, password)
+            if (!saved) {
+                aapsLogger.error(LTag.CORE, "${CloudConstants.LOG_PREFIX} COMPOSE_EXPORT_SAVE_FAIL")
+                tempDoc.delete()
+                return false
+            }
+            val bytes = context.contentResolver.openInputStream(tempDoc.uri)?.use { it.readBytes() }
+            if (bytes == null) {
+                aapsLogger.error(LTag.CORE, "${CloudConstants.LOG_PREFIX} COMPOSE_EXPORT_READ_FAIL")
+                tempDoc.delete()
+                return false
+            }
+            provider.getOrCreateFolderPath(CloudConstants.CLOUD_PATH_SETTINGS)?.let {
+                provider.setSelectedFolderId(it)
+            }
+            var uploadedFileId = provider.uploadFileToPath(
+                exportFileName, bytes, "application/json", CloudConstants.CLOUD_PATH_SETTINGS
+            )
+            if (uploadedFileId == null) {
+                uploadedFileId = provider.uploadFile(exportFileName, bytes, "application/json")
+            }
+            tempDoc.delete()
+            return uploadedFileId != null
+        } catch (e: Exception) {
+            aapsLogger.error(LTag.CORE, "${CloudConstants.LOG_PREFIX} COMPOSE_EXPORT_EXCEPTION", e)
+            return false
+        }
     }
 
     override fun cacheExportPassword(password: String): String =

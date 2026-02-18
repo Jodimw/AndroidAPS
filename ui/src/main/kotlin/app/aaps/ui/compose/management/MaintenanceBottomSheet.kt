@@ -1,11 +1,15 @@
 package app.aaps.ui.compose.management
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Cloud
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DeleteForever
 import androidx.compose.material.icons.filled.FileDownload
@@ -14,8 +18,12 @@ import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.TableChart
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
@@ -30,6 +38,7 @@ import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import app.aaps.core.interfaces.maintenance.ExportConfig
 import app.aaps.core.ui.compose.TonalIcon
 import app.aaps.core.ui.R as CoreUiR
 
@@ -41,12 +50,20 @@ fun MaintenanceBottomSheet(
     onSendLogsClick: () -> Unit,
     onDeleteLogsClick: () -> Unit,
     onDirectoryClick: () -> Unit,
+    onCloudDirectoryClick: () -> Unit,
     onExportSettingsClick: () -> Unit,
     onImportSettingsClick: () -> Unit,
     onExportCsvClick: () -> Unit,
     onResetApsResultsClick: () -> Unit,
     onCleanupDbClick: () -> Unit,
-    onResetDbClick: () -> Unit
+    onResetDbClick: () -> Unit,
+    exportConfig: ExportConfig? = null,
+    onToggleSettingsLocal: (Boolean) -> Unit = {},
+    onToggleSettingsCloud: (Boolean) -> Unit = {},
+    onToggleLogEmail: (Boolean) -> Unit = {},
+    onToggleLogCloud: (Boolean) -> Unit = {},
+    onToggleCsvLocal: (Boolean) -> Unit = {},
+    onToggleCsvCloud: (Boolean) -> Unit = {}
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
@@ -61,12 +78,20 @@ fun MaintenanceBottomSheet(
             onSendLogsClick = onSendLogsClick,
             onDeleteLogsClick = onDeleteLogsClick,
             onDirectoryClick = onDirectoryClick,
+            onCloudDirectoryClick = onCloudDirectoryClick,
             onExportSettingsClick = onExportSettingsClick,
             onImportSettingsClick = onImportSettingsClick,
             onExportCsvClick = onExportCsvClick,
             onResetApsResultsClick = onResetApsResultsClick,
             onCleanupDbClick = onCleanupDbClick,
-            onResetDbClick = onResetDbClick
+            onResetDbClick = onResetDbClick,
+            exportConfig = exportConfig,
+            onToggleSettingsLocal = onToggleSettingsLocal,
+            onToggleSettingsCloud = onToggleSettingsCloud,
+            onToggleLogEmail = onToggleLogEmail,
+            onToggleLogCloud = onToggleLogCloud,
+            onToggleCsvLocal = onToggleCsvLocal,
+            onToggleCsvCloud = onToggleCsvCloud
         )
     }
 }
@@ -78,15 +103,25 @@ internal fun MaintenanceBottomSheetContent(
     onSendLogsClick: () -> Unit = {},
     onDeleteLogsClick: () -> Unit = {},
     onDirectoryClick: () -> Unit = {},
+    onCloudDirectoryClick: () -> Unit = {},
     onExportSettingsClick: () -> Unit = {},
     onImportSettingsClick: () -> Unit = {},
     onExportCsvClick: () -> Unit = {},
     onResetApsResultsClick: () -> Unit = {},
     onCleanupDbClick: () -> Unit = {},
-    onResetDbClick: () -> Unit = {}
+    onResetDbClick: () -> Unit = {},
+    exportConfig: ExportConfig? = null,
+    onToggleSettingsLocal: (Boolean) -> Unit = {},
+    onToggleSettingsCloud: (Boolean) -> Unit = {},
+    onToggleLogEmail: (Boolean) -> Unit = {},
+    onToggleLogCloud: (Boolean) -> Unit = {},
+    onToggleCsvLocal: (Boolean) -> Unit = {},
+    onToggleCsvCloud: (Boolean) -> Unit = {}
 ) {
     val primaryColor = MaterialTheme.colorScheme.primary
     val errorColor = MaterialTheme.colorScheme.error
+    val isCloudActive = exportConfig?.isCloudActive == true
+    val hasCloudError = exportConfig?.isCloudError == true
 
     Column(
         modifier = Modifier
@@ -98,65 +133,141 @@ internal fun MaintenanceBottomSheetContent(
 
         MaintenanceItem(
             text = stringResource(CoreUiR.string.nav_logsettings),
+            description = stringResource(CoreUiR.string.maintenance_log_settings_desc),
             icon = Icons.Default.Settings,
             color = primaryColor,
             onDismiss = onDismiss,
             onClick = onLogSettingsClick
         )
         MaintenanceItem(
-            text = stringResource(CoreUiR.string.send_all_logs),
+            text = stringResource(CoreUiR.string.send_logs),
+            description = stringResource(CoreUiR.string.maintenance_send_logs_desc),
             icon = Icons.Default.Send,
             color = primaryColor,
             onDismiss = onDismiss,
-            onClick = onSendLogsClick
+            onClick = onSendLogsClick,
+            trailingContent = exportConfig?.let {
+                {
+                    DestinationChips(
+                        localSelected = it.logEmail,
+                        cloudSelected = it.logCloud,
+                        cloudEnabled = isCloudActive,
+                        cloudLabel = stringResource(CoreUiR.string.chip_cloud),
+                        useEmailLabel = true,
+                        emailLabel = stringResource(CoreUiR.string.chip_email),
+                        onLocalToggle = onToggleLogEmail,
+                        onCloudToggle = onToggleLogCloud
+                    )
+                }
+            }
         )
         MaintenanceItem(
             text = stringResource(CoreUiR.string.delete_logs),
+            description = stringResource(CoreUiR.string.maintenance_delete_logs_desc),
             icon = Icons.Default.Delete,
             color = primaryColor,
             onDismiss = onDismiss,
             onClick = onDeleteLogsClick
         )
 
-        // Section: Settings
+        // Section: File management
         HorizontalDivider(modifier = Modifier.padding(start = 56.dp))
-        SectionHeader(stringResource(CoreUiR.string.settings))
+        SectionHeader(stringResource(CoreUiR.string.file_management))
 
         MaintenanceItem(
             text = stringResource(CoreUiR.string.aaps_directory),
+            description = stringResource(CoreUiR.string.maintenance_aaps_directory_desc),
             icon = Icons.Default.Folder,
             color = primaryColor,
             onDismiss = onDismiss,
             onClick = onDirectoryClick
         )
         MaintenanceItem(
+            text = stringResource(CoreUiR.string.cloud_directory),
+            description = stringResource(CoreUiR.string.maintenance_cloud_directory_desc),
+            icon = Icons.Default.Cloud,
+            color = primaryColor,
+            onDismiss = onDismiss,
+            onClick = onCloudDirectoryClick,
+            trailingContent = if (hasCloudError) {
+                {
+                    Icon(
+                        imageVector = Icons.Default.Warning,
+                        contentDescription = null,
+                        tint = errorColor,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+            } else null
+        )
+        MaintenanceItem(
             text = stringResource(CoreUiR.string.nav_export),
+            description = stringResource(CoreUiR.string.maintenance_export_desc),
             icon = Icons.Default.FileUpload,
             color = primaryColor,
             onDismiss = onDismiss,
-            onClick = onExportSettingsClick
+            onClick = onExportSettingsClick,
+            trailingContent = exportConfig?.let {
+                {
+                    DestinationChips(
+                        localSelected = it.settingsLocal,
+                        cloudSelected = it.settingsCloud,
+                        cloudEnabled = isCloudActive,
+                        cloudLabel = stringResource(CoreUiR.string.chip_cloud),
+                        onLocalToggle = onToggleSettingsLocal,
+                        onCloudToggle = onToggleSettingsCloud
+                    )
+                }
+            }
         )
         MaintenanceItem(
             text = stringResource(CoreUiR.string.import_setting),
+            description = stringResource(CoreUiR.string.maintenance_import_desc),
             icon = Icons.Default.FileDownload,
             color = primaryColor,
             onDismiss = onDismiss,
-            onClick = onImportSettingsClick
+            onClick = onImportSettingsClick,
+            trailingContent = exportConfig?.let {
+                {
+                    DestinationChips(
+                        localSelected = it.settingsLocal,
+                        cloudSelected = it.settingsCloud,
+                        cloudEnabled = isCloudActive,
+                        cloudLabel = stringResource(CoreUiR.string.chip_cloud),
+                        onLocalToggle = onToggleSettingsLocal,
+                        onCloudToggle = onToggleSettingsCloud
+                    )
+                }
+            }
         )
-
-        // Section: Miscellaneous
-        HorizontalDivider(modifier = Modifier.padding(start = 56.dp))
-        SectionHeader(stringResource(CoreUiR.string.miscellaneous))
-
         MaintenanceItem(
             text = stringResource(CoreUiR.string.ue_export_to_csv),
+            description = stringResource(CoreUiR.string.maintenance_export_csv_desc),
             icon = Icons.Default.TableChart,
             color = primaryColor,
             onDismiss = onDismiss,
-            onClick = onExportCsvClick
+            onClick = onExportCsvClick,
+            trailingContent = exportConfig?.let {
+                {
+                    DestinationChips(
+                        localSelected = it.csvLocal,
+                        cloudSelected = it.csvCloud,
+                        cloudEnabled = isCloudActive,
+                        cloudLabel = stringResource(CoreUiR.string.chip_cloud),
+                        onLocalToggle = onToggleCsvLocal,
+                        onCloudToggle = onToggleCsvCloud
+                    )
+                }
+            }
         )
+
+        // Section: Database management
+        HorizontalDivider(modifier = Modifier.padding(start = 56.dp))
+        SectionHeader(stringResource(CoreUiR.string.database_management))
+
         MaintenanceItem(
             text = stringResource(CoreUiR.string.database_cleanup),
+            description = stringResource(CoreUiR.string.maintenance_cleanup_db_desc),
             icon = Icons.Default.Delete,
             color = primaryColor,
             onDismiss = onDismiss,
@@ -164,17 +275,21 @@ internal fun MaintenanceBottomSheetContent(
         )
         MaintenanceItem(
             text = stringResource(CoreUiR.string.reset_aps_results),
+            description = stringResource(CoreUiR.string.maintenance_reset_aps_results_desc),
             icon = Icons.Default.DeleteForever,
-            color = errorColor,
+            color = primaryColor,
             onDismiss = onDismiss,
-            onClick = onResetApsResultsClick
+            onClick = onResetApsResultsClick,
+            danger = true
         )
         MaintenanceItem(
             text = stringResource(CoreUiR.string.nav_resetdb),
+            description = stringResource(CoreUiR.string.maintenance_reset_db_desc),
             icon = Icons.Default.DeleteForever,
-            color = errorColor,
+            color = primaryColor,
             onDismiss = onDismiss,
-            onClick = onResetDbClick
+            onClick = onResetDbClick,
+            danger = true
         )
     }
 }
@@ -195,14 +310,32 @@ private fun MaintenanceItem(
     icon: ImageVector,
     color: Color,
     onDismiss: () -> Unit,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    description: String? = null,
+    trailingContent: @Composable (() -> Unit)? = null,
+    danger: Boolean = false
 ) {
+    val containerColor = if (danger) MaterialTheme.colorScheme.errorContainer
+    else MaterialTheme.colorScheme.surface
+    val contentColor = if (danger) MaterialTheme.colorScheme.onErrorContainer
+    else color
+
     ListItem(
-        headlineContent = { Text(text = text, color = color) },
-        leadingContent = {
-            TonalIcon(painter = rememberVectorPainter(icon), color = color)
+        headlineContent = { Text(text = text, color = contentColor) },
+        supportingContent = description?.let {
+            {
+                Text(
+                    text = it,
+                    color = if (danger) MaterialTheme.colorScheme.onErrorContainer.copy(alpha = 0.7f)
+                    else MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
         },
-        colors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.surface),
+        leadingContent = {
+            TonalIcon(painter = rememberVectorPainter(icon), color = contentColor)
+        },
+        trailingContent = trailingContent,
+        colors = ListItemDefaults.colors(containerColor = containerColor),
         modifier = Modifier.clickable {
             onDismiss()
             onClick()
@@ -210,10 +343,71 @@ private fun MaintenanceItem(
     )
 }
 
+/**
+ * Inline destination FilterChips for export rows.
+ * Both chips can be on, at least one must stay on (enforced by backend).
+ * For logs: [Email] [Cloud]. For settings/CSV: [Local] [Cloud].
+ */
+@Composable
+private fun DestinationChips(
+    localSelected: Boolean = true,
+    cloudSelected: Boolean = false,
+    cloudEnabled: Boolean = true,
+    cloudLabel: String,
+    emailLabel: String = "",
+    useEmailLabel: Boolean = false,
+    onLocalToggle: (Boolean) -> Unit,
+    onCloudToggle: (Boolean) -> Unit
+) {
+    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+        FilterChip(
+            selected = localSelected,
+            onClick = { onLocalToggle(!localSelected) },
+            label = {
+                Text(
+                    text = if (useEmailLabel) emailLabel else stringResource(CoreUiR.string.chip_local),
+                    style = MaterialTheme.typography.labelSmall
+                )
+            },
+            colors = FilterChipDefaults.filterChipColors(
+                selectedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
+                selectedLabelColor = MaterialTheme.colorScheme.onSecondaryContainer
+            )
+        )
+        FilterChip(
+            selected = cloudSelected,
+            onClick = { onCloudToggle(!cloudSelected) },
+            enabled = cloudEnabled,
+            label = {
+                Text(
+                    text = cloudLabel,
+                    style = MaterialTheme.typography.labelSmall
+                )
+            },
+            colors = FilterChipDefaults.filterChipColors(
+                selectedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
+                selectedLabelColor = MaterialTheme.colorScheme.onSecondaryContainer
+            )
+        )
+    }
+}
+
 @Preview(showBackground = true)
 @Composable
 private fun MaintenanceBottomSheetContentPreview() {
     MaterialTheme {
-        MaintenanceBottomSheetContent()
+        MaintenanceBottomSheetContent(
+            exportConfig = ExportConfig(
+                isCloudActive = true,
+                isCloudError = false,
+                settingsLocal = true,
+                settingsCloud = true,
+                logEmail = true,
+                logCloud = false,
+                csvLocal = true,
+                csvCloud = false,
+                cloudDisplayName = "Google Drive"
+            )
+        )
     }
 }

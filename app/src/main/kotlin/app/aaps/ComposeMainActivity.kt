@@ -130,6 +130,9 @@ class ComposeMainActivity : DaggerAppCompatActivityWithResult() {
     @Inject lateinit var iobCobCalculator: IobCobCalculator
     @Inject lateinit var builtInSearchables: BuiltInSearchables
 
+    @Inject lateinit var cloudDirectoryDialog: app.aaps.plugins.configuration.maintenance.cloud.CloudDirectoryDialog
+
+
     // ViewModels
     @Inject lateinit var mainViewModel: MainViewModel
     @Inject lateinit var manageViewModel: ManageViewModel
@@ -349,6 +352,12 @@ class ComposeMainActivity : DaggerAppCompatActivityWithResult() {
                                 } catch (_: Exception) {
                                     maintenanceViewModel.emitError("Unable to launch activity. This is an Android issue")
                                 }
+                            },
+                            onCloudDirectoryClick = {
+                                cloudDirectoryDialog.showCloudDirectoryDialog(
+                                    this@ComposeMainActivity,
+                                    onStorageChanged = { maintenanceViewModel.refreshExportConfig() }
+                                )
                             },
                             onImportSettingsExecute = {
                                 importExportPrefs.importSharedPreferences(this@ComposeMainActivity)

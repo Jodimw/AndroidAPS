@@ -12,7 +12,9 @@ import app.aaps.core.interfaces.logging.L
 import app.aaps.core.interfaces.logging.LTag
 import app.aaps.core.interfaces.logging.LogElement
 import app.aaps.core.interfaces.logging.UserEntryLogger
-import app.aaps.core.interfaces.maintenance.ExportPreparation
+import app.aaps.core.interfaces.maintenance.ExportConfig
+import app.aaps.core.interfaces.maintenance.ExportDestination
+import app.aaps.core.interfaces.maintenance.ExportResult
 import app.aaps.core.interfaces.maintenance.ImportExportPrefs
 import app.aaps.core.interfaces.maintenance.Maintenance
 import app.aaps.core.interfaces.resources.ResourceHelper
@@ -64,6 +66,50 @@ class MaintenanceViewModel @Inject constructor(
 
     private val _events = MutableSharedFlow<MaintenanceEvent>()
     val events: SharedFlow<MaintenanceEvent> = _events
+
+    // Export configuration (cloud awareness)
+    val exportConfig: StateFlow<ExportConfig?>
+        field = MutableStateFlow<ExportConfig?>(null)
+
+    init {
+        refreshExportConfig()
+    }
+
+    fun refreshExportConfig() {
+        viewModelScope.launch(Dispatchers.IO) {
+            exportConfig.value = importExportPrefs.getExportConfig()
+        }
+    }
+
+    fun toggleSettingsLocal(enabled: Boolean) {
+        importExportPrefs.setSettingsLocalEnabled(enabled)
+        refreshExportConfig()
+    }
+
+    fun toggleSettingsCloud(enabled: Boolean) {
+        importExportPrefs.setSettingsCloudEnabled(enabled)
+        refreshExportConfig()
+    }
+
+    fun toggleLogEmail(enabled: Boolean) {
+        importExportPrefs.setLogEmailEnabled(enabled)
+        refreshExportConfig()
+    }
+
+    fun toggleLogCloud(enabled: Boolean) {
+        importExportPrefs.setLogCloudEnabled(enabled)
+        refreshExportConfig()
+    }
+
+    fun toggleCsvLocal(enabled: Boolean) {
+        importExportPrefs.setCsvLocalEnabled(enabled)
+        refreshExportConfig()
+    }
+
+    fun toggleCsvCloud(enabled: Boolean) {
+        importExportPrefs.setCsvCloudEnabled(enabled)
+        refreshExportConfig()
+    }
 
     // Log elements for LogSettingBottomSheet
     val logElements: List<LogElement> get() = l.logElements()
@@ -176,7 +222,12 @@ class MaintenanceViewModel @Inject constructor(
     sealed interface ExportState {
         data object Idle : ExportState
         data object MasterPasswordMissing : ExportState
-        data class ConfirmExport(val fileName: String) : ExportState
+        data class ConfirmExport(
+            val fileName: String,
+            val destination: ExportDestination = ExportDestination.LOCAL,
+            val cloudDisplayName: String? = null
+        ) : ExportState
+
         data object AskPassword : ExportState
     }
 
@@ -203,7 +254,11 @@ class MaintenanceViewModel @Inject constructor(
             doExport(cached)
         } else {
             // Need to show confirm + password dialogs
-            exportState.value = ExportState.ConfirmExport(preparation.fileName)
+            exportState.value = ExportState.ConfirmExport(
+                fileName = preparation.fileName,
+                destination = preparation.destination,
+                cloudDisplayName = preparation.cloudDisplayName
+            )
         }
     }
 
@@ -223,14 +278,24 @@ class MaintenanceViewModel @Inject constructor(
 
     private fun doExport(password: String) {
         viewModelScope.launch {
-            val success = withContext(Dispatchers.IO) {
+            val result = withContext(Dispatchers.IO) {
                 importExportPrefs.executeExport(password)
             }
-            val message = if (success)
-                rh.gs(CoreUiR.string.export_result_message_exported)
-            else
-                rh.gs(CoreUiR.string.export_result_message_failed)
+            val message = buildExportResultMessage(result)
             _events.emit(MaintenanceEvent.Snackbar(message))
         }
+    }
+
+    private fun buildExportResultMessage(result: ExportResult): String {
+        val parts = mutableListOf<String>()
+        result.localSuccess?.let { ok ->
+            parts += if (ok) rh.gs(CoreUiR.string.export_result_message_exported)
+            else rh.gs(CoreUiR.string.export_result_message_failed)
+        }
+        result.cloudSuccess?.let { ok ->
+            parts += if (ok) rh.gs(CoreUiR.string.export_cloud_success)
+            else rh.gs(CoreUiR.string.export_cloud_failed)
+        }
+        return parts.joinToString("\n").ifEmpty { rh.gs(CoreUiR.string.export_result_message_failed) }
     }
 }
