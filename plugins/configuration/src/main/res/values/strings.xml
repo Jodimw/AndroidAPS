@@ -17,10 +17,7 @@
     <string name="high_mark_comment">Higher value of in range area (display only)</string>
     <string name="permission">Permission</string>
     <string name="need_system_window_permission">Application needs system window permission for notifications</string>
-    <string name="need_location_permission">Application needs location permission for BT scan and WiFi identification</string>
-    <string name="need_background_location_permission">Application needs background location permission for automations</string>
     <string name="askforpermission">Ask for permission</string>
-    <string name="need_whitelisting">%1$s needs battery optimization whitelisting for proper performance</string>
     <string name="storedsettingsfound">Stored settings found</string>
     <string name="master_password_summary">Master password is used for backup encryption and to override security in application. Remember it or store on a safe place.</string>
     <!-- current_master_password moved to core/ui/protection.xml -->
@@ -80,7 +77,6 @@
     <string name="check_preferences_details_title">Import issues details</string>
     <string name="check_preferences_import_btn">Import</string>
     <string name="check_preferences_import_anyway_btn">Import anyway (DANGEROUS!)</string>
-    <string name="select_aaps_directory">Select AAPS directory for storing exports, configurations etc.</string>
     <string name="check_preferences_before_import">Please check preferences before importing:</string>
     <string name="check_preferences_cannot_import">Preferences cannot be imported!</string>
     <string name="check_preferences_dangerous_import">Preferences should not be imported!</string>

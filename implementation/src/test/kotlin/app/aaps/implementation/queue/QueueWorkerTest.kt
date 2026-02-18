@@ -6,7 +6,6 @@ import androidx.work.ListenableWorker
 import androidx.work.WorkManager
 import androidx.work.testing.TestListenableWorkerBuilder
 import app.aaps.core.data.pump.defs.PumpDescription
-import app.aaps.core.interfaces.androidPermissions.AndroidPermission
 import app.aaps.core.interfaces.constraints.ConstraintsChecker
 import app.aaps.core.interfaces.db.PersistenceLayer
 import app.aaps.core.interfaces.pump.PumpSync
@@ -31,7 +30,6 @@ class QueueWorkerTest : TestBaseWithProfile() {
 
     @Mock lateinit var constraintChecker: ConstraintsChecker
     @Mock lateinit var powerManager: PowerManager
-    @Mock lateinit var androidPermission: AndroidPermission
     @Mock lateinit var uiInteraction: UiInteraction
     @Mock lateinit var persistenceLayer: PersistenceLayer
     @Mock lateinit var jobName: CommandQueueName
@@ -54,7 +52,6 @@ class QueueWorkerTest : TestBaseWithProfile() {
                 it.activePlugin = activePlugin
                 it.rh = rh
                 it.preferences = preferences
-                it.androidPermission = androidPermission
                 it.config = config
             }
         }

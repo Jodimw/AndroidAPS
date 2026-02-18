@@ -152,4 +152,11 @@ interface ActivePlugin {
      * Collects missing permissions across all enabled plugins, deduplicated by permission set.
      */
     fun collectMissingPermissions(context: Context): List<PermissionGroup>
+
+    /**
+     * Collects all required permissions (both global and plugin-declared),
+     * regardless of grant status. Used by the permission UI to show both
+     * granted and missing permissions.
+     */
+    fun collectAllPermissions(context: Context): List<PermissionGroup>
 }

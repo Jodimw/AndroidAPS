@@ -1,6 +1,12 @@
 package app.aaps.implementation.plugin
 
+import android.Manifest
+import android.app.AlarmManager
 import android.content.Context
+import android.content.pm.PackageManager
+import android.os.Build
+import android.os.PowerManager
+import androidx.core.content.ContextCompat
 import app.aaps.core.data.plugin.PluginType
 import app.aaps.core.interfaces.aps.APS
 import app.aaps.core.interfaces.aps.Sensitivity
@@ -22,15 +28,59 @@ import app.aaps.core.interfaces.smoothing.Smoothing
 import app.aaps.core.interfaces.source.BgSource
 import app.aaps.core.interfaces.sync.NsClient
 import app.aaps.core.interfaces.sync.Sync
+import app.aaps.core.keys.StringKey
+import app.aaps.core.keys.interfaces.Preferences
+import app.aaps.implementation.R
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class PluginStore @Inject constructor(
-    private val aapsLogger: AAPSLogger
+    private val aapsLogger: AAPSLogger,
+    private val preferences: Preferences,
 ) : ActivePlugin {
 
+    companion object {
+
+        /** Custom identifier for the AAPS directory selection requirement. */
+        const val PERMISSION_SELECT_DIRECTORY = "app.aaps.permission.SELECT_DIRECTORY"
+    }
+
     lateinit var plugins: List<@JvmSuppressWildcards PluginBase>
+
+    private fun globalPermissions(context: Context): List<PermissionGroup> = buildList {
+        add(
+            PermissionGroup(
+                permissions = listOf(Manifest.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS),
+                rationaleTitle = R.string.permission_battery_title,
+                rationaleDescription = R.string.permission_battery_description,
+                special = true,
+            )
+        )
+        add(
+            PermissionGroup(
+                permissions = listOf(PERMISSION_SELECT_DIRECTORY),
+                rationaleTitle = R.string.permission_directory_title,
+                rationaleDescription = R.string.permission_directory_description,
+                special = true,
+                alwaysShowAction = true,
+            )
+        )
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            // When targetSdk < 33, the system won't show a runtime permission dialog for
+            // POST_NOTIFICATIONS — must open notification settings directly (special = true).
+            // When targetSdk >= 33, the standard runtime dialog works (special = false).
+            val needsSettingsWorkaround = context.applicationInfo.targetSdkVersion < Build.VERSION_CODES.TIRAMISU
+            add(
+                PermissionGroup(
+                    permissions = listOf(Manifest.permission.POST_NOTIFICATIONS),
+                    rationaleTitle = R.string.permission_notifications_title,
+                    rationaleDescription = R.string.permission_notifications_description,
+                    special = needsSettingsWorkaround,
+                )
+            )
+        }
+    }
 
     private var activeBgSourceStore: BgSource? = null
     private var activePumpStore: Pump? = null
@@ -217,9 +267,44 @@ class PluginStore @Inject constructor(
 
     override fun getPluginsList(): ArrayList<PluginBase> = ArrayList(plugins)
 
-    override fun collectMissingPermissions(context: Context): List<PermissionGroup> =
-        plugins.filter { it.isEnabled() }
+    private fun isPermissionMissing(context: Context, perm: String): Boolean =
+        when (perm) {
+            Manifest.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS -> {
+                val pm = context.getSystemService(Context.POWER_SERVICE) as PowerManager
+                pm.isIgnoringBatteryOptimizations(context.packageName).not()
+            }
+
+            PERMISSION_SELECT_DIRECTORY                              ->
+                preferences.getIfExists(StringKey.AapsDirectoryUri).isNullOrEmpty()
+
+            Manifest.permission.SCHEDULE_EXACT_ALARM                 -> {
+                val am = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+                am.canScheduleExactAlarms().not()
+            }
+
+            else                                                     ->
+                ContextCompat.checkSelfPermission(context, perm) != PackageManager.PERMISSION_GRANTED
+        }
+
+    override fun collectMissingPermissions(context: Context): List<PermissionGroup> {
+        // Standard (non-special) plugin permissions — checked via ContextCompat
+        val pluginPerms = plugins.filter { it.isEnabled() }
             .flatMap { it.missingPermissions(context) }
+            .distinctBy { it.permissions.toSet() }
+        // Special plugin permissions — missingPermissions() skips these, so check separately
+        val specialPluginPerms = plugins.filter { it.isEnabled() }
+            .flatMap { it.requiredPermissions().filter { group -> group.special } }
+            .filter { group -> group.permissions.any { perm -> isPermissionMissing(context, perm) } }
+            .distinctBy { it.permissions.toSet() }
+        // Global permissions (battery, directory)
+        val globalMissing = globalPermissions(context).filter { group ->
+            group.permissions.any { perm -> isPermissionMissing(context, perm) }
+        }
+        return (globalMissing + pluginPerms + specialPluginPerms).distinctBy { it.permissions.toSet() }
+    }
+
+    override fun collectAllPermissions(context: Context): List<PermissionGroup> =
+        (globalPermissions(context) + plugins.filter { it.isEnabled() }.flatMap { it.requiredPermissions() })
             .distinctBy { it.permissions.toSet() }
 
 }

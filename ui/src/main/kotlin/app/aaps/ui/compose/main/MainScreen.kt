@@ -3,6 +3,8 @@ package app.aaps.ui.compose.main
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.SwapHoriz
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -22,24 +24,22 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.SwapHoriz
 import app.aaps.core.data.plugin.PluginType
 import app.aaps.core.interfaces.plugin.PluginBase
 import app.aaps.core.ui.compose.AapsFab
 import app.aaps.core.ui.compose.OkCancelDialog
 import app.aaps.core.ui.compose.OkDialog
+import app.aaps.ui.compose.alertDialogs.AboutAlertDialog
+import app.aaps.ui.compose.alertDialogs.AboutDialogData
 import app.aaps.ui.compose.management.LogSettingBottomSheet
 import app.aaps.ui.compose.management.MaintenanceBottomSheet
 import app.aaps.ui.compose.management.MaintenanceEvent
 import app.aaps.ui.compose.management.MaintenanceViewModel
-import app.aaps.ui.compose.overview.manage.ManageViewModel
-import app.aaps.ui.compose.alertDialogs.AboutAlertDialog
-import app.aaps.ui.compose.alertDialogs.AboutDialogData
-import app.aaps.ui.compose.overview.graphs.GraphViewModel
 import app.aaps.ui.compose.overview.OverviewScreen
-import app.aaps.ui.compose.overview.statusLights.StatusViewModel
+import app.aaps.ui.compose.overview.graphs.GraphViewModel
 import app.aaps.ui.compose.overview.manage.ManageBottomSheet
+import app.aaps.ui.compose.overview.manage.ManageViewModel
+import app.aaps.ui.compose.overview.statusLights.StatusViewModel
 import app.aaps.ui.compose.overview.treatments.TreatmentBottomSheet
 import app.aaps.ui.search.SearchIndexEntry
 import app.aaps.ui.search.SearchResults
@@ -108,6 +108,9 @@ fun MainScreen(
     onCalibrationClick: (() -> Unit)?,
     onQuickWizardClick: ((String) -> Unit)? = null,
     onActionsError: (String, String) -> Unit,
+    // Permissions
+    permissionsMissing: Boolean = false,
+    onPermissionsClick: () -> Unit = {},
     graphViewModel: GraphViewModel,
     statusLightsDef: app.aaps.core.ui.compose.preference.PreferenceSubScreenDef,
     treatmentButtonsDef: app.aaps.core.ui.compose.preference.PreferenceSubScreenDef,
@@ -135,9 +138,9 @@ fun MainScreen(
         maintenanceViewModel.events.collect { event ->
             when (event) {
                 is MaintenanceEvent.RecreateActivity -> onRecreateActivity()
-                is MaintenanceEvent.CleanupResult -> cleanupResultText = event.result
-                is MaintenanceEvent.Snackbar -> snackbarHostState.showSnackbar(event.message)
-                is MaintenanceEvent.Error -> snackbarHostState.showSnackbar(event.message)
+                is MaintenanceEvent.CleanupResult    -> cleanupResultText = event.result
+                is MaintenanceEvent.Snackbar         -> snackbarHostState.showSnackbar(event.message)
+                is MaintenanceEvent.Error            -> snackbarHostState.showSnackbar(event.message)
             }
         }
     }
@@ -221,7 +224,9 @@ fun MainScreen(
                         treatmentViewModel.refreshState()
                         showTreatmentSheet = true
                     },
-                    quickWizardCount = uiState.quickWizardItems.size
+                    quickWizardCount = uiState.quickWizardItems.size,
+                    permissionsMissing = permissionsMissing,
+                    onPermissionsClick = onPermissionsClick,
                 )
             },
             floatingActionButton = {

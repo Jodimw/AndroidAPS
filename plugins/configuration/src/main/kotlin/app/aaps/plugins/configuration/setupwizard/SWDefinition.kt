@@ -1,13 +1,7 @@
 package app.aaps.plugins.configuration.setupwizard
 
-import android.Manifest
-import android.content.Context
-import android.content.Intent
-import android.provider.Settings
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.net.toUri
 import app.aaps.core.data.plugin.PluginType
-import app.aaps.core.interfaces.androidPermissions.AndroidPermission
 import app.aaps.core.interfaces.configuration.Config
 import app.aaps.core.interfaces.constraints.Objectives
 import app.aaps.core.interfaces.maintenance.ImportExportPrefs
@@ -23,7 +17,6 @@ import app.aaps.core.interfaces.resources.ResourceHelper
 import app.aaps.core.interfaces.rx.AapsSchedulers
 import app.aaps.core.interfaces.rx.bus.RxBus
 import app.aaps.core.interfaces.rx.events.Event
-import app.aaps.core.interfaces.rx.events.EventAAPSDirectorySelected
 import app.aaps.core.interfaces.rx.events.EventPumpStatusChanged
 import app.aaps.core.interfaces.rx.events.EventSWRLStatus
 import app.aaps.core.interfaces.rx.events.EventSWSyncStatus
@@ -39,11 +32,8 @@ import app.aaps.core.keys.UnitDoubleKey
 import app.aaps.core.keys.interfaces.Preferences
 import app.aaps.core.objects.crypto.CryptoUtil
 import app.aaps.core.objects.profile.ProfileSealed
-import app.aaps.core.utils.isRunningTest
 import app.aaps.plugins.configuration.R
-import app.aaps.plugins.configuration.activities.DaggerAppCompatActivityWithResult
 import app.aaps.plugins.configuration.configBuilder.events.EventConfigBuilderUpdateGui
-import app.aaps.plugins.configuration.maintenance.MaintenancePlugin
 import app.aaps.plugins.configuration.setupwizard.elements.SWBreak
 import app.aaps.plugins.configuration.setupwizard.elements.SWButton
 import app.aaps.plugins.configuration.setupwizard.elements.SWEditEncryptedPassword
@@ -65,7 +55,6 @@ import javax.inject.Singleton
 @Singleton
 class SWDefinition @Inject constructor(
     private val rxBus: RxBus,
-    private val context: Context,
     private val rh: ResourceHelper,
     private val preferences: Preferences,
     private val profileFunction: ProfileFunction,
@@ -73,12 +62,10 @@ class SWDefinition @Inject constructor(
     private val localProfileManager: LocalProfileManager,
     private val commandQueue: CommandQueue,
     private val importExportPrefs: ImportExportPrefs,
-    private val androidPermission: AndroidPermission,
     private val cryptoUtil: CryptoUtil,
     private val config: Config,
     private val hardLimits: HardLimits,
     private val uiInteraction: UiInteraction,
-    private val maintenancePlugin: MaintenancePlugin,
     private val aapsSchedulers: AapsSchedulers,
     private val swScreenProvider: Provider<SWScreen>,
     private val swEventListenerProvider: Provider<SWEventListener>,
@@ -187,64 +174,6 @@ class SWDefinition @Inject constructor(
                     .label(R.string.high_mark)
                     .comment(R.string.high_mark_comment)
             )
-
-    private val screenPermissionWindow
-        get() = swScreenProvider.get().with(R.string.permission)
-            .skippable(false)
-            .add(swInfoTextProvider.get().label(rh.gs(R.string.need_system_window_permission)))
-            .add(
-                swButtonProvider.get()
-                    .text(R.string.askforpermission)
-                    .visibility { !Settings.canDrawOverlays(requireActivity()) }
-                    .action { requireActivity().startActivity(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, ("package:" + requireActivity().packageName).toUri())) })
-            .add(swBreakProvider.get())
-            .add(swInfoTextProvider.get().label(rh.gs(R.string.need_whitelisting, rh.gs(config.appName))))
-            .add(
-                swButtonProvider.get()
-                    .text(R.string.askforpermission)
-                    .visibility { androidPermission.permissionNotGranted(context, Manifest.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS) }
-                    .action { androidPermission.askForPermission(requireActivity(), Manifest.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS) })
-            .add(swBreakProvider.get())
-            .add(swInfoTextProvider.get().label(rh.gs(R.string.select_aaps_directory)))
-            .add(
-                swButtonProvider.get()
-                    .text(app.aaps.core.ui.R.string.aaps_directory)
-                    .visibility { preferences.getIfExists(StringKey.AapsDirectoryUri) == null }
-                    .action { maintenancePlugin.selectAapsDirectory(requireActivity() as DaggerAppCompatActivityWithResult) })
-            .add(swBreakProvider.get())
-            .add(swEventListenerProvider.get().with(EventAAPSDirectorySelected::class.java, this).label(app.aaps.core.ui.R.string.settings).initialStatus(preferences.get(StringKey.AapsDirectoryUri)))
-            .add(swBreakProvider.get())
-            .visibility {
-                !Settings.canDrawOverlays(requireActivity()) ||
-                    androidPermission.permissionNotGranted(requireActivity(), Manifest.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS) ||
-                    preferences.getIfExists(StringKey.AapsDirectoryUri) == null
-            }
-            .validator {
-                Settings.canDrawOverlays(requireActivity()) &&
-                    !androidPermission.permissionNotGranted(requireActivity(), Manifest.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS) &&
-                    preferences.getIfExists(StringKey.AapsDirectoryUri) != null
-            }
-
-    private val screenPermissionBt
-        get() = swScreenProvider.get().with(R.string.permission)
-            .skippable(false)
-            .add(swInfoTextProvider.get().label(rh.gs(R.string.need_location_permission)))
-            .add(swBreakProvider.get())
-            .add(
-                swButtonProvider.get()
-                    .text(R.string.askforpermission)
-                    .visibility { androidPermission.permissionNotGranted(requireActivity(), Manifest.permission.ACCESS_FINE_LOCATION) }
-                    .action { androidPermission.askForPermission(requireActivity(), Manifest.permission.ACCESS_FINE_LOCATION) })
-            .add(swBreakProvider.get())
-            .add(swInfoTextProvider.get().label(rh.gs(R.string.need_background_location_permission)))
-            .add(swBreakProvider.get())
-            .add(
-                swButtonProvider.get()
-                    .text(R.string.askforpermission)
-                    .visibility { androidPermission.permissionNotGranted(requireActivity(), Manifest.permission.ACCESS_BACKGROUND_LOCATION) }
-                    .action { androidPermission.askForPermission(requireActivity(), Manifest.permission.ACCESS_BACKGROUND_LOCATION) })
-            .visibility { androidPermission.permissionNotGranted(requireActivity(), Manifest.permission.ACCESS_FINE_LOCATION) || androidPermission.permissionNotGranted(requireActivity(), Manifest.permission.ACCESS_BACKGROUND_LOCATION) }
-            .validator { !androidPermission.permissionNotGranted(requireActivity(), Manifest.permission.ACCESS_FINE_LOCATION) && !androidPermission.permissionNotGranted(requireActivity(), Manifest.permission.ACCESS_BACKGROUND_LOCATION) }
 
     private val screenImport
         get() = swScreenProvider.get().with(app.aaps.core.ui.R.string.import_setting)
@@ -415,8 +344,6 @@ class SWDefinition @Inject constructor(
         add(screenSetupWizard)
             //.add(screenLanguage)
             .add(screenEula)
-            .add(if (isRunningTest()) null else screenPermissionWindow)  // cannot mock ask battery optimization
-            .add(screenPermissionBt)
             .add(screenMasterPassword)
             .add(screenImport)
             .add(screenUnits)
@@ -437,8 +364,6 @@ class SWDefinition @Inject constructor(
         add(screenSetupWizard)
             //.add(screenLanguage)
             .add(screenEula)
-            .add(if (isRunningTest()) null else screenPermissionWindow) // cannot mock ask battery optimization
-            .add(screenPermissionBt)
             .add(screenMasterPassword)
             .add(screenImport)
             .add(screenUnits)
@@ -457,7 +382,6 @@ class SWDefinition @Inject constructor(
         add(screenSetupWizard)
             //.add(screenLanguage)
             .add(screenEula)
-            .add(if (isRunningTest()) null else screenPermissionWindow) // cannot mock ask battery optimization
             .add(screenMasterPassword)
             .add(screenImport)
             .add(screenUnits)

@@ -209,6 +209,16 @@
     <string name="until_changed">Until changed</string>
     <string name="limitations">Limitations</string>
 
+    <!--    Permissions-->
+    <string name="permission_sheet_title">Permissions Required</string>
+    <string name="permission_sheet_subtitle">Some permissions are needed for the app to work correctly</string>
+    <string name="permission_grant">Grant</string>
+    <string name="permission_change">Change</string>
+    <string name="permission_denied_go_to_settings">Permission permanently denied. Please enable it in app settings.</string>
+    <string name="permission_open_settings">Settings</string>
+    <string name="permission_directory_picker_error">Unable to launch directory picker. Usually Android or Family Link issue.</string>
+    <string name="permission_nav_label">Permissions</string>
+
     <string-array name="yes_no_positiveonly_negativeonly">
         <item>Both</item>
         <item>Positive only</item>

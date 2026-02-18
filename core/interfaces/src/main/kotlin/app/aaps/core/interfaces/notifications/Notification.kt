@@ -72,7 +72,6 @@ open class Notification {
         const val INVALID_MESSAGE_BODY = 11
         const val APPROACHING_DAILY_LIMIT = 12
         const val NSCLIENT_NO_WRITE_PERMISSION = 13
-        const val MISSING_SMS_PERMISSION = 14
         const val PUMP_ERROR = 15
         const val WRONG_SERIAL_NUMBER = 16
         const val NS_ANNOUNCEMENT = 18
@@ -89,9 +88,6 @@ open class Notification {
         const val MINIMAL_BASAL_VALUE_REPLACED = 29
         const val BASAL_PROFILE_NOT_ALIGNED_TO_HOURS = 30
         const val WRONG_PUMP_PASSWORD = 34
-        const val PERMISSION_LOCATION = 36
-        const val PERMISSION_BATTERY = 37
-        const val PERMISSION_SMS = 38
         const val MAXIMUM_BASAL_VALUE_REPLACED = 39
         const val NS_MALFUNCTION = 40
         const val NEW_VERSION_DETECTED = 41
@@ -105,7 +101,6 @@ open class Notification {
         const val DISK_FULL = 51
         const val OVER_24H_TIME_CHANGE_REQUESTED = 54
         const val INVALID_VERSION = 55
-        const val PERMISSION_SYSTEM_WINDOW = 56
         const val TIME_OR_TIMEZONE_CHANGE = 58
         const val OMNIPOD_POD_NOT_ATTACHED = 59
         const val CARBS_REQUIRED = 60
@@ -125,7 +120,6 @@ open class Notification {
         const val INVALID_PROFILE_NOT_ACCEPTED = 75
         const val MDT_INVALID_HISTORY_DATA = 76
         const val IDENTIFICATION_NOT_SET = 77
-        const val PERMISSION_BT = 78
         const val EOFLOW_PATCH_ALERTS = 79
         const val PUMP_SUSPENDED = 80
         const val COMBO_UNKNOWN_TBR = 81

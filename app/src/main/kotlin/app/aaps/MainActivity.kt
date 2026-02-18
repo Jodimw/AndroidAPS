@@ -202,14 +202,6 @@ class MainActivity : DaggerAppCompatActivityWithResult() {
                 startActivity(Intent(this, SetupWizardActivity::class.java).setAction("info.nightscout.androidaps.MainActivity"))
             })
         }
-        androidPermission.notifyForBatteryOptimizationPermission(this)
-        if (!config.AAPSCLIENT) androidPermission.notifyForLocationPermissions(this)
-        if (config.PUMPDRIVERS) {
-            if (smsCommunicator.isEnabled())
-                androidPermission.notifyForSMSPermissions(this)
-            androidPermission.notifyForSystemWindowPermissions(this)
-            androidPermission.notifyForBtConnectPermission(this)
-        }
         passwordResetCheck(this)
         exportPasswordResetCheck(this)
 

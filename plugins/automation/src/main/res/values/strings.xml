@@ -157,7 +157,7 @@
     <string name="selected_coords">Selected: %1$.6f, %2$.6f</string>
     <!-- Permission rationales -->
     <string name="permission_location_title">Location</string>
-    <string name="permission_location_description">Application needs location permission for BT scan and WiFi identification</string>
-    <string name="permission_background_location_description">Application needs background location permission for automations</string>
+    <string name="permission_location_description">Needed for location-based automation triggers and WiFi network identification</string>
+    <string name="permission_background_location_description">Needed for automation triggers to work when the app is in the background</string>
 
 </resources>

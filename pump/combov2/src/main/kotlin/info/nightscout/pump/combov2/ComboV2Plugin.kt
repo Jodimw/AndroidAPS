@@ -17,7 +17,6 @@ import app.aaps.core.data.pump.defs.ManufacturerType
 import app.aaps.core.data.pump.defs.PumpDescription
 import app.aaps.core.data.pump.defs.PumpType
 import app.aaps.core.data.pump.defs.TimeChangeType
-import app.aaps.core.interfaces.androidPermissions.AndroidPermission
 import app.aaps.core.interfaces.configuration.Config
 import app.aaps.core.interfaces.constraints.Constraint
 import app.aaps.core.interfaces.constraints.ConstraintsChecker
@@ -129,7 +128,6 @@ class ComboV2Plugin @Inject constructor(
     private val pumpSync: PumpSync,
     private val dateUtil: DateUtil,
     private val uiInteraction: UiInteraction,
-    private val androidPermission: AndroidPermission,
     private val config: Config,
     private val pumpEnactResultProvider: Provider<PumpEnactResult>
 ) :
@@ -308,7 +306,7 @@ class ComboV2Plugin @Inject constructor(
         pumpCoroutineScope.launch {
             try {
                 runWithPermissionCheck(
-                    context, config, aapsLogger, androidPermission,
+                    context, config, aapsLogger,
                     permissionsToCheckFor = listOf("android.permission.BLUETOOTH_CONNECT")
                 ) {
                     aapsLogger.debug(LTag.PUMP, "Setting up bluetooth interface")
@@ -675,7 +673,7 @@ class ComboV2Plugin @Inject constructor(
 
                 try {
                     runWithPermissionCheck(
-                        context, config, aapsLogger, androidPermission,
+                        context, config, aapsLogger,
                         permissionsToCheckFor = listOf("android.permission.BLUETOOTH_CONNECT")
                     ) {
                         // Set maxNumAttempts to null to turn off the connection attempt limit inside the connect() call.
@@ -1501,7 +1499,7 @@ class ComboV2Plugin @Inject constructor(
                 // Do the pairing attempt within runWithPermissionCheck()
                 // since pairing requires Bluetooth permissions.
                 val pairingResult = runWithPermissionCheck(
-                    context, config, aapsLogger, androidPermission,
+                    context, config, aapsLogger,
                     permissionsToCheckFor = listOf("android.permission.BLUETOOTH_CONNECT")
                 ) {
                     try {

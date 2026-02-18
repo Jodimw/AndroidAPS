@@ -78,13 +78,26 @@ class DexcomPlugin @Inject constructor(
 
     override fun advancedFilteringSupported(): Boolean = true
 
-    override fun requiredPermissions(): List<PermissionGroup> = listOf(
-        PermissionGroup(
-            permissions = listOf(PERMISSION),
-            rationaleTitle = R.string.permission_dexcom_title,
-            rationaleDescription = R.string.permission_dexcom_description,
-        )
-    )
+    override fun requiredPermissions(): List<PermissionGroup> =
+        if (isDexcomAppInstalled()) listOf(
+            PermissionGroup(
+                permissions = listOf(PERMISSION),
+                rationaleTitle = R.string.permission_dexcom_title,
+                rationaleDescription = R.string.permission_dexcom_description,
+                special = true,
+            )
+        ) else emptyList()
+
+    private fun isDexcomAppInstalled(): Boolean =
+        PACKAGE_NAMES.any { pkg ->
+            try {
+                @Suppress("DEPRECATION")
+                context.packageManager.getPackageInfo(pkg, 0)
+                true
+            } catch (_: Exception) {
+                false
+            }
+        }
 
     override fun onStart() {
         super.onStart()

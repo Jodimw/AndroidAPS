@@ -1,12 +1,10 @@
 package app.aaps.plugins.configuration.di
 
-import app.aaps.core.interfaces.androidPermissions.AndroidPermission
 import app.aaps.core.interfaces.configuration.ConfigBuilder
 import app.aaps.core.interfaces.maintenance.FileListProvider
 import app.aaps.core.interfaces.maintenance.ImportExportPrefs
 import app.aaps.core.interfaces.maintenance.Maintenance
 import app.aaps.core.nssdk.interfaces.RunningConfiguration
-import app.aaps.plugins.configuration.AndroidPermissionImpl
 import app.aaps.plugins.configuration.activities.SingleFragmentActivity
 import app.aaps.plugins.configuration.configBuilder.ConfigBuilderFragment
 import app.aaps.plugins.configuration.configBuilder.ConfigBuilderPlugin
@@ -46,7 +44,6 @@ abstract class ConfigurationModule {
     @Module
     interface Bindings {
 
-        @Binds fun bindAndroidPermissionInterface(androidPermission: AndroidPermissionImpl): AndroidPermission
         @Binds fun bindPrefFileListProvider(prefFileListProviderImpl: FileListProviderImpl): FileListProvider
         @Binds fun bindRunningConfiguration(runningConfigurationImpl: RunningConfigurationImpl): RunningConfiguration
         @Binds fun bindConfigBuilderInterface(configBuilderPlugin: ConfigBuilderPlugin): ConfigBuilder

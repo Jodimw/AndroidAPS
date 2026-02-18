@@ -8,7 +8,6 @@ import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import androidx.work.testing.TestListenableWorkerBuilder
 import app.aaps.core.data.model.BS
-import app.aaps.core.interfaces.androidPermissions.AndroidPermission
 import app.aaps.core.interfaces.configuration.Config
 import app.aaps.core.interfaces.constraints.ConstraintsChecker
 import app.aaps.core.interfaces.db.PersistenceLayer
@@ -68,7 +67,6 @@ class CommandQueueImplementationTest : TestBaseWithProfile() {
     @Mock lateinit var constraintChecker: ConstraintsChecker
     @Mock lateinit var powerManager: PowerManager
     @Mock lateinit var uiInteraction: UiInteraction
-    @Mock lateinit var androidPermission: AndroidPermission
     @Mock lateinit var persistenceLayer: PersistenceLayer
     @Mock lateinit var jobName: CommandQueueName
     @Mock lateinit var workManager: WorkManager
@@ -182,7 +180,6 @@ class CommandQueueImplementationTest : TestBaseWithProfile() {
                 it.activePlugin = activePlugin
                 it.rh = rh
                 it.preferences = preferences
-                it.androidPermission = androidPermission
                 it.config = config
             }
         }

@@ -1,17 +1,24 @@
 package app.aaps
 
+import android.Manifest
 import android.content.ActivityNotFoundException
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
+import android.provider.Settings
 import android.view.WindowManager
 import androidx.activity.compose.setContent
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.core.app.ActivityCompat
 import androidx.core.net.toUri
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
@@ -50,10 +57,13 @@ import app.aaps.core.ui.compose.preference.LocalVisibilityContext
 import app.aaps.core.ui.compose.preference.PluginPreferencesScreen
 import app.aaps.core.ui.compose.preference.PreferenceSubScreenDef
 import app.aaps.core.ui.search.SearchableItem
+import app.aaps.implementation.plugin.PluginStore
 import app.aaps.implementation.protection.BiometricCheck
 import app.aaps.plugins.configuration.activities.DaggerAppCompatActivityWithResult
 import app.aaps.plugins.configuration.activities.SingleFragmentActivity
 import app.aaps.plugins.configuration.setupwizard.SetupWizardActivity
+import app.aaps.plugins.source.DexcomPlugin
+import app.aaps.plugins.source.activities.RequestDexcomPermissionActivity
 import app.aaps.ui.compose.carbsDialog.CarbsDialogScreen
 import app.aaps.ui.compose.carbsDialog.CarbsDialogViewModel
 import app.aaps.ui.compose.careDialog.CareDialogScreen
@@ -71,6 +81,9 @@ import app.aaps.ui.compose.overview.graphs.GraphViewModel
 import app.aaps.ui.compose.overview.manage.ManageViewModel
 import app.aaps.ui.compose.overview.statusLights.StatusViewModel
 import app.aaps.ui.compose.overview.treatments.TreatmentViewModel
+import app.aaps.ui.compose.permissions.PermissionsSheet
+import app.aaps.ui.compose.permissions.PermissionsSideEffect
+import app.aaps.ui.compose.permissions.PermissionsViewModel
 import app.aaps.ui.compose.preferences.AllPreferencesScreen
 import app.aaps.ui.compose.preferences.PreferenceScreenView
 import app.aaps.ui.compose.profileHelper.ProfileHelperScreen
@@ -139,11 +152,19 @@ class ComposeMainActivity : DaggerAppCompatActivityWithResult() {
     @Inject lateinit var insulinDialogViewModel: InsulinDialogViewModel
     @Inject lateinit var treatmentDialogViewModel: TreatmentDialogViewModel
     @Inject lateinit var searchViewModel: SearchViewModel
+    @Inject lateinit var permissionsViewModel: PermissionsViewModel
 
     private val disposable = CompositeDisposable()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        onPermissionResultDenied = { denied ->
+            permissionsViewModel.onPermissionsDenied(
+                deniedPermissions = denied,
+                canShowRationale = { ActivityCompat.shouldShowRequestPermissionRationale(this, it) }
+            )
+        }
 
         setupEventListeners()
         setupWakeLock()
@@ -174,6 +195,82 @@ class ComposeMainActivity : DaggerAppCompatActivityWithResult() {
                         BiometricCheck.biometricPrompt(activity, titleRes, onGranted, onCancelled, onDenied, passwordCheck)
                     }
                 )
+
+                // Permissions bottom sheet
+                val permState by permissionsViewModel.uiState.collectAsState()
+
+                val snackbarHostState = remember { SnackbarHostState() }
+
+                LaunchedEffect(Unit) {
+                    permissionsViewModel.sideEffect.collect { effect ->
+                        when (effect) {
+                            is PermissionsSideEffect.RequestPermissions      ->
+                                requestMultiplePermissions?.launch(effect.permissions.toTypedArray())
+
+                            is PermissionsSideEffect.LaunchSpecialPermission ->
+                                when {
+                                    effect.group.permissions.contains(Manifest.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS) ->
+                                        try {
+                                            callForBatteryOptimization?.launch(null)
+                                        } catch (_: ActivityNotFoundException) {
+                                            snackbarHostState.showSnackbar(getString(app.aaps.plugins.configuration.R.string.alert_dialog_permission_battery_optimization_failed))
+                                        } catch (_: IllegalStateException) {
+                                            snackbarHostState.showSnackbar(getString(app.aaps.plugins.configuration.R.string.error_asking_for_permissions))
+                                        }
+
+                                    effect.group.permissions.contains(PluginStore.PERMISSION_SELECT_DIRECTORY)                  ->
+                                        try {
+                                            accessTree?.launch(null)
+                                        } catch (_: Exception) {
+                                            snackbarHostState.showSnackbar(getString(app.aaps.ui.R.string.permission_directory_picker_error))
+                                        }
+
+                                    effect.group.permissions.contains(DexcomPlugin.PERMISSION)                                  ->
+                                        startActivity(Intent(this@ComposeMainActivity, RequestDexcomPermissionActivity::class.java))
+
+                                    effect.group.permissions.contains(Manifest.permission.POST_NOTIFICATIONS)                   ->
+                                        startActivity(
+                                            Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
+                                                putExtra(Settings.EXTRA_APP_PACKAGE, packageName)
+                                            }
+                                        )
+
+                                    effect.group.permissions.contains(Manifest.permission.SCHEDULE_EXACT_ALARM)                 ->
+                                        startActivity(
+                                            Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM).apply {
+                                                data = Uri.parse("package:$packageName")
+                                            }
+                                        )
+                                }
+
+                            is PermissionsSideEffect.ShowError               ->
+                                snackbarHostState.showSnackbar(effect.message)
+
+                            is PermissionsSideEffect.PermanentlyDenied       -> {
+                                val result = snackbarHostState.showSnackbar(
+                                    message = getString(app.aaps.ui.R.string.permission_denied_go_to_settings),
+                                    actionLabel = getString(app.aaps.ui.R.string.permission_open_settings),
+                                )
+                                if (result == SnackbarResult.ActionPerformed) {
+                                    startActivity(
+                                        Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                                            data = Uri.parse("package:$packageName")
+                                        }
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if (permState.showSheet) {
+                    PermissionsSheet(
+                        items = permState.items,
+                        snackbarHostState = snackbarHostState,
+                        onRequestPermission = { permissionsViewModel.requestPermission(it) },
+                        onDismiss = { permissionsViewModel.dismissSheet() }
+                    )
+                }
 
                 val state by mainViewModel.uiState.collectAsState()
 
@@ -234,6 +331,7 @@ class ComposeMainActivity : DaggerAppCompatActivityWithResult() {
                             onPluginClick = { plugin -> handlePluginClick(plugin) },
                             onPluginEnableToggle = { plugin, type, enabled ->
                                 mainViewModel.togglePluginEnabled(plugin, type, enabled)
+                                permissionsViewModel.refresh(this@ComposeMainActivity)
                             },
                             onPluginPreferencesClick = { plugin ->
                                 protectionCheck.requestProtection(ProtectionCheck.Protection.PREFERENCES) { result ->
@@ -380,6 +478,10 @@ class ComposeMainActivity : DaggerAppCompatActivityWithResult() {
                             } else null,
                             onActionsError = { comment, title ->
                                 uiInteraction.runAlarm(comment, title, app.aaps.core.ui.R.raw.boluserror)
+                            },
+                            permissionsMissing = permState.hasAnyMissing,
+                            onPermissionsClick = {
+                                permissionsViewModel.showSheet()
                             },
                             graphViewModel = graphViewModel,
                             statusLightsDef = builtInSearchables.statusLights,
@@ -683,6 +785,12 @@ class ComposeMainActivity : DaggerAppCompatActivityWithResult() {
         super.onResume()
         // Profile and TempTarget state are now updated reactively via OverviewDataCache flows
         manageViewModel.refreshState()
+        permissionsViewModel.refresh(this)
+    }
+
+    override fun updateButtons() {
+        // Called by activity result callbacks (battery optimization, runtime permissions)
+        permissionsViewModel.refresh(this)
     }
 
     override fun onDestroy() {

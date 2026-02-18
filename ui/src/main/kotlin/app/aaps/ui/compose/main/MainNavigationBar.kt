@@ -1,6 +1,8 @@
 package app.aaps.ui.compose.main
 
 import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.GppMaybe
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Icon
@@ -15,6 +17,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import app.aaps.core.ui.compose.icons.IcBolus
+import app.aaps.ui.R
 import app.aaps.core.ui.R as CoreUiR
 
 @Composable
@@ -22,6 +25,8 @@ fun MainNavigationBar(
     onManageClick: () -> Unit,
     onTreatmentClick: () -> Unit,
     quickWizardCount: Int = 0,
+    permissionsMissing: Boolean = false,
+    onPermissionsClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val navColors = NavigationBarItemDefaults.colors(
@@ -87,5 +92,26 @@ fun MainNavigationBar(
             label = { Text(text = stringResource(CoreUiR.string.manage)) },
             colors = navColors
         )
+
+        // Permissions (visible only when some are missing)
+        if (permissionsMissing) {
+            NavigationBarItem(
+                selected = false,
+                onClick = onPermissionsClick,
+                icon = {
+                    BadgedBox(badge = { Badge() }) {
+                        Icon(
+                            imageVector = Icons.Default.GppMaybe,
+                            contentDescription = stringResource(R.string.permission_sheet_title),
+                        )
+                    }
+                },
+                label = { Text(text = stringResource(R.string.permission_nav_label)) },
+                colors = navColors.copy(
+                    unselectedIconColor = MaterialTheme.colorScheme.error,
+                    unselectedTextColor = MaterialTheme.colorScheme.error,
+                )
+            )
+        }
     }
 }

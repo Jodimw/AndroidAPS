@@ -1273,8 +1273,7 @@ class SmsCommunicatorPlugin @Inject constructor(
                 false
             }
         } catch (_: SecurityException) {
-            val notification = Notification(Notification.MISSING_SMS_PERMISSION, rh.gs(app.aaps.core.ui.R.string.smscommunicator_missingsmspermission), Notification.NORMAL)
-            rxBus.send(EventNewNotification(notification))
+            // This should open Permissions bottom sheet when permission is missing
             return false
         }
         rxBus.send(EventSmsCommunicatorUpdateGui())
