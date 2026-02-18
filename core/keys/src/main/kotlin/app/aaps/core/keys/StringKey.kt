@@ -196,4 +196,5 @@ enum class StringKey(
         isPassword = true,
         validator = StringValidator.minLength(17)
     ),
+
 }

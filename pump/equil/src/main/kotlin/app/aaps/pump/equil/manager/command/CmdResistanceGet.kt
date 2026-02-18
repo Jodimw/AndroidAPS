@@ -1,6 +1,7 @@
 package app.aaps.pump.equil.manager.command
 
 import app.aaps.core.interfaces.logging.AAPSLogger
+import app.aaps.core.interfaces.logging.LTag
 import app.aaps.core.keys.interfaces.Preferences
 import app.aaps.core.utils.notify
 import app.aaps.pump.equil.database.EquilHistoryRecord
@@ -39,6 +40,10 @@ class CmdResistanceGet(
         val value = Utils.bytesToInt(data[7], data[6])
         cmdSuccess = true
         enacted = value >= 500
+        aapsLogger.debug(
+            LTag.PUMPCOMM,
+            "CmdResistanceGet: resistance=$value, threshold=500, enacted=$enacted (pin ${if (enacted) "REACHED" else "NOT reached"} piston)"
+        )
         synchronized(this) {
             notify()
         }

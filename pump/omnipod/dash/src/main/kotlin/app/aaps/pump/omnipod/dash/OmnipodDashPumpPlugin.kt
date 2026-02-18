@@ -703,10 +703,7 @@ class OmnipodDashPumpPlugin @Inject constructor(
                 continue
             }
             val percent = (waited.toFloat() / estimatedDeliveryTimeSeconds) * 100
-            updateBolusProgressDialog(
-                rh.gs(app.aaps.core.interfaces.R.string.bolus_delivering, Round.roundTo(percent * requestedBolusAmount / 100, PodConstants.POD_PULSE_BOLUS_UNITS)),
-                percent.toInt()
-            )
+            rxBus.send(EventOverviewBolusProgress(rh, percent = percent.toInt()))
         }
 
         (1..BOLUS_RETRIES).forEach { tryNumber ->
@@ -734,10 +731,7 @@ class OmnipodDashPumpPlugin @Inject constructor(
                 // delivery not complete yet
                 val remainingUnits = podStateManager.lastBolus!!.bolusUnitsRemaining
                 val percent = ((requestedBolusAmount - remainingUnits) / requestedBolusAmount) * 100
-                updateBolusProgressDialog(
-                    rh.gs(app.aaps.core.interfaces.R.string.bolus_delivering, Round.roundTo(requestedBolusAmount - remainingUnits, PodConstants.POD_PULSE_BOLUS_UNITS)),
-                    percent.toInt()
-                )
+                rxBus.send(EventOverviewBolusProgress(rh, percent = percent.toInt()))
 
                 val sleepSeconds = if (bolusCanceled)
                     BOLUS_RETRY_INTERVAL_MS

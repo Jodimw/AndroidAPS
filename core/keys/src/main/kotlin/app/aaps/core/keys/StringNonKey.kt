@@ -21,4 +21,9 @@ enum class StringNonKey(
     PumpCommonTbrStorage(key = "pump_sync_storage_tbr", defaultValue = ""),
     TempTargetPresets(key = "temp_target_presets", defaultValue = "[]"),
 
+    // Google Drive settings (internal, no preferences UI)
+    GoogleDriveStorageType(key = "google_drive_storage_type", defaultValue = "local"),
+    GoogleDriveFolderId(key = "google_drive_folder_id", defaultValue = ""),
+    GoogleDriveRefreshToken(key = "google_drive_refresh_token", defaultValue = ""),
+
 }
