@@ -210,7 +210,7 @@ class MyPreferenceFragment : PreferenceFragmentCompat(), OnSharedPreferenceChang
             preferences.get(key) == BIOMETRIC.ordinal
         ) {
             val title = rh.gs(app.aaps.core.ui.R.string.unsecure_fallback_biometric)
-            val message = rh.gs(app.aaps.plugins.configuration.R.string.master_password_missing, rh.gs(app.aaps.core.ui.R.string.protection))
+            val message = rh.gs(app.aaps.core.ui.R.string.master_password_missing, rh.gs(app.aaps.core.ui.R.string.protection))
             uiInteraction.showOkDialog(context = requireActivity(), title = title, message = message)
         }
 

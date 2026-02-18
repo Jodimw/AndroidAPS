@@ -55,7 +55,7 @@ class DashPodManagementActivity : TranslatedDaggerAppCompatActivity() {
         binding.buttonActivatePod.setOnClickListener {
             val profile = profileFunction.getProfile()
             if (profile == null) {
-                OKDialog.show(
+                uiInteraction.showOkDialog(
                     this,
                     rh.gs(app.aaps.pump.omnipod.common.R.string.omnipod_common_warning),
                     rh.gs(app.aaps.pump.omnipod.common.R.string.omnipod_common_error_failed_to_set_profile_empty_profile)
@@ -66,7 +66,7 @@ class DashPodManagementActivity : TranslatedDaggerAppCompatActivity() {
             try {
                 mapProfileToBasalProgram(profile)
             } catch (e: IllegalArgumentException) {
-                OKDialog.show(
+                uiInteraction.showOkDialog(
                     this,
                     rh.gs(app.aaps.pump.omnipod.common.R.string.omnipod_common_warning),
                     e.message ?: rh.gs(app.aaps.pump.omnipod.common.R.string.omnipod_common_error_set_basal_failed)

@@ -309,7 +309,7 @@ class MaintenanceFragment : DaggerFragment() {
         // Log button text
         val isLogCloud = isAllCloud || exportOptionsDialog.isLogCloudEnabled()
         binding.logSend.text = rh.gs(
-            if (isLogCloud) R.string.send_logs_to_cloud else R.string.send_all_logs
+            if (isLogCloud) R.string.send_logs_to_cloud else app.aaps.core.ui.R.string.send_all_logs
         )
         
         // CSV button text

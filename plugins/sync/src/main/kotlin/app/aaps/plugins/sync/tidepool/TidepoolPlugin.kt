@@ -24,7 +24,6 @@ import app.aaps.core.keys.BooleanKey
 import app.aaps.core.keys.StringKey
 import app.aaps.core.keys.interfaces.Preferences
 import app.aaps.core.ui.compose.preference.PreferenceSubScreenDef
-import app.aaps.core.utils.HtmlHelper
 import app.aaps.core.validators.DefaultEditTextValidator
 import app.aaps.core.validators.preferences.AdaptiveStringPreference
 import app.aaps.core.validators.preferences.AdaptiveSwitchPreference
@@ -63,8 +62,7 @@ class TidepoolPlugin @Inject constructor(
     private val rateLimit: RateLimit,
     private val receiverDelegate: ReceiverDelegate,
     private val authFlowOut: AuthFlowOut,
-    private val tidepoolMvvmRepository: TidepoolMvvmRepository,
-    private val config: Config,
+    private val tidepoolMvvmRepository: TidepoolMvvmRepository
 ) : Sync, Tidepool, PluginBaseWithPreferences(
     PluginDescription()
         .mainType(PluginType.SYNC)
@@ -171,20 +169,20 @@ class TidepoolPlugin @Inject constructor(
         // Connectivity is handled above, so we only deal with authentication states here
         when (authFlowOut.connectionStatus) {
             // Authentication needed
-            AuthFlowOut.ConnectionStatus.NOT_LOGGED_IN       -> tidepoolUploader.doLogin(true, "doUpload $from NOT_LOGGED_IN")
-            AuthFlowOut.ConnectionStatus.FAILED              -> tidepoolUploader.doLogin(true, "doUpload $from FAILED")
-            AuthFlowOut.ConnectionStatus.NO_SESSION          -> tidepoolUploader.doLogin(true, "doUpload $from NO_SESSION")
+            AuthFlowOut.ConnectionStatus.NOT_LOGGED_IN -> tidepoolUploader.doLogin(true, "doUpload $from NOT_LOGGED_IN")
+            AuthFlowOut.ConnectionStatus.FAILED -> tidepoolUploader.doLogin(true, "doUpload $from FAILED")
+            AuthFlowOut.ConnectionStatus.NO_SESSION -> tidepoolUploader.doLogin(true, "doUpload $from NO_SESSION")
 
             // Ready to upload
             AuthFlowOut.ConnectionStatus.SESSION_ESTABLISHED -> scope.launch { tidepoolUploader.doUpload(from) }
 
             // Transient states - wait for completion
-            AuthFlowOut.ConnectionStatus.FETCHING_TOKEN      -> aapsLogger.debug(LTag.TIDEPOOL, "doUpload $from: Already fetching token")
+            AuthFlowOut.ConnectionStatus.FETCHING_TOKEN -> aapsLogger.debug(LTag.TIDEPOOL, "doUpload $from: Already fetching token")
 
             // REMOVED: BLOCKED case - connectivity is now checked separately above
             // This prevents the state machine from getting stuck when connectivity changes
 
-            else                                             -> aapsLogger.debug(LTag.TIDEPOOL, "doUpload $from: Unhandled state ${authFlowOut.connectionStatus}")
+            else -> aapsLogger.debug(LTag.TIDEPOOL, "doUpload $from: Unhandled state ${authFlowOut.connectionStatus}")
         }
     }
 
@@ -200,14 +198,14 @@ class TidepoolPlugin @Inject constructor(
      */
     override val hasWritePermission: Boolean
         get() = isConnectivityAllowed() &&
-                authFlowOut.connectionStatus == AuthFlowOut.ConnectionStatus.SESSION_ESTABLISHED
+            authFlowOut.connectionStatus == AuthFlowOut.ConnectionStatus.SESSION_ESTABLISHED
 
     /**
      * IMPROVED: Connected requires both connectivity AND auth
      */
     override val connected: Boolean
         get() = isConnectivityAllowed() &&
-                authFlowOut.connectionStatus == AuthFlowOut.ConnectionStatus.SESSION_ESTABLISHED
+            authFlowOut.connectionStatus == AuthFlowOut.ConnectionStatus.SESSION_ESTABLISHED
 
     override fun getPreferenceScreenContent() = PreferenceSubScreenDef(
         key = "tidepool_settings",
@@ -254,7 +252,15 @@ class TidepoolPlugin @Inject constructor(
                 addPreference(AdaptiveSwitchPreference(ctx = context, booleanKey = BooleanKey.NsClientUseCellular, title = R.string.ns_cellular))
                 addPreference(AdaptiveSwitchPreference(ctx = context, booleanKey = BooleanKey.NsClientUseRoaming, title = R.string.ns_allow_roaming))
                 addPreference(AdaptiveSwitchPreference(ctx = context, booleanKey = BooleanKey.NsClientUseWifi, title = R.string.ns_wifi))
-                addPreference(AdaptiveStringPreference(ctx = context, stringKey = StringKey.NsClientWifiSsids, dialogMessage = R.string.ns_wifi_allowed_ssids, title = R.string.ns_wifi_ssids, validatorParams = DefaultEditTextValidator.Parameters(emptyAllowed = true)))
+                addPreference(
+                    AdaptiveStringPreference(
+                        ctx = context,
+                        stringKey = StringKey.NsClientWifiSsids,
+                        dialogMessage = app.aaps.core.keys.R.string.ns_wifi_ssids_summary,
+                        title = app.aaps.core.ui.R.string.ns_wifi_ssids,
+                        validatorParams = DefaultEditTextValidator.Parameters(emptyAllowed = true)
+                    )
+                )
                 addPreference(AdaptiveSwitchPreference(ctx = context, booleanKey = BooleanKey.NsClientUseOnBattery, title = R.string.ns_battery))
                 addPreference(AdaptiveSwitchPreference(ctx = context, booleanKey = BooleanKey.NsClientUseOnCharging, title = R.string.ns_charging))
             })

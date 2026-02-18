@@ -85,7 +85,6 @@ class MainActivity : DaggerAppCompatActivityWithResult() {
     @Inject lateinit var fileListProvider: FileListProvider
     @Inject lateinit var cryptoUtil: CryptoUtil
     @Inject lateinit var exportPasswordDataStore: ExportPasswordDataStore
-    @Inject lateinit var uiInteraction: UiInteraction
     @Inject lateinit var configBuilder: ConfigBuilder
 
     private lateinit var actionBarDrawerToggle: ActionBarDrawerToggle

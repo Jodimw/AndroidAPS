@@ -300,18 +300,17 @@ class ImportExportPrefsImpl @Inject constructor(
         }
         exportPasswordDataStore.clearPasswordDataStore(context)
 
-        TwoMessagesAlertDialog.showAlert(
-            activity,
-            rh.gs(app.aaps.core.ui.R.string.nav_export),
-            rh.gs(R.string.export_to) + " " + targetDisplayName + " ?",
-            rh.gs(R.string.password_preferences_encrypt_prompt),
-            {
-                askForMasterPassIfNeeded(activity, R.string.preferences_export_canceled) { pwd ->
+        uiInteraction.showOkCancelDialog(
+            context = activity,
+            title = rh.gs(app.aaps.core.ui.R.string.nav_export),
+            message = rh.gs(app.aaps.core.ui.R.string.export_to) + " " + targetDisplayName + " ?",
+            secondMessage = rh.gs(app.aaps.core.ui.R.string.password_preferences_encrypt_prompt),
+            ok = {
+                askForMasterPassIfNeeded(activity, app.aaps.core.ui.R.string.preferences_export_canceled) { pwd ->
                     then(exportPasswordDataStore.putPasswordToDataStore(context, pwd))
                 }
             },
-            null,
-            R.drawable.ic_header_export
+            icon = R.drawable.ic_header_export
         )
     }
 
@@ -470,14 +469,16 @@ class ImportExportPrefsImpl @Inject constructor(
 
         ToastUtils.okToast(activity, exportResultMessage)
 
-        disposable += persistenceLayer.insertPumpTherapyEventIfNewByTimestamp(
-            therapyEvent = TE.asSettingsExport(error = exportResultMessage),
-            timestamp = dateUtil.now(),
-            action = Action.EXPORT_SETTINGS,
-            source = Sources.Automation,
-            note = "Manual Local: $exportResultMessage",
-            listValues = listOf()
-        ).subscribe()
+        appScope.launch {
+            persistenceLayer.insertPumpTherapyEventIfNewByTimestamp(
+                therapyEvent = TE.asSettingsExport(error = exportResultMessage),
+                timestamp = dateUtil.now(),
+                action = Action.EXPORT_SETTINGS,
+                source = Sources.Automation,
+                note = "Manual Local: $exportResultMessage",
+                listValues = listOf()
+            )
+        }
     }
 
     private fun exportToCloud(activity: FragmentActivity) {
@@ -593,14 +594,14 @@ class ImportExportPrefsImpl @Inject constructor(
 
                 ToastUtils.infoToast(activity, exportResultMessage)
 
-                disposable += persistenceLayer.insertPumpTherapyEventIfNewByTimestamp(
+                persistenceLayer.insertPumpTherapyEventIfNewByTimestamp(
                     therapyEvent = TE.asSettingsExport(error = exportResultMessage),
                     timestamp = dateUtil.now(),
                     action = Action.EXPORT_SETTINGS,
                     source = Sources.Automation,
                     note = "Manual Cloud: $exportResultMessage",
                     listValues = listOf()
-                ).subscribe()
+                )
 
                 tempDoc.delete()
             } catch (e: Exception) {

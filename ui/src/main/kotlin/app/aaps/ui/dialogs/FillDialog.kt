@@ -174,7 +174,7 @@ class FillDialog(val fm: FragmentManager) : DialogFragmentWithDate() {
                                 )
                             )
                         }
-                        if (preferences.get(BooleanKey.SiteRotationManageCgm)) {
+                        if (preferences.get(BooleanKey.SiteRotationManagePump)) {
                             SiteRotationDialog().also { srd ->
                                 srd.arguments = Bundle().also { args ->
                                     args.putLong("time", eventTime)

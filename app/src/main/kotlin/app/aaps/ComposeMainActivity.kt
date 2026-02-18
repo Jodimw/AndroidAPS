@@ -123,7 +123,6 @@ class ComposeMainActivity : DaggerAppCompatActivityWithResult() {
     @Inject lateinit var activePlugin: ActivePlugin
     @Inject lateinit var configBuilder: ConfigBuilder
     @Inject lateinit var config: Config
-    @Inject lateinit var uiInteraction: UiInteraction
     @Inject lateinit var profileUtil: ProfileUtil
     @Inject lateinit var visibilityContext: PreferenceVisibilityContext
     @Inject lateinit var xDripSource: XDripSource

@@ -47,7 +47,6 @@ class SingleFragmentActivity : DaggerAppCompatActivityWithResult() {
 
     @Inject lateinit var activePlugin: ActivePlugin
     @Inject lateinit var protectionCheck: ProtectionCheck
-    @Inject lateinit var uiInteraction: UiInteraction
     @Inject lateinit var overview: Overview
     @Inject lateinit var config: Config
     @Inject lateinit var profileUtil: ProfileUtil

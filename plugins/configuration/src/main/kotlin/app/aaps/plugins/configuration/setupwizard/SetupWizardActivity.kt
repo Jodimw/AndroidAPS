@@ -36,7 +36,6 @@ class SetupWizardActivity : DaggerAppCompatActivityWithResult() {
     @Inject lateinit var swDefinition: SWDefinition
     @Inject lateinit var fabricPrivacy: FabricPrivacy
     @Inject lateinit var aapsSchedulers: AapsSchedulers
-    @Inject lateinit var uiInteraction: UiInteraction
     @Inject lateinit var swItemProvider: Provider<SWItem>
 
     private val disposable = CompositeDisposable()

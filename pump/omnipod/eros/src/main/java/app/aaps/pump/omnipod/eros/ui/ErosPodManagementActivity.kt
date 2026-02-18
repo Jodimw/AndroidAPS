@@ -78,7 +78,7 @@ class ErosPodManagementActivity : TranslatedDaggerAppCompatActivity() {
         binding.buttonActivatePod.setOnClickListener {
             val profile = profileFunction.getProfile()
             if (profile == null) {
-                OKDialog.show(
+                uiInteraction.showOkDialog(
                     this,
                     rh.gs(app.aaps.pump.omnipod.common.R.string.omnipod_common_warning),
                     rh.gs(app.aaps.pump.omnipod.common.R.string.omnipod_common_error_failed_to_set_profile_empty_profile)
