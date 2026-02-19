@@ -9,18 +9,22 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Send
+import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Cloud
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DeleteForever
 import androidx.compose.material.icons.filled.FileDownload
 import androidx.compose.material.icons.filled.FileUpload
 import androidx.compose.material.icons.filled.Folder
-import androidx.compose.material.icons.filled.Send
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.TableChart
 import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -51,8 +55,9 @@ fun MaintenanceBottomSheet(
     onDeleteLogsClick: () -> Unit,
     onDirectoryClick: () -> Unit,
     onCloudDirectoryClick: () -> Unit,
+    onClearCloudClick: () -> Unit,
     onExportSettingsClick: () -> Unit,
-    onImportSettingsClick: () -> Unit,
+    onImportSettingsClick: (ImportSource) -> Unit,
     onExportCsvClick: () -> Unit,
     onResetApsResultsClick: () -> Unit,
     onCleanupDbClick: () -> Unit,
@@ -79,6 +84,7 @@ fun MaintenanceBottomSheet(
             onDeleteLogsClick = onDeleteLogsClick,
             onDirectoryClick = onDirectoryClick,
             onCloudDirectoryClick = onCloudDirectoryClick,
+            onClearCloudClick = onClearCloudClick,
             onExportSettingsClick = onExportSettingsClick,
             onImportSettingsClick = onImportSettingsClick,
             onExportCsvClick = onExportCsvClick,
@@ -104,8 +110,9 @@ internal fun MaintenanceBottomSheetContent(
     onDeleteLogsClick: () -> Unit = {},
     onDirectoryClick: () -> Unit = {},
     onCloudDirectoryClick: () -> Unit = {},
+    onClearCloudClick: () -> Unit = {},
     onExportSettingsClick: () -> Unit = {},
-    onImportSettingsClick: () -> Unit = {},
+    onImportSettingsClick: (ImportSource) -> Unit = {},
     onExportCsvClick: () -> Unit = {},
     onResetApsResultsClick: () -> Unit = {},
     onCleanupDbClick: () -> Unit = {},
@@ -122,6 +129,7 @@ internal fun MaintenanceBottomSheetContent(
     val errorColor = MaterialTheme.colorScheme.error
     val isCloudActive = exportConfig?.isCloudActive == true
     val hasCloudError = exportConfig?.isCloudError == true
+    val hasCloudCredentials = exportConfig?.hasCloudCredentials == true
 
     Column(
         modifier = Modifier
@@ -142,7 +150,7 @@ internal fun MaintenanceBottomSheetContent(
         MaintenanceItem(
             text = stringResource(CoreUiR.string.send_logs),
             description = stringResource(CoreUiR.string.maintenance_send_logs_desc),
-            icon = Icons.Default.Send,
+            icon = Icons.AutoMirrored.Filled.Send,
             color = primaryColor,
             onDismiss = onDismiss,
             onClick = onSendLogsClick,
@@ -189,14 +197,23 @@ internal fun MaintenanceBottomSheetContent(
             color = primaryColor,
             onDismiss = onDismiss,
             onClick = onCloudDirectoryClick,
-            trailingContent = if (hasCloudError) {
+            leadingContent = {
+                CloudStatusIcon(
+                    hasCredentials = hasCloudCredentials,
+                    hasError = hasCloudError,
+                    isActive = isCloudActive,
+                    color = primaryColor
+                )
+            },
+            trailingContent = if (hasCloudCredentials) {
                 {
-                    Icon(
-                        imageVector = Icons.Default.Warning,
-                        contentDescription = null,
-                        tint = errorColor,
-                        modifier = Modifier.size(20.dp)
-                    )
+                    IconButton(onClick = onClearCloudClick) {
+                        Icon(
+                            imageVector = Icons.Default.Clear,
+                            contentDescription = stringResource(CoreUiR.string.clear_cloud_action),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                 }
             } else null
         )
@@ -226,7 +243,14 @@ internal fun MaintenanceBottomSheetContent(
             icon = Icons.Default.FileDownload,
             color = primaryColor,
             onDismiss = onDismiss,
-            onClick = onImportSettingsClick,
+            onClick = {
+                val source = when {
+                    exportConfig?.settingsLocal == true && exportConfig.settingsCloud && isCloudActive -> ImportSource.BOTH
+                    exportConfig?.settingsCloud == true && isCloudActive                               -> ImportSource.CLOUD
+                    else                                                                               -> ImportSource.LOCAL
+                }
+                onImportSettingsClick(source)
+            },
             trailingContent = exportConfig?.let {
                 {
                     DestinationChips(
@@ -295,6 +319,34 @@ internal fun MaintenanceBottomSheetContent(
 }
 
 @Composable
+private fun CloudStatusIcon(
+    hasCredentials: Boolean,
+    hasError: Boolean,
+    isActive: Boolean,
+    color: Color
+) {
+    val badgeColor = when {
+        hasError       -> MaterialTheme.colorScheme.error
+        isActive       -> Color(0xFF4CAF50) // green
+        hasCredentials -> Color(0xFF4CAF50) // green (has credentials, active)
+        else           -> MaterialTheme.colorScheme.outlineVariant // gray
+    }
+    BadgedBox(
+        badge = {
+            Badge(
+                containerColor = badgeColor,
+                modifier = Modifier.size(8.dp)
+            )
+        }
+    ) {
+        TonalIcon(
+            painter = rememberVectorPainter(Icons.Default.Cloud),
+            color = color
+        )
+    }
+}
+
+@Composable
 private fun SectionHeader(text: String) {
     Text(
         text = text,
@@ -313,6 +365,7 @@ private fun MaintenanceItem(
     onClick: () -> Unit,
     description: String? = null,
     trailingContent: @Composable (() -> Unit)? = null,
+    leadingContent: @Composable (() -> Unit)? = null,
     danger: Boolean = false
 ) {
     val containerColor = if (danger) MaterialTheme.colorScheme.errorContainer
@@ -331,7 +384,7 @@ private fun MaintenanceItem(
                 )
             }
         },
-        leadingContent = {
+        leadingContent = leadingContent ?: {
             TonalIcon(painter = rememberVectorPainter(icon), color = contentColor)
         },
         trailingContent = trailingContent,
@@ -400,6 +453,7 @@ private fun MaintenanceBottomSheetContentPreview() {
             exportConfig = ExportConfig(
                 isCloudActive = true,
                 isCloudError = false,
+                hasCloudCredentials = true,
                 settingsLocal = true,
                 settingsCloud = true,
                 logEmail = true,

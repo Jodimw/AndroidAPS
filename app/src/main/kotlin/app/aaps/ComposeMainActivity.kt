@@ -19,6 +19,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.core.app.ActivityCompat
+import androidx.browser.customtabs.CustomTabsIntent
 import androidx.core.net.toUri
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
@@ -31,6 +32,7 @@ import app.aaps.core.data.ue.Sources
 import app.aaps.core.interfaces.configuration.Config
 import app.aaps.core.interfaces.configuration.ConfigBuilder
 import app.aaps.core.interfaces.iob.IobCobCalculator
+import app.aaps.core.interfaces.maintenance.FileListProvider
 import app.aaps.core.interfaces.plugin.ActivePlugin
 import app.aaps.core.interfaces.plugin.PluginBase
 import app.aaps.core.interfaces.profile.ProfileUtil
@@ -76,6 +78,9 @@ import app.aaps.ui.compose.insulinDialog.InsulinDialogViewModel
 import app.aaps.ui.compose.main.MainMenuItem
 import app.aaps.ui.compose.main.MainScreen
 import app.aaps.ui.compose.main.MainViewModel
+import app.aaps.ui.compose.management.ImportSettingsScreen
+import app.aaps.ui.compose.management.ImportSource
+import app.aaps.ui.compose.management.ImportViewModel
 import app.aaps.ui.compose.management.MaintenanceViewModel
 import app.aaps.ui.compose.overview.graphs.GraphViewModel
 import app.aaps.ui.compose.overview.manage.ManageViewModel
@@ -128,10 +133,8 @@ class ComposeMainActivity : DaggerAppCompatActivityWithResult() {
     @Inject lateinit var xDripSource: XDripSource
     @Inject lateinit var dexcomBoyda: DexcomBoyda
     @Inject lateinit var iobCobCalculator: IobCobCalculator
+    @Inject lateinit var prefFileList: FileListProvider
     @Inject lateinit var builtInSearchables: BuiltInSearchables
-
-    @Inject lateinit var cloudDirectoryDialog: app.aaps.plugins.configuration.maintenance.cloud.CloudDirectoryDialog
-
 
     // ViewModels
     @Inject lateinit var mainViewModel: MainViewModel
@@ -153,6 +156,7 @@ class ComposeMainActivity : DaggerAppCompatActivityWithResult() {
     @Inject lateinit var carbsDialogViewModel: CarbsDialogViewModel
     @Inject lateinit var insulinDialogViewModel: InsulinDialogViewModel
     @Inject lateinit var treatmentDialogViewModel: TreatmentDialogViewModel
+    @Inject lateinit var importViewModel: ImportViewModel
     @Inject lateinit var searchViewModel: SearchViewModel
     @Inject lateinit var permissionsViewModel: PermissionsViewModel
 
@@ -354,14 +358,28 @@ class ComposeMainActivity : DaggerAppCompatActivityWithResult() {
                                     maintenanceViewModel.emitError("Unable to launch activity. This is an Android issue")
                                 }
                             },
-                            onCloudDirectoryClick = {
-                                cloudDirectoryDialog.showCloudDirectoryDialog(
-                                    this@ComposeMainActivity,
-                                    onStorageChanged = { maintenanceViewModel.refreshExportConfig() }
-                                )
+                            onLaunchBrowser = { url ->
+                                try {
+                                    val customTabsIntent = CustomTabsIntent.Builder()
+                                        .setShowTitle(true)
+                                        .build()
+                                    customTabsIntent.launchUrl(this@ComposeMainActivity, url.toUri())
+                                } catch (e: Exception) {
+                                    maintenanceViewModel.emitError("Unable to open browser")
+                                }
                             },
-                            onImportSettingsExecute = {
-                                importExportPrefs.importSharedPreferences(this@ComposeMainActivity)
+                            onBringToForeground = {
+                                val intent = Intent(this@ComposeMainActivity, ComposeMainActivity::class.java)
+                                    .addFlags(
+                                        Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
+                                            or Intent.FLAG_ACTIVITY_SINGLE_TOP
+                                            or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                                            or Intent.FLAG_ACTIVITY_NO_ANIMATION
+                                    )
+                                startActivity(intent)
+                            },
+                            onImportSettingsNavigate = { source ->
+                                navController.navigate(AppRoute.ImportSettings.createRoute(source.name))
                             },
                             onExportCsvExecute = {
                                 importExportPrefs.exportUserEntriesCsv(this@ComposeMainActivity)
@@ -624,6 +642,27 @@ class ComposeMainActivity : DaggerAppCompatActivityWithResult() {
                             onShowDeliveryError = { comment ->
                                 uiInteraction.runAlarm(comment, rh.gs(app.aaps.core.ui.R.string.treatmentdeliveryerror), app.aaps.core.ui.R.raw.boluserror)
                             }
+                        )
+                    }
+
+                    composable(
+                        route = AppRoute.ImportSettings.route,
+                        arguments = listOf(
+                            androidx.navigation.navArgument("source") {
+                                type = androidx.navigation.NavType.StringType
+                            }
+                        )
+                    ) { backStackEntry ->
+                        val source = try {
+                            ImportSource.valueOf(backStackEntry.arguments?.getString("source") ?: "LOCAL")
+                        } catch (_: IllegalArgumentException) {
+                            ImportSource.LOCAL
+                        }
+                        LaunchedEffect(source) { importViewModel.startImport(source) }
+                        ImportSettingsScreen(
+                            viewModel = importViewModel,
+                            prefFileList = prefFileList,
+                            onClose = { navController.popBackStack() }
                         )
                     }
 
