@@ -100,7 +100,7 @@ fun BgInfoSection(
                         style = Stroke(width = strokeWidth, cap = StrokeCap.Round)
                     )
 
-                    // Triangles pointing outward at arc center
+                    // Triangles pointing outward, placed side by side along the arc
                     val centerRad = Math.toRadians(indicator.centerAngle.toDouble())
                     val ringCenterX = topLeft.x + arcSize.width / 2
                     val ringCenterY = topLeft.y + arcSize.height / 2
@@ -111,12 +111,14 @@ fun BgInfoSection(
                     val perpY = dirX
                     val triHeight = strokeWidth * 1.3f
                     val triHalfBase = strokeWidth * 0.7f
-                    val triSpacing = triHeight * 0.7f
+                    val triSpacing = triHalfBase * 2.2f
+                    val n = indicator.triangleCount
+                    val baseDist = ringRadius + strokeWidth / 2
 
-                    for (i in 0 until indicator.triangleCount) {
-                        val baseDist = ringRadius + strokeWidth / 2 + i * triSpacing
-                        val baseX = ringCenterX + baseDist * dirX
-                        val baseY = ringCenterY + baseDist * dirY
+                    for (i in 0 until n) {
+                        val lateralOffset = (i - (n - 1) / 2f) * triSpacing
+                        val baseX = ringCenterX + baseDist * dirX + lateralOffset * perpX
+                        val baseY = ringCenterY + baseDist * dirY + lateralOffset * perpY
                         val tipX = baseX + triHeight * dirX
                         val tipY = baseY + triHeight * dirY
                         drawPath(
@@ -251,8 +253,8 @@ private fun BgInfoSectionHighPreview() {
                 bgRange = BgRange.HIGH,
                 isOutdated = false,
                 timestamp = System.currentTimeMillis(),
-                trendArrow = TrendArrow.SINGLE_UP,
-                trendDescription = "Rising",
+                trendArrow = TrendArrow.DOUBLE_UP,
+                trendDescription = "Rising fast",
                 delta = 15.0,
                 deltaText = "+15",
                 shortAvgDelta = 12.0,
@@ -276,8 +278,8 @@ private fun BgInfoSectionLowPreview() {
                 bgRange = BgRange.LOW,
                 isOutdated = false,
                 timestamp = System.currentTimeMillis(),
-                trendArrow = TrendArrow.SINGLE_DOWN,
-                trendDescription = "Falling",
+                trendArrow = TrendArrow.TRIPLE_DOWN,
+                trendDescription = "Falling rapidly",
                 delta = -10.0,
                 deltaText = "-10",
                 shortAvgDelta = -8.0,
