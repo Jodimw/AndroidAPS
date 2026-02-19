@@ -63,6 +63,7 @@ class MainViewModel @Inject constructor(
 
     val versionName: String get() = config.VERSION_NAME
     val appIcon: Int get() = iconsProvider.getIcon()
+    val calcProgressFlow: StateFlow<Int> = overviewDataCache.calcProgressFlow
 
     // Ticker for time-based progress updates (every 30 seconds)
     private val progressTicker = flow {

@@ -282,6 +282,7 @@ class ComposeMainActivity : DaggerAppCompatActivityWithResult() {
                 ) {
                     composable(AppRoute.Main.route) {
                         val searchState by searchViewModel.uiState.collectAsState()
+                        val calcProgress by mainViewModel.calcProgressFlow.collectAsState()
 
                         MainScreen(
                             uiState = state,
@@ -494,6 +495,7 @@ class ComposeMainActivity : DaggerAppCompatActivityWithResult() {
                             onPermissionsClick = {
                                 permissionsViewModel.showSheet()
                             },
+                            calcProgress = calcProgress,
                             graphViewModel = graphViewModel,
                             statusLightsDef = builtInSearchables.statusLights,
                             treatmentButtonsDef = builtInSearchables.treatmentButtons,

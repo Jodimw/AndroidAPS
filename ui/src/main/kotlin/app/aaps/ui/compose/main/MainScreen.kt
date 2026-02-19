@@ -116,6 +116,7 @@ fun MainScreen(
     // Permissions
     permissionsMissing: Boolean = false,
     onPermissionsClick: () -> Unit = {},
+    calcProgress: Int,
     graphViewModel: GraphViewModel,
     statusLightsDef: app.aaps.core.ui.compose.preference.PreferenceSubScreenDef,
     treatmentButtonsDef: app.aaps.core.ui.compose.preference.PreferenceSubScreenDef,
@@ -256,6 +257,7 @@ fun MainScreen(
                     runningMode = uiState.runningMode,
                     runningModeText = uiState.runningModeText,
                     runningModeProgress = uiState.runningModeProgress,
+                    calcProgress = calcProgress,
                     graphViewModel = graphViewModel,
                     manageViewModel = manageViewModel,
                     statusViewModel = statusViewModel,

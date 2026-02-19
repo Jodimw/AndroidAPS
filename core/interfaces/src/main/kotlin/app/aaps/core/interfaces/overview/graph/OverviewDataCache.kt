@@ -24,7 +24,7 @@ interface OverviewDataCache {
     fun updateTimeRange(range: TimeRange?)
 
     // Calculation progress (0-100)
-    var calcProgressPct: Int
+    val calcProgressFlow: StateFlow<Int>
 
     // =========================================================================
     // BG data flows

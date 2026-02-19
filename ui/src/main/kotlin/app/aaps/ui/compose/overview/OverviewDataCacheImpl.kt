@@ -60,6 +60,7 @@ import app.aaps.core.interfaces.profile.ProfileUtil
 import app.aaps.core.interfaces.resources.ResourceHelper
 import app.aaps.core.interfaces.rx.bus.RxBus
 import app.aaps.core.interfaces.rx.events.EventBucketedDataCreated
+import app.aaps.core.interfaces.rx.events.EventIobCalculationProgress
 import app.aaps.core.interfaces.utils.DateUtil
 import app.aaps.core.interfaces.utils.DecimalFormatter
 import app.aaps.core.interfaces.utils.TrendCalculator
@@ -125,7 +126,8 @@ class OverviewDataCacheImpl @Inject constructor(
     // State flows (must be declared before init block to avoid race conditions)
     // =========================================================================
 
-    override var calcProgressPct: Int = 100
+    private val _calcProgressFlow = MutableStateFlow(100)
+    override val calcProgressFlow: StateFlow<Int> = _calcProgressFlow.asStateFlow()
 
     // Time range
     private val _timeRangeFlow = MutableStateFlow<TimeRange?>(null)
@@ -209,6 +211,13 @@ class OverviewDataCacheImpl @Inject constructor(
             rxBus.toFlow(EventBucketedDataCreated::class.java).collect {
                 aapsLogger.debug(LTag.UI, "Bucketed data created, refreshing BgInfo for trend arrow")
                 updateBgInfoFromDatabase()
+            }
+        }
+
+        // Observe calculation progress from workers
+        scope.launch {
+            rxBus.toFlow(EventIobCalculationProgress::class.java).collect {
+                _calcProgressFlow.value = it.finalPercent
             }
         }
 
@@ -728,6 +737,6 @@ class OverviewDataCacheImpl @Inject constructor(
         _basalGraphFlow.value = BasalGraphData(emptyList(), emptyList(), 0.0)
         _targetLineFlow.value = TargetLineData(emptyList())
         _runningModeGraphFlow.value = RunningModeGraphData(emptyList())
-        calcProgressPct = 100
+        _calcProgressFlow.value = 100
     }
 }
