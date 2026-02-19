@@ -60,7 +60,8 @@ data class ElementColors(
     val loopDisabled: Color,
     val loopSuperBolus: Color,
     val loopDisconnected: Color,
-    val loopSuspended: Color
+    val loopSuspended: Color,
+    val sensitivity: Color
 )
 
 /**
@@ -95,7 +96,8 @@ internal val LightElementColors = ElementColors(
     loopDisabled = Color(0xFFFF1313),     // red
     loopSuperBolus = Color(0xFFFFA500),   // orange
     loopDisconnected = Color(0xFF939393), // gray
-    loopSuspended = Color(0xFFF6CE22)     // yellow
+    loopSuspended = Color(0xFFF6CE22),    // yellow
+    sensitivity = Color(0xFF008585)        // teal — autosens icon color
 )
 
 /**
@@ -130,7 +132,8 @@ internal val DarkElementColors = ElementColors(
     loopDisabled = Color(0xFFFF1313),     // red
     loopSuperBolus = Color(0xFFFFA500),   // orange
     loopDisconnected = Color(0xFF939393), // gray
-    loopSuspended = Color(0xFFF6CE22)     // yellow
+    loopSuspended = Color(0xFFF6CE22),    // yellow
+    sensitivity = Color(0xFF008585)        // teal — autosens icon color
 )
 
 /**

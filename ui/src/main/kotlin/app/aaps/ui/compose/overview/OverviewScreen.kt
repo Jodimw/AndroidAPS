@@ -111,11 +111,32 @@ fun OverviewScreen(
                 .padding(horizontal = 8.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // BG Info section on the left
-            BgInfoSection(
-                bgInfo = bgInfoState.bgInfo,
-                timeAgoText = bgInfoState.timeAgoText
-            )
+            // BG Info section + sensitivity chip on the left
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                BgInfoSection(
+                    bgInfo = bgInfoState.bgInfo,
+                    timeAgoText = bgInfoState.timeAgoText
+                )
+                // Sensitivity / Autosens chip (hidden when ratio is 100% with no extra info)
+                val sensitivityUiState by graphViewModel.sensitivityUiState.collectAsState()
+                if (sensitivityUiState.asText.isNotEmpty() || sensitivityUiState.isfFrom.isNotEmpty()) {
+                    var showSensitivityDialog by remember { mutableStateOf(false) }
+                    SensitivityChip(
+                        state = sensitivityUiState,
+                        onClick = { if (sensitivityUiState.dialogText.isNotEmpty()) showSensitivityDialog = true }
+                    )
+                    if (showSensitivityDialog) {
+                        OkCancelDialog(
+                            title = stringResource(app.aaps.core.ui.R.string.sensitivity),
+                            message = sensitivityUiState.dialogText,
+                            onConfirm = { showSensitivityDialog = false },
+                            onDismiss = { showSensitivityDialog = false }
+                        )
+                    }
+                }
+            }
 
             // Chips column on the right
             Column(

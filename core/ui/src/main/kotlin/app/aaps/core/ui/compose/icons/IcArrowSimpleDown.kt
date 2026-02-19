@@ -1,4 +1,4 @@
-package app.aaps.core.ui.compose.icons.library
+package app.aaps.core.ui.compose.icons
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -15,14 +15,14 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 
 /**
- * Icon for AutoSens Below.
- * Represents AutoSensitivity below target range.
+ * Icon for Simple Down Arrow.
+ * Represents downward trend or direction.
  *
- * Bounding box: x: 7.4-16.6, y: 5.7-18.3 (viewport: 24x24, ~53% height)
+ * Bounding box: x: 5.4-18.6, y: 1.2-22.8 (viewport: 24x24, ~90% height)
  */
-val IcAsBelow: ImageVector by lazy {
+val IcArrowSimpleDown: ImageVector by lazy {
     ImageVector.Builder(
-        name = "IcAsBelow",
+        name = "IcArrowSimpleDown",
         defaultWidth = 48.dp,
         defaultHeight = 48.dp,
         viewportWidth = 24f,
@@ -38,14 +38,20 @@ val IcAsBelow: ImageVector by lazy {
             strokeLineJoin = StrokeJoin.Miter,
             strokeLineMiter = 1.0f
         ) {
-            moveTo(13.151f, 13.738f)
-            verticalLineTo(5.669f)
-            horizontalLineToRelative(-2.302f)
-            verticalLineToRelative(8.069f)
-            horizontalLineTo(7.396f)
-            lineTo(12f, 18.331f)
-            lineToRelative(4.604f, -4.593f)
-            horizontalLineTo(13.151f)
+            moveTo(6.228f, 16.653f)
+            curveToRelative(2.121f, 1.967f, 4.65f, 4.43f, 5.771f, 6.145f)
+            verticalLineTo(22.8f)
+            lineTo(12f, 22.799f)
+            lineToRelative(0.001f, 0.001f)
+            verticalLineToRelative(-0.002f)
+            curveToRelative(1.121f, -1.715f, 3.65f, -4.178f, 5.771f, -6.145f)
+            lineToRelative(-1.44f, -1.979f)
+            curveToRelative(0f, 0f, -1.715f, 1.53f, -3.188f, 2.964f)
+            verticalLineTo(1.2f)
+            horizontalLineToRelative(-2.286f)
+            verticalLineToRelative(16.438f)
+            curveToRelative(-1.474f, -1.434f, -3.189f, -2.964f, -3.189f, -2.964f)
+            lineTo(6.228f, 16.653f)
             close()
         }
     }.build()
@@ -53,9 +59,9 @@ val IcAsBelow: ImageVector by lazy {
 
 @Preview(showBackground = true)
 @Composable
-private fun IcAsBelowIconPreview() {
+private fun IcArrowSimpleDownIconPreview() {
     Icon(
-        imageVector = IcAsBelow,
+        imageVector = IcArrowSimpleDown,
         contentDescription = null,
         modifier = Modifier
             .padding(0.dp)
@@ -70,10 +76,10 @@ private fun IcAsBelowIconPreview() {
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
 <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="24px"
 	 height="24px" viewBox="0 0 24 24" enable-background="new 0 0 24 24" xml:space="preserve">
-<g id="ic_as_below">
-	<g>
-		<path fill="#008585" d="M13.151,13.738V5.669h-2.302v8.069H7.396L12,18.331l4.604-4.593H13.151z"/>
-	</g>
+<g id="ic_arrow_simple_down">
+	<path display="inline" fill="#36FF00" d="M6.228,16.653c2.121,1.967,4.65,4.43,5.771,6.145V22.8L12,22.799l0.001,0.001v-0.002
+		c1.121-1.715,3.65-4.178,5.771-6.145l-1.44-1.979c0,0-1.715,1.53-3.188,2.964V1.2h-2.286v16.438
+		c-1.474-1.434-3.189-2.964-3.189-2.964L6.228,16.653z"/>
 </g>
 </svg>
  */

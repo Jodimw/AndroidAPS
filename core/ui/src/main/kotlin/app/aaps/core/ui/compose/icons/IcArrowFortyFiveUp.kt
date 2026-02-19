@@ -1,4 +1,4 @@
-package app.aaps.core.ui.compose.icons.library
+package app.aaps.core.ui.compose.icons
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -15,14 +15,14 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 
 /**
- * Icon for AutoSens.
- * Represents AutoSensitivity feature.
+ * Icon for Forty-Five Degrees Up Arrow.
+ * Represents forty-five degree upward trend.
  *
- * Bounding box: x: 4.5-19.5, y: 1.6-22.4 (viewport: 24x24, ~90% height)
+ * Bounding box: x: 3.5-19.6, y: 3.5-20.5 (viewport: 24x24, ~84% width)
  */
-val IcAs: ImageVector by lazy {
+val IcArrowFortyfiveUp: ImageVector by lazy {
     ImageVector.Builder(
-        name = "IcAs",
+        name = "IcArrowFortyfiveUp",
         defaultWidth = 48.dp,
         defaultHeight = 48.dp,
         viewportWidth = 24f,
@@ -38,24 +38,20 @@ val IcAs: ImageVector by lazy {
             strokeLineJoin = StrokeJoin.Miter,
             strokeLineMiter = 1.0f
         ) {
-            moveTo(16.086f, 17.767f)
-            verticalLineToRelative(-8.069f)
-            horizontalLineToRelative(-2.302f)
-            verticalLineToRelative(8.069f)
-            horizontalLineToRelative(-3.454f)
-            lineToRelative(4.604f, 4.593f)
-            lineToRelative(4.604f, -4.593f)
-            horizontalLineToRelative(-3.452f)
-            close()
-
-            moveTo(9.066f, 1.64f)
-            lineTo(4.461f, 6.233f)
-            horizontalLineToRelative(3.453f)
-            verticalLineToRelative(8.069f)
-            horizontalLineToRelative(2.302f)
-            verticalLineTo(6.233f)
-            horizontalLineToRelative(3.453f)
-            lineTo(9.066f, 1.64f)
+            moveTo(19.372f, 12.791f)
+            curveToRelative(-0.109f, -2.891f, -0.156f, -6.42f, 0.264f, -8.426f)
+            lineToRelative(0.002f, -0.002f)
+            lineToRelative(-0.001f, 0f)
+            lineToRelative(0f, -0.001f)
+            lineToRelative(-0.002f, 0.001f)
+            curveToRelative(-2.006f, 0.42f, -5.535f, 0.373f, -8.426f, 0.264f)
+            lineToRelative(-0.381f, 2.418f)
+            curveToRelative(0f, 0f, 2.295f, 0.13f, 4.351f, 0.158f)
+            lineTo(3.555f, 18.828f)
+            lineToRelative(1.617f, 1.617f)
+            lineTo(16.795f, 8.822f)
+            curveToRelative(0.028f, 2.056f, 0.158f, 4.351f, 0.158f, 4.351f)
+            lineTo(19.372f, 12.791f)
             close()
         }
     }.build()
@@ -63,9 +59,9 @@ val IcAs: ImageVector by lazy {
 
 @Preview(showBackground = true)
 @Composable
-private fun IcAsIconPreview() {
+private fun IcArrowFortyfiveUpIconPreview() {
     Icon(
-        imageVector = IcAs,
+        imageVector = IcArrowFortyfiveUp,
         contentDescription = null,
         modifier = Modifier
             .padding(0.dp)
@@ -80,11 +76,10 @@ private fun IcAsIconPreview() {
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
 <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="24px"
 	 height="24px" viewBox="0 0 24 24" enable-background="new 0 0 24 24" xml:space="preserve">
-<g id="ic_as">
-	<g>
-		<path fill="#008585" d="M16.086,17.767V9.698h-2.302v8.069H10.33l4.604,4.593l4.604-4.593H16.086z M9.066,1.64L4.461,6.233h3.453
-			v8.069h2.302V6.233h3.453L9.066,1.64z"/>
-	</g>
+<g id="ic_arrow_fortyfive_up">
+	<path display="inline" fill="#36FF00" d="M19.372,12.791c-0.109-2.891-0.156-6.42,0.264-8.426l0.002-0.002l-0.001,0l0-0.001
+		l-0.002,0.001c-2.006,0.42-5.535,0.373-8.426,0.264l-0.381,2.418c0,0,2.295,0.13,4.351,0.158L3.555,18.828l1.617,1.617
+		L16.795,8.822c0.028,2.056,0.158,4.351,0.158,4.351L19.372,12.791z"/>
 </g>
 </svg>
  */
