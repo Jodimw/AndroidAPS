@@ -19,6 +19,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.core.app.ActivityCompat
+import androidx.browser.customtabs.CustomTabsIntent
 import androidx.core.net.toUri
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
@@ -129,9 +130,6 @@ class ComposeMainActivity : DaggerAppCompatActivityWithResult() {
     @Inject lateinit var dexcomBoyda: DexcomBoyda
     @Inject lateinit var iobCobCalculator: IobCobCalculator
     @Inject lateinit var builtInSearchables: BuiltInSearchables
-
-    @Inject lateinit var cloudDirectoryDialog: app.aaps.plugins.configuration.maintenance.cloud.CloudDirectoryDialog
-
 
     // ViewModels
     @Inject lateinit var mainViewModel: MainViewModel
@@ -353,11 +351,25 @@ class ComposeMainActivity : DaggerAppCompatActivityWithResult() {
                                     maintenanceViewModel.emitError("Unable to launch activity. This is an Android issue")
                                 }
                             },
-                            onCloudDirectoryClick = {
-                                cloudDirectoryDialog.showCloudDirectoryDialog(
-                                    this@ComposeMainActivity,
-                                    onStorageChanged = { maintenanceViewModel.refreshExportConfig() }
-                                )
+                            onLaunchBrowser = { url ->
+                                try {
+                                    val customTabsIntent = CustomTabsIntent.Builder()
+                                        .setShowTitle(true)
+                                        .build()
+                                    customTabsIntent.launchUrl(this@ComposeMainActivity, url.toUri())
+                                } catch (e: Exception) {
+                                    maintenanceViewModel.emitError("Unable to open browser")
+                                }
+                            },
+                            onBringToForeground = {
+                                val intent = Intent(this@ComposeMainActivity, ComposeMainActivity::class.java)
+                                    .addFlags(
+                                        Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
+                                            or Intent.FLAG_ACTIVITY_SINGLE_TOP
+                                            or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                                            or Intent.FLAG_ACTIVITY_NO_ANIMATION
+                                    )
+                                startActivity(intent)
                             },
                             onImportSettingsExecute = {
                                 importExportPrefs.importSharedPreferences(this@ComposeMainActivity)

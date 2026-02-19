@@ -15,6 +15,7 @@ enum class ExportDestination { LOCAL, CLOUD, BOTH }
 data class ExportConfig(
     val isCloudActive: Boolean,
     val isCloudError: Boolean,
+    val hasCloudCredentials: Boolean,
     val settingsLocal: Boolean,
     val settingsCloud: Boolean,
     val logEmail: Boolean,

@@ -12,6 +12,8 @@ import app.aaps.core.interfaces.logging.L
 import app.aaps.core.interfaces.logging.LTag
 import app.aaps.core.interfaces.logging.LogElement
 import app.aaps.core.interfaces.logging.UserEntryLogger
+import app.aaps.core.interfaces.maintenance.CloudDirectoryInfo
+import app.aaps.core.interfaces.maintenance.CloudDirectoryManager
 import app.aaps.core.interfaces.maintenance.ExportConfig
 import app.aaps.core.interfaces.maintenance.ExportDestination
 import app.aaps.core.interfaces.maintenance.ExportResult
@@ -43,6 +45,8 @@ sealed interface MaintenanceEvent {
     data class CleanupResult(val result: String) : MaintenanceEvent
     data class Snackbar(val message: String) : MaintenanceEvent
     data class Error(val message: String) : MaintenanceEvent
+    data class LaunchBrowser(val url: String) : MaintenanceEvent
+    data object BringToForeground : MaintenanceEvent
 }
 
 @Stable
@@ -52,6 +56,7 @@ class MaintenanceViewModel @Inject constructor(
     private val l: L,
     private val maintenance: Maintenance,
     private val importExportPrefs: ImportExportPrefs,
+    private val cloudDirectoryManager: CloudDirectoryManager,
     private val activePlugin: ActivePlugin,
     private val persistenceLayer: PersistenceLayer,
     private val fabricPrivacy: FabricPrivacy,
@@ -215,6 +220,108 @@ class MaintenanceViewModel @Inject constructor(
 
     fun logExportCsv() {
         uel.log(Action.EXPORT_CSV, Sources.Maintenance)
+    }
+
+    // Cloud directory flow
+
+    sealed interface CloudDirectoryState {
+        data object Hidden : CloudDirectoryState
+        data class Shown(val info: CloudDirectoryInfo) : CloudDirectoryState
+        data object ConfirmClear : CloudDirectoryState
+        data object Reauthorize : CloudDirectoryState
+    }
+
+    val cloudDirectoryState: StateFlow<CloudDirectoryState>
+        field = MutableStateFlow<CloudDirectoryState>(CloudDirectoryState.Hidden)
+
+    fun showCloudDirectory() {
+        val info = cloudDirectoryManager.getCloudDirectoryInfo()
+        cloudDirectoryState.value = CloudDirectoryState.Shown(info)
+    }
+
+    fun dismissCloudDirectory() {
+        cloudDirectoryState.value = CloudDirectoryState.Hidden
+    }
+
+    fun connectGoogleDrive() {
+        val info = cloudDirectoryManager.getCloudDirectoryInfo()
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                if (info.hasCredentials) {
+                    if (cloudDirectoryManager.testConnection()) {
+                        cloudDirectoryManager.setupCloudStorage()
+                        refreshExportConfig()
+                        cloudDirectoryState.value = CloudDirectoryState.Hidden
+                    } else {
+                        cloudDirectoryState.value = CloudDirectoryState.Reauthorize
+                    }
+                } else {
+                    startAuthAndComplete()
+                }
+            } catch (e: Exception) {
+                aapsLogger.error("Cloud directory connection error", e)
+                _events.emit(MaintenanceEvent.Error(e.message ?: rh.gs(CoreUiR.string.error)))
+                cloudDirectoryState.value = CloudDirectoryState.Hidden
+            }
+        }
+    }
+
+    fun requestClearCloud() {
+        val info = cloudDirectoryManager.getCloudDirectoryInfo()
+        if (info.isCloudActive) {
+            cloudDirectoryState.value = CloudDirectoryState.ConfirmClear
+        } else {
+            cloudDirectoryManager.clearCloudSettings()
+            refreshExportConfig()
+            cloudDirectoryState.value = CloudDirectoryState.Hidden
+        }
+    }
+
+    fun confirmClearCloud() {
+        cloudDirectoryManager.clearCloudSettings()
+        refreshExportConfig()
+        cloudDirectoryState.value = CloudDirectoryState.Hidden
+    }
+
+    fun cancelClearCloud() {
+        showCloudDirectory()
+    }
+
+    fun reauthorize() {
+        cloudDirectoryManager.clearCloudSettings()
+        viewModelScope.launch(Dispatchers.IO) {
+            startAuthAndComplete()
+        }
+    }
+
+    private suspend fun startAuthAndComplete() {
+        try {
+            val authUrl = cloudDirectoryManager.startAuth()
+            if (authUrl != null) {
+                cloudDirectoryState.value = CloudDirectoryState.Hidden
+                _events.emit(MaintenanceEvent.LaunchBrowser(authUrl))
+                val authCode = cloudDirectoryManager.waitForAuthCode()
+                if (authCode != null && cloudDirectoryManager.completeAuth(authCode)) {
+                    cloudDirectoryManager.setupCloudStorage()
+                    cloudDirectoryManager.enableAllCloudExport()
+                    refreshExportConfig()
+                    _events.emit(MaintenanceEvent.BringToForeground)
+                    _events.emit(MaintenanceEvent.Snackbar(rh.gs(CoreUiR.string.cloud_auth_success)))
+                    cloudDirectoryState.value = CloudDirectoryState.Hidden
+                } else {
+                    _events.emit(MaintenanceEvent.BringToForeground)
+                    _events.emit(MaintenanceEvent.Error(rh.gs(CoreUiR.string.error)))
+                    cloudDirectoryState.value = CloudDirectoryState.Hidden
+                }
+            } else {
+                _events.emit(MaintenanceEvent.Error(rh.gs(CoreUiR.string.error)))
+            }
+        } catch (e: Exception) {
+            aapsLogger.error("Auth flow error", e)
+            _events.emit(MaintenanceEvent.BringToForeground)
+            _events.emit(MaintenanceEvent.Error(e.message ?: rh.gs(CoreUiR.string.error)))
+            cloudDirectoryState.value = CloudDirectoryState.Hidden
+        }
     }
 
     // Compose export flow

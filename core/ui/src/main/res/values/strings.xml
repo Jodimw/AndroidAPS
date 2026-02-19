@@ -714,6 +714,17 @@
     <string name="maintenance_reset_aps_results_desc">Clear stored algorithm results</string>
     <string name="maintenance_reset_db_desc">Erase all databases and restart</string>
 
+    <!-- Cloud directory dialog (Compose) -->
+    <string name="select_storage_type">Select Storage Type</string>
+    <string name="clear_cloud_action">Clear Settings</string>
+    <string name="clear_cloud_settings">Clear Cloud Settings</string>
+    <string name="clear_cloud_settings_message">This will switch to local storage and clear authorization. Continue?</string>
+    <string name="cloud_connection_failed">Cloud storage connection failed</string>
+    <string name="cloud_reauthorize_message">Cloud storage connection failed. Would you like to re-authenticate?</string>
+    <string name="reauthorize">Re-authenticate</string>
+    <string name="cloud_auth_success">Cloud storage authentication successful</string>
+    <string name="authorization_status">Authorization Status</string>
+
     <!-- NumberPicker -->
     <string name="a11y_min_button_description">decrement %1$s by %2$s</string>
     <string name="a11y_plus_button_description">increment %1$s by %2$s</string>

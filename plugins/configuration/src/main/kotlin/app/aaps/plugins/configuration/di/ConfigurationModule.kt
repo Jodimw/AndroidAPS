@@ -1,6 +1,7 @@
 package app.aaps.plugins.configuration.di
 
 import app.aaps.core.interfaces.configuration.ConfigBuilder
+import app.aaps.core.interfaces.maintenance.CloudDirectoryManager
 import app.aaps.core.interfaces.maintenance.FileListProvider
 import app.aaps.core.interfaces.maintenance.ImportExportPrefs
 import app.aaps.core.interfaces.maintenance.Maintenance
@@ -13,6 +14,7 @@ import app.aaps.plugins.configuration.maintenance.FileListProviderImpl
 import app.aaps.plugins.configuration.maintenance.ImportExportPrefsImpl
 import app.aaps.plugins.configuration.maintenance.MaintenanceFragment
 import app.aaps.plugins.configuration.maintenance.MaintenancePlugin
+import app.aaps.plugins.configuration.maintenance.cloud.CloudDirectoryManagerImpl
 import app.aaps.plugins.configuration.maintenance.activities.CloudPrefImportListActivity
 import app.aaps.plugins.configuration.maintenance.activities.CustomWatchfaceImportListActivity
 import app.aaps.plugins.configuration.maintenance.activities.LogSettingActivity
@@ -52,5 +54,6 @@ abstract class ConfigurationModule {
         @Binds fun bindConfigBuilderInterface(configBuilderPlugin: ConfigBuilderPlugin): ConfigBuilder
         @Binds fun bindImportExportPrefsInterface(importExportPrefs: ImportExportPrefsImpl): ImportExportPrefs
         @Binds fun bindMaintenanceInterface(maintenancePlugin: MaintenancePlugin): Maintenance
+        @Binds fun bindCloudDirectoryManager(impl: CloudDirectoryManagerImpl): CloudDirectoryManager
     }
 }

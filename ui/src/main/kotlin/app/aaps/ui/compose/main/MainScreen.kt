@@ -33,6 +33,7 @@ import app.aaps.core.ui.compose.QueryAnyPasswordDialog
 import app.aaps.ui.compose.alertDialogs.AboutAlertDialog
 import app.aaps.ui.compose.management.MaintenanceViewModel.ExportState
 import app.aaps.ui.compose.alertDialogs.AboutDialogData
+import app.aaps.ui.compose.management.CloudDirectorySheet
 import app.aaps.ui.compose.management.LogSettingBottomSheet
 import app.aaps.ui.compose.management.MaintenanceBottomSheet
 import app.aaps.ui.compose.management.MaintenanceEvent
@@ -83,7 +84,8 @@ fun MainScreen(
     onAboutDialogDismiss: () -> Unit,
     onMaintenanceSheetDismiss: () -> Unit,
     onDirectoryClick: () -> Unit,
-    onCloudDirectoryClick: () -> Unit,
+    onLaunchBrowser: (String) -> Unit,
+    onBringToForeground: () -> Unit,
     onImportSettingsExecute: () -> Unit,
     onExportCsvExecute: () -> Unit,
     onRecreateActivity: () -> Unit,
@@ -141,6 +143,9 @@ fun MainScreen(
     // Export dialog state
     val exportState by maintenanceViewModel.exportState.collectAsState()
 
+    // Cloud directory dialog state
+    val cloudDirectoryState by maintenanceViewModel.cloudDirectoryState.collectAsState()
+
     // Export config for dynamic labels and cloud error badge
     val exportConfig by maintenanceViewModel.exportConfig.collectAsState()
 
@@ -148,10 +153,12 @@ fun MainScreen(
     LaunchedEffect(Unit) {
         maintenanceViewModel.events.collect { event ->
             when (event) {
-                is MaintenanceEvent.RecreateActivity -> onRecreateActivity()
-                is MaintenanceEvent.CleanupResult    -> cleanupResultText = event.result
-                is MaintenanceEvent.Snackbar         -> snackbarHostState.showSnackbar(event.message)
-                is MaintenanceEvent.Error            -> snackbarHostState.showSnackbar(event.message)
+                is MaintenanceEvent.RecreateActivity  -> onRecreateActivity()
+                is MaintenanceEvent.CleanupResult     -> cleanupResultText = event.result
+                is MaintenanceEvent.Snackbar          -> snackbarHostState.showSnackbar(event.message)
+                is MaintenanceEvent.Error             -> snackbarHostState.showSnackbar(event.message)
+                is MaintenanceEvent.LaunchBrowser     -> onLaunchBrowser(event.url)
+                is MaintenanceEvent.BringToForeground -> onBringToForeground()
             }
         }
     }
@@ -396,7 +403,8 @@ fun MainScreen(
                 maintenanceViewModel.logSelectDirectory()
                 onDirectoryClick()
             },
-            onCloudDirectoryClick = onCloudDirectoryClick,
+            onCloudDirectoryClick = { maintenanceViewModel.showCloudDirectory() },
+            onClearCloudClick = { maintenanceViewModel.requestClearCloud() },
             onExportSettingsClick = {
                 maintenanceViewModel.startExport()
             },
@@ -427,6 +435,16 @@ fun MainScreen(
             onResetToDefaults = { maintenanceViewModel.resetLogDefaults() }
         )
     }
+
+    // Cloud directory dialog
+    CloudDirectorySheet(
+        state = cloudDirectoryState,
+        onConnectGoogleDrive = { maintenanceViewModel.connectGoogleDrive() },
+        onConfirmClear = { maintenanceViewModel.confirmClearCloud() },
+        onCancelClear = { maintenanceViewModel.cancelClearCloud() },
+        onReauthorize = { maintenanceViewModel.reauthorize() },
+        onDismiss = { maintenanceViewModel.dismissCloudDirectory() }
+    )
 
     // About dialog
     if (uiState.showAboutDialog && aboutDialogData != null) {
