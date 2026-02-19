@@ -20,6 +20,20 @@
     <string name="activity_monitor">Activity monitor</string>
     <string name="time_range">Time range</string>
     <string name="dexcom_tir">Dexcom TIR</string>
+    <string name="cgp_title">Glucose Pentagon (CGP) — 14 days</string>
+    <string name="cgp_tor" comment="Glucose Pentagon axis: Time out of Range">ToR</string>
+    <string name="cgp_cv" comment="Glucose Pentagon axis: Coefficient of Variation">\%CV</string>
+    <string name="cgp_hypo" comment="Glucose Pentagon axis: Hypoglycemia">Hypo</string>
+    <string name="cgp_hyper" comment="Glucose Pentagon axis: Hyperglycemia">Hyper</string>
+    <string name="cgp_mean_glucose" comment="Glucose Pentagon axis: Mean glucose">Mean</string>
+    <string name="cgp_reference">Healthy person</string>
+    <string name="cgp_patient">Patient</string>
+    <string name="cgp_pgr" comment="Prognostic Glycemic Risk score label">PGR</string>
+    <string name="cgp_pgr_very_low">Very low risk</string>
+    <string name="cgp_pgr_low">Low risk</string>
+    <string name="cgp_pgr_moderate">Moderate risk</string>
+    <string name="cgp_pgr_high">High risk</string>
+    <string name="cgp_pgr_extremely_high">Extremely high risk</string>
     <string name="do_you_want_reset_stats">Do you want to reset activity stats?</string>
     <string name="do_you_want_recalculate_tdd_stats">Do you want to recalculate TDD stats?</string>
     <string name="statistics">Statistics</string>

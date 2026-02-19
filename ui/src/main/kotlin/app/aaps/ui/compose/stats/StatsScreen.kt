@@ -282,6 +282,26 @@ fun StatsScreen(
                     }
                 }
             }
+
+            // CGP Section (Comprehensive Glucose Pentagon) - always expanded
+            AapsCard(modifier = Modifier.fillMaxWidth()) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text(
+                        text = stringResource(R.string.cgp_title),
+                        style = MaterialTheme.typography.titleMedium,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+                    Crossfade(targetState = state.dexcomTirLoading, label = "cgp_loading") { isLoading ->
+                        if (isLoading) {
+                            LoadingSection(title = stringResource(R.string.cgp_title), message = stringResource(R.string.calculation_in_progress))
+                        } else {
+                            state.dexcomTirData?.let { data ->
+                                GlucosePentagonCompose(dexcomTir = data, profileUtil = viewModel.profileUtil, modifier = Modifier.fillMaxWidth())
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }
