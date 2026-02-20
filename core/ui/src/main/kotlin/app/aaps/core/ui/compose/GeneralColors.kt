@@ -87,7 +87,11 @@ data class GeneralColors(
     // AAPSClient flavor tint colors (for NSClient status card background)
     val flavorClient1Tint: Color,
     val flavorClient2Tint: Color,
-    val flavorClient3Tint: Color
+    val flavorClient3Tint: Color,
+    // Version overlay colors
+    val versionCommitted: Color,
+    val versionWarning: Color,
+    val versionUncommitted: Color
 )
 
 /**
@@ -130,7 +134,10 @@ internal val LightGeneralColors = GeneralColors(
     loopSuperBolus = Color(0xFFFB8C00),      // orange for super bolus
     flavorClient1Tint = Color(0x30E8C50C),   // yellow tint (AAPSClient) — alpha ~19%
     flavorClient2Tint = Color(0x300FBBE0),   // blue tint (AAPSClient2)
-    flavorClient3Tint = Color(0x304CAF50)    // green tint (AAPSClient3)
+    flavorClient3Tint = Color(0x304CAF50),   // green tint (AAPSClient3)
+    versionCommitted = Color(0xFFB2B2B2),    // gray for official/committed builds (matches omniGrayColor)
+    versionWarning = Color(0xFFFF8C00),      // orange for newer version available (matches metadataTextWarningColor)
+    versionUncommitted = Color(0xFFFF4444)   // red for uncommitted dev builds (matches urgentColor/alarm)
 )
 
 /**
@@ -173,7 +180,10 @@ internal val DarkGeneralColors = GeneralColors(
     loopSuperBolus = Color(0xFFFB8C00),      // orange for super bolus
     flavorClient1Tint = Color(0x30E8C50C),   // yellow tint (AAPSClient)
     flavorClient2Tint = Color(0x300FBBE0),   // blue tint (AAPSClient2)
-    flavorClient3Tint = Color(0x304CAF50)    // green tint (AAPSClient3)
+    flavorClient3Tint = Color(0x304CAF50),   // green tint (AAPSClient3)
+    versionCommitted = Color(0xFFB2B2B2),    // gray for official/committed builds
+    versionWarning = Color(0xFFFF8C00),      // orange for newer version available
+    versionUncommitted = Color(0xFFFF4444)   // red for uncommitted dev builds
 )
 
 /**

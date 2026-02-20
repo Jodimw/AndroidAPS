@@ -3,6 +3,7 @@ package app.aaps.ui.compose.main
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.SwapHoriz
 import androidx.compose.material3.DrawerValue
@@ -22,11 +23,16 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import app.aaps.core.data.plugin.PluginType
 import app.aaps.core.interfaces.plugin.PluginBase
+import app.aaps.core.keys.LongComposedKey
 import app.aaps.core.ui.compose.AapsFab
+import app.aaps.core.ui.compose.AapsTheme
 import app.aaps.core.ui.compose.OkCancelDialog
 import app.aaps.core.ui.compose.OkDialog
 import app.aaps.core.ui.compose.QueryAnyPasswordDialog
@@ -306,6 +312,25 @@ fun MainScreen(
                         modifier = Modifier
                             .fillMaxSize()
                             .padding(paddingValues)
+                    )
+                }
+
+                // Version overlay (always visible for screenshots)
+                if (config.APS || config.PUMPCONTROL) {
+                    val colors = AapsTheme.generalColors
+                    val versionColor = when {
+                        config.COMMITTED                                                               -> colors.versionCommitted
+                        preferences.get(LongComposedKey.AppExpiration, config.VERSION_NAME) != 0L -> colors.versionWarning
+                        else                                                                           -> colors.versionUncommitted
+                    }
+                    Text(
+                        text = "${config.VERSION_NAME} (${config.HEAD.substring(0, minOf(4, config.HEAD.length))})",
+                        color = versionColor,
+                        fontSize = 10.sp,
+                        modifier = Modifier
+                            .align(Alignment.TopStart)
+                            .padding(paddingValues)
+                            .padding(start = 4.dp)
                     )
                 }
             }

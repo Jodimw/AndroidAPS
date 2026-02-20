@@ -428,7 +428,6 @@ class MainApp : DaggerApplication() {
         val presets = listOf(
             TTPreset(
                 id = "eatingsoon",
-                nameRes = app.aaps.core.ui.R.string.eatingsoon,
                 reason = TT.Reason.EATING_SOON,
                 targetValue = if (hasOldPreferences) {
                     profileUtil.convertToMgdl(preferences.get(UnitDoubleKey.OverviewEatingSoonTarget), units)
@@ -444,7 +443,6 @@ class MainApp : DaggerApplication() {
             ),
             TTPreset(
                 id = "activity",
-                nameRes = app.aaps.core.ui.R.string.activity,
                 reason = TT.Reason.ACTIVITY,
                 targetValue = if (hasOldPreferences) {
                     profileUtil.convertToMgdl(preferences.get(UnitDoubleKey.OverviewActivityTarget), units)
@@ -460,7 +458,6 @@ class MainApp : DaggerApplication() {
             ),
             TTPreset(
                 id = "hypo",
-                nameRes = app.aaps.core.ui.R.string.hypo,
                 reason = TT.Reason.HYPOGLYCEMIA,
                 targetValue = if (hasOldPreferences) {
                     profileUtil.convertToMgdl(preferences.get(UnitDoubleKey.OverviewHypoTarget), units)

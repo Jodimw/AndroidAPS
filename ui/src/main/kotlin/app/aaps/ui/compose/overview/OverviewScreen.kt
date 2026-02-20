@@ -123,7 +123,7 @@ fun OverviewScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 8.dp, vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.Bottom
         ) {
             // BG Info section + sensitivity chip on the left
             Column(
