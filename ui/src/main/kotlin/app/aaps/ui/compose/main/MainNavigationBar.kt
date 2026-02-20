@@ -16,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import app.aaps.core.ui.compose.icons.IcAutomation
 import app.aaps.core.ui.compose.icons.IcBolus
 import app.aaps.ui.R
 import app.aaps.core.ui.R as CoreUiR
@@ -25,6 +26,8 @@ fun MainNavigationBar(
     onManageClick: () -> Unit,
     onTreatmentClick: () -> Unit,
     quickWizardCount: Int = 0,
+    onAutomationClick: () -> Unit = {},
+    automationCount: Int = 0,
     permissionsMissing: Boolean = false,
     onPermissionsClick: () -> Unit = {},
     modifier: Modifier = Modifier
@@ -78,6 +81,27 @@ fun MainNavigationBar(
             label = { Text(text = stringResource(CoreUiR.string.treatments)) },
             colors = navColors
         )
+
+        // Automation action button (visible only when actions are available)
+        if (automationCount > 0) {
+            NavigationBarItem(
+                selected = false,
+                onClick = onAutomationClick,
+                icon = {
+                    BadgedBox(
+                        badge = { Badge { Text(text = automationCount.toString()) } }
+                    ) {
+                        Icon(
+                            imageVector = IcAutomation,
+                            contentDescription = stringResource(CoreUiR.string.automation),
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                },
+                label = { Text(text = stringResource(CoreUiR.string.automation)) },
+                colors = navColors
+            )
+        }
 
         // Manage action button (opens bottom sheet)
         NavigationBarItem(

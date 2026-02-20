@@ -82,6 +82,7 @@ import app.aaps.ui.compose.management.ImportSettingsScreen
 import app.aaps.ui.compose.management.ImportSource
 import app.aaps.ui.compose.management.ImportViewModel
 import app.aaps.ui.compose.management.MaintenanceViewModel
+import app.aaps.ui.compose.overview.automation.AutomationViewModel
 import app.aaps.ui.compose.overview.graphs.GraphViewModel
 import app.aaps.ui.compose.overview.manage.ManageViewModel
 import app.aaps.ui.compose.overview.statusLights.StatusViewModel
@@ -142,6 +143,7 @@ class ComposeMainActivity : DaggerAppCompatActivityWithResult() {
     @Inject lateinit var maintenanceViewModel: MaintenanceViewModel
     @Inject lateinit var statusViewModel: StatusViewModel
     @Inject lateinit var treatmentViewModel: TreatmentViewModel
+    @Inject lateinit var automationViewModel: AutomationViewModel
     @Inject lateinit var graphViewModel: GraphViewModel
     @Inject lateinit var treatmentsViewModel: TreatmentsViewModel
     @Inject lateinit var tempTargetManagementViewModel: TempTargetManagementViewModel
@@ -299,6 +301,7 @@ class ComposeMainActivity : DaggerAppCompatActivityWithResult() {
                             maintenanceViewModel = maintenanceViewModel,
                             statusViewModel = statusViewModel,
                             treatmentViewModel = treatmentViewModel,
+                            automationViewModel = automationViewModel,
                             // Search
                             searchUiState = searchState,
                             onSearchQueryChange = { searchViewModel.onQueryChanged(it) },

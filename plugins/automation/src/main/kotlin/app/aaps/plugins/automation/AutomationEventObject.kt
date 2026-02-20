@@ -38,6 +38,29 @@ class AutomationEventObject(private val injector: HasAndroidInjector) : Automati
     override fun canRun(): Boolean = trigger.shouldRun()
     override fun preconditionCanRun(): Boolean = getPreconditions().shouldRun()
     override fun firstActionIcon(): Int? = actions.firstOrNull()?.icon()
+    override fun actionsDescription(): List<String> = actions.map { it.shortDescription() }
+
+    override fun triggerIcons(): Set<Int> {
+        val icons = mutableSetOf<Int>()
+        if (userAction) icons.add(app.aaps.core.ui.R.drawable.ic_user_options)
+        fillTriggerIconSet(trigger, icons)
+        return icons
+    }
+
+    override fun actionIcons(): Set<Int> = actions.mapTo(mutableSetOf()) { it.icon() }
+
+    private fun fillTriggerIconSet(connector: TriggerConnector, set: MutableSet<Int>) {
+        for (t in connector.list) {
+            if (t is TriggerConnector) {
+                fillTriggerIconSet(t, set)
+            } else {
+                val icon = t.icon()
+                if (icon.isPresent) {
+                    set.add(icon.get())
+                }
+            }
+        }
+    }
 
     internal fun getPreconditions(): TriggerConnector {
         val trigger = TriggerConnector(injector, TriggerConnector.Type.AND)

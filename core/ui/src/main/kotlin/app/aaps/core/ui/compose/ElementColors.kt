@@ -31,6 +31,7 @@ import androidx.compose.ui.graphics.Color
  * @property careportal Color for careportal/note icon
  * @property runningMode Color for running mode icon
  * @property userEntry Color for user entry icon
+ * @property automation Color for automation action items
  */
 data class ElementColors(
     val insulin: Color,
@@ -61,7 +62,8 @@ data class ElementColors(
     val loopSuperBolus: Color,
     val loopDisconnected: Color,
     val loopSuspended: Color,
-    val sensitivity: Color
+    val sensitivity: Color,
+    val automation: Color
 )
 
 /**
@@ -97,7 +99,8 @@ internal val LightElementColors = ElementColors(
     loopSuperBolus = Color(0xFFFFA500),   // orange
     loopDisconnected = Color(0xFF939393), // gray
     loopSuspended = Color(0xFFF6CE22),    // yellow
-    sensitivity = Color(0xFF008585)        // teal — autosens icon color
+    sensitivity = Color(0xFF008585),        // teal — autosens icon color
+    automation = Color(0xFF66BB6A)          // green — same as userEntry light (userOptionColor)
 )
 
 /**
@@ -133,7 +136,8 @@ internal val DarkElementColors = ElementColors(
     loopSuperBolus = Color(0xFFFFA500),   // orange
     loopDisconnected = Color(0xFF939393), // gray
     loopSuspended = Color(0xFFF6CE22),    // yellow
-    sensitivity = Color(0xFF008585)        // teal — autosens icon color
+    sensitivity = Color(0xFF008585),        // teal — autosens icon color
+    automation = Color(0xFF6AE86D)          // green — same as userEntry dark
 )
 
 /**

@@ -40,6 +40,9 @@ import app.aaps.ui.compose.management.MaintenanceBottomSheet
 import app.aaps.ui.compose.management.MaintenanceEvent
 import app.aaps.ui.compose.management.MaintenanceViewModel
 import app.aaps.ui.compose.overview.OverviewScreen
+import app.aaps.ui.compose.overview.automation.AutomationActionItem
+import app.aaps.ui.compose.overview.automation.AutomationBottomSheet
+import app.aaps.ui.compose.overview.automation.AutomationViewModel
 import app.aaps.ui.compose.overview.graphs.GraphViewModel
 import app.aaps.ui.compose.overview.manage.ManageBottomSheet
 import app.aaps.ui.compose.overview.manage.ManageViewModel
@@ -63,6 +66,7 @@ fun MainScreen(
     maintenanceViewModel: MaintenanceViewModel,
     statusViewModel: StatusViewModel,
     treatmentViewModel: app.aaps.ui.compose.overview.treatments.TreatmentViewModel,
+    automationViewModel: AutomationViewModel,
     // Search
     searchUiState: SearchUiState,
     onSearchQueryChange: (String) -> Unit,
@@ -131,6 +135,8 @@ fun MainScreen(
     val scope = rememberCoroutineScope()
     var showTreatmentSheet by remember { mutableStateOf(false) }
     var showManageSheet by remember { mutableStateOf(false) }
+    var showAutomationSheet by remember { mutableStateOf(false) }
+    var confirmAutomationItem by remember { mutableStateOf<AutomationActionItem?>(null) }
     var showLogSettings by remember { mutableStateOf(false) }
 
     // Confirmation dialog states for maintenance destructive actions
@@ -245,6 +251,11 @@ fun MainScreen(
                         showTreatmentSheet = true
                     },
                     quickWizardCount = uiState.quickWizardItems.size,
+                    onAutomationClick = {
+                        automationViewModel.refreshState()
+                        showAutomationSheet = true
+                    },
+                    automationCount = automationViewModel.uiState.collectAsState().value.items.size,
                     permissionsMissing = permissionsMissing,
                     onPermissionsClick = onPermissionsClick,
                 )
@@ -344,6 +355,30 @@ fun MainScreen(
             treatmentButtonsDef = treatmentButtonsDef,
             preferences = preferences,
             config = config
+        )
+    }
+
+    // Automation bottom sheet
+    if (showAutomationSheet) {
+        val automationState by automationViewModel.uiState.collectAsState()
+        AutomationBottomSheet(
+            onDismiss = { showAutomationSheet = false },
+            automationItems = automationState.items,
+            onItemClick = { item -> confirmAutomationItem = item }
+        )
+    }
+
+    // Automation confirmation dialog
+    confirmAutomationItem?.let { item ->
+        val message = item.actionsDescription.joinToString("\n") { "• $it" }
+        OkCancelDialog(
+            title = item.title,
+            message = message,
+            onConfirm = {
+                automationViewModel.processAutomationEvent(item.eventHashCode)
+                confirmAutomationItem = null
+            },
+            onDismiss = { confirmAutomationItem = null }
         )
     }
 

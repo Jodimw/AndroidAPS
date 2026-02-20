@@ -1,6 +1,6 @@
 package app.aaps.ui.compose.main
-import androidx.compose.runtime.Immutable
 
+import androidx.compose.runtime.Immutable
 import app.aaps.core.data.model.RM
 
 /**
