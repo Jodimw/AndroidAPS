@@ -381,9 +381,6 @@ class ComposeMainActivity : DaggerAppCompatActivityWithResult() {
                             onImportSettingsNavigate = { source ->
                                 navController.navigate(AppRoute.ImportSettings.createRoute(source.name))
                             },
-                            onExportCsvExecute = {
-                                importExportPrefs.exportUserEntriesCsv(this@ComposeMainActivity)
-                            },
                             onRecreateActivity = { recreate() },
                             // Overview status callbacks
                             onSensorInsertClick = {

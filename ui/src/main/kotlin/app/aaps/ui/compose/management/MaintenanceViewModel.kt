@@ -1,5 +1,6 @@
 package app.aaps.ui.compose.management
 
+import androidx.annotation.StringRes
 import androidx.compose.runtime.Stable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -130,7 +131,17 @@ class MaintenanceViewModel @Inject constructor(
     // Log actions
 
     fun sendLogs() {
-        maintenance.sendLogs()
+        viewModelScope.launch {
+            val result = withContext(Dispatchers.IO) {
+                maintenance.executeSendLogs()
+            }
+            val message = buildResultMessage(
+                result,
+                localSuccess = CoreUiR.string.logs_sent,
+                localFailed = CoreUiR.string.logs_send_failed
+            )
+            _events.emit(MaintenanceEvent.Snackbar(message))
+        }
     }
 
     fun deleteLogs() {
@@ -218,8 +229,19 @@ class MaintenanceViewModel @Inject constructor(
         uel.log(Action.IMPORT_SETTINGS, Sources.Maintenance)
     }
 
-    fun logExportCsv() {
+    fun exportCsv() {
         uel.log(Action.EXPORT_CSV, Sources.Maintenance)
+        viewModelScope.launch {
+            val result = withContext(Dispatchers.IO) {
+                importExportPrefs.executeCsvExport()
+            }
+            val message = buildResultMessage(
+                result,
+                localSuccess = CoreUiR.string.csv_exported,
+                localFailed = CoreUiR.string.csv_export_failed
+            )
+            _events.emit(MaintenanceEvent.Snackbar(message))
+        }
     }
 
     // Cloud directory flow
@@ -393,16 +415,18 @@ class MaintenanceViewModel @Inject constructor(
         }
     }
 
-    private fun buildExportResultMessage(result: ExportResult): String {
+    private fun buildExportResultMessage(result: ExportResult): String =
+        buildResultMessage(result, CoreUiR.string.export_result_message_exported, CoreUiR.string.export_result_message_failed)
+
+    private fun buildResultMessage(result: ExportResult, @StringRes localSuccess: Int, @StringRes localFailed: Int): String {
         val parts = mutableListOf<String>()
         result.localSuccess?.let { ok ->
-            parts += if (ok) rh.gs(CoreUiR.string.export_result_message_exported)
-            else rh.gs(CoreUiR.string.export_result_message_failed)
+            parts += if (ok) rh.gs(localSuccess) else rh.gs(localFailed)
         }
         result.cloudSuccess?.let { ok ->
             parts += if (ok) rh.gs(CoreUiR.string.export_cloud_success)
             else rh.gs(CoreUiR.string.export_cloud_failed)
         }
-        return parts.joinToString("\n").ifEmpty { rh.gs(CoreUiR.string.export_result_message_failed) }
+        return parts.joinToString("\n").ifEmpty { rh.gs(localFailed) }
     }
 }

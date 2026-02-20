@@ -88,7 +88,6 @@ fun MainScreen(
     onLaunchBrowser: (String) -> Unit,
     onBringToForeground: () -> Unit,
     onImportSettingsNavigate: (ImportSource) -> Unit,
-    onExportCsvExecute: () -> Unit,
     onRecreateActivity: () -> Unit,
     // Overview status callbacks
     onSensorInsertClick: () -> Unit,
@@ -139,6 +138,7 @@ fun MainScreen(
     var showConfirmResetDb by remember { mutableStateOf(false) }
     var showConfirmCleanupDb by remember { mutableStateOf(false) }
     var showConfirmExportCsv by remember { mutableStateOf(false) }
+    var showConfirmSendLogs by remember { mutableStateOf(false) }
     var cleanupResultText by remember { mutableStateOf<String?>(null) }
     val snackbarHostState = remember { SnackbarHostState() }
 
@@ -401,7 +401,7 @@ fun MainScreen(
         MaintenanceBottomSheet(
             onDismiss = onMaintenanceSheetDismiss,
             onLogSettingsClick = { showLogSettings = true },
-            onSendLogsClick = { maintenanceViewModel.sendLogs() },
+            onSendLogsClick = { showConfirmSendLogs = true },
             onDeleteLogsClick = { maintenanceViewModel.deleteLogs() },
             onDirectoryClick = {
                 maintenanceViewModel.logSelectDirectory()
@@ -461,7 +461,7 @@ fun MainScreen(
     // Maintenance confirmation dialogs
     if (showConfirmResetAps) {
         OkCancelDialog(
-            title = stringResource(CoreUiR.string.maintenance),
+            title = stringResource(CoreUiR.string.confirmation),
             message = stringResource(CoreUiR.string.reset_aps_results_confirm),
             onConfirm = {
                 showConfirmResetAps = false
@@ -473,7 +473,7 @@ fun MainScreen(
 
     if (showConfirmResetDb) {
         OkCancelDialog(
-            title = stringResource(CoreUiR.string.maintenance),
+            title = stringResource(CoreUiR.string.confirmation),
             message = stringResource(CoreUiR.string.reset_db_confirm),
             onConfirm = {
                 showConfirmResetDb = false
@@ -485,7 +485,7 @@ fun MainScreen(
 
     if (showConfirmCleanupDb) {
         OkCancelDialog(
-            title = stringResource(CoreUiR.string.maintenance),
+            title = stringResource(CoreUiR.string.confirmation),
             message = stringResource(CoreUiR.string.cleanup_db_confirm),
             onConfirm = {
                 showConfirmCleanupDb = false
@@ -495,13 +495,25 @@ fun MainScreen(
         )
     }
 
+    if (showConfirmSendLogs) {
+        OkCancelDialog(
+            title = stringResource(CoreUiR.string.confirmation),
+            message = stringResource(CoreUiR.string.send_logs) + "?",
+            onConfirm = {
+                showConfirmSendLogs = false
+                maintenanceViewModel.sendLogs()
+            },
+            onDismiss = { showConfirmSendLogs = false }
+        )
+    }
+
     if (showConfirmExportCsv) {
         OkCancelDialog(
+            title = stringResource(CoreUiR.string.confirmation),
             message = stringResource(CoreUiR.string.ue_export_to_csv) + "?",
             onConfirm = {
                 showConfirmExportCsv = false
-                maintenanceViewModel.logExportCsv()
-                onExportCsvExecute()
+                maintenanceViewModel.exportCsv()
             },
             onDismiss = { showConfirmExportCsv = false }
         )

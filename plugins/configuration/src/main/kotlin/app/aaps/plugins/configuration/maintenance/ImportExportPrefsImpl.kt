@@ -112,7 +112,9 @@ class ImportExportPrefsImpl @Inject constructor(
     @ApplicationScope private val appScope: CoroutineScope,
     private val cloudStorageManager: CloudStorageManager,
     private val exportOptionsDialog: ExportOptionsDialog,
-    private val importSourceDialog: ImportSourceDialog
+    private val importSourceDialog: ImportSourceDialog,
+    private val userEntryPresentationHelper: UserEntryPresentationHelper,
+    private val storage: Storage
 ) : ImportExportPrefs {
 
     companion object {
@@ -1258,6 +1260,69 @@ class ImportExportPrefsImpl @Inject constructor(
         aapsLogger.info(LTag.CORE, "${CloudConstants.LOG_PREFIX} CSV_EXPORT WorkManager enqueued")
     }
 
+    override suspend fun executeCsvExport(): ExportResult {
+        aapsLogger.info(LTag.CORE, "${CloudConstants.LOG_PREFIX} CSV_EXPORT executeCsvExport started")
+
+        val entries = persistenceLayer.getUserEntryFilteredDataFromTime(MidnightTime.calc() - T.days(90).msecs())
+        aapsLogger.info(LTag.CORE, "${CloudConstants.LOG_PREFIX} CSV_EXPORT entries count=${entries.size}")
+
+        val csvLocal = sp.getBoolean(ExportOptionsDialog.PREF_CSV_LOCAL_ENABLED, true)
+        val csvCloud = sp.getBoolean(ExportOptionsDialog.PREF_CSV_CLOUD_ENABLED, false)
+        val isCloudActive = cloudStorageManager.isCloudStorageActive()
+        val cloudEnabled = csvCloud && isCloudActive
+
+        val destination = when {
+            csvLocal && cloudEnabled -> ExportDestination.BOTH
+            cloudEnabled             -> ExportDestination.CLOUD
+            else                     -> ExportDestination.LOCAL
+        }
+        aapsLogger.info(LTag.CORE, "${CloudConstants.LOG_PREFIX} CSV_EXPORT csvLocal=$csvLocal, csvCloud=$csvCloud, isCloudActive=$isCloudActive, destination=$destination")
+
+        var localSuccess: Boolean? = null
+        var cloudSuccess: Boolean? = null
+
+        if (destination == ExportDestination.LOCAL || destination == ExportDestination.BOTH) {
+            localSuccess = performLocalCsvExport(entries)
+        }
+
+        if (destination == ExportDestination.CLOUD || destination == ExportDestination.BOTH) {
+            cloudSuccess = performCloudCsvExport(entries)
+        }
+
+        return ExportResult(localSuccess = localSuccess, cloudSuccess = cloudSuccess)
+    }
+
+    private fun performLocalCsvExport(userEntries: List<UE>): Boolean {
+        return try {
+            prefFileList.ensureExportDirExists()
+            val newFile = prefFileList.newExportCsvFile() ?: return false
+            val contents = userEntryPresentationHelper.userEntriesToCsv(userEntries)
+            storage.putFileContents(context.contentResolver, newFile, contents)
+            true
+        } catch (e: Exception) {
+            aapsLogger.error(LTag.CORE, "CSV local export failed", e)
+            false
+        }
+    }
+
+    private suspend fun performCloudCsvExport(userEntries: List<UE>): Boolean {
+        return try {
+            val provider = cloudStorageManager.getActiveProvider() ?: return false
+            val contents = userEntryPresentationHelper.userEntriesToCsv(userEntries)
+            val fileName = "UserEntries_${org.joda.time.LocalDateTime.now().toString(org.joda.time.format.DateTimeFormat.forPattern("yyyy-MM-dd_HHmmss"))}.csv"
+            val folderId = provider.getOrCreateFolderPath(CloudConstants.CLOUD_PATH_USER_ENTRIES)
+            folderId?.let { provider.setSelectedFolderId(it) }
+            var uploadedFileId = provider.uploadFileToPath(fileName, contents.toByteArray(Charsets.UTF_8), "text/csv", CloudConstants.CLOUD_PATH_USER_ENTRIES)
+            if (uploadedFileId == null) {
+                uploadedFileId = provider.uploadFile(fileName, contents.toByteArray(Charsets.UTF_8), "text/csv")
+            }
+            uploadedFileId != null
+        } catch (e: Exception) {
+            aapsLogger.error(LTag.CORE, "${CloudConstants.LOG_PREFIX} CSV cloud export failed", e)
+            false
+        }
+    }
+
     class CsvExportWorker(
         private val context: Context,
         params: WorkerParameters
@@ -1269,7 +1334,7 @@ class ImportExportPrefsImpl @Inject constructor(
         @Inject lateinit var storage: Storage
         @Inject lateinit var persistenceLayer: PersistenceLayer
         @Inject lateinit var cloudStorageManager: CloudStorageManager
-        @Inject lateinit var exportOptionsDialog: ExportOptionsDialog
+        @Inject lateinit var sp: SP
 
         override suspend fun doWorkAndLog(): Result {
             aapsLogger.info(LTag.CORE, "${CloudConstants.LOG_PREFIX} CSV_EXPORT doWorkAndLog started")
@@ -1278,20 +1343,34 @@ class ImportExportPrefsImpl @Inject constructor(
 
             aapsLogger.info(LTag.CORE, "${CloudConstants.LOG_PREFIX} CSV_EXPORT entries count=${entries.size}")
 
-            val isCsvCloudEnabled = exportOptionsDialog.isCsvCloudEnabled()
+            val csvLocal = sp.getBoolean(ExportOptionsDialog.PREF_CSV_LOCAL_ENABLED, true)
+            val csvCloud = sp.getBoolean(ExportOptionsDialog.PREF_CSV_CLOUD_ENABLED, false)
             val isCloudActive = cloudStorageManager.isCloudStorageActive()
-            aapsLogger.info(LTag.CORE, "${CloudConstants.LOG_PREFIX} CSV_EXPORT isCsvCloudEnabled=$isCsvCloudEnabled, isCloudActive=$isCloudActive")
+            val cloudEnabled = csvCloud && isCloudActive
 
-            if (isCsvCloudEnabled && isCloudActive) {
-                aapsLogger.info(LTag.CORE, "${CloudConstants.LOG_PREFIX} CSV_EXPORT calling exportToCloud")
-                return exportToCloud(entries)
-            } else {
-                aapsLogger.info(LTag.CORE, "${CloudConstants.LOG_PREFIX} CSV_EXPORT calling exportToLocal")
-                return exportToLocal(entries)
+            val destination = when {
+                csvLocal && cloudEnabled -> ExportDestination.BOTH
+                cloudEnabled             -> ExportDestination.CLOUD
+                else                     -> ExportDestination.LOCAL
             }
+            aapsLogger.info(LTag.CORE, "${CloudConstants.LOG_PREFIX} CSV_EXPORT csvLocal=$csvLocal, csvCloud=$csvCloud, isCloudActive=$isCloudActive, destination=$destination")
+
+            var failed = false
+
+            if (destination == ExportDestination.LOCAL || destination == ExportDestination.BOTH) {
+                aapsLogger.info(LTag.CORE, "${CloudConstants.LOG_PREFIX} CSV_EXPORT calling exportToLocal")
+                if (exportToLocal(entries) != Result.success()) failed = true
+            }
+
+            if (destination == ExportDestination.CLOUD || destination == ExportDestination.BOTH) {
+                aapsLogger.info(LTag.CORE, "${CloudConstants.LOG_PREFIX} CSV_EXPORT calling exportToCloud")
+                if (exportToCloud(entries) != Result.success()) failed = true
+            }
+
+            return if (failed) Result.failure() else Result.success()
         }
 
-        private suspend fun exportToLocal(userEntries: List<UE>): Result {
+        private fun exportToLocal(userEntries: List<UE>): Result {
             prefFileList.ensureExportDirExists()
             val newFile = prefFileList.newExportCsvFile() ?: return Result.failure()
             var ret = Result.success()

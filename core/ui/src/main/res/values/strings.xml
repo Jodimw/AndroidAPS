@@ -683,6 +683,10 @@
     <!-- Cloud export -->
     <string name="export_cloud_success">Cloud export successful</string>
     <string name="export_cloud_failed">Cloud export FAILED!</string>
+    <string name="csv_exported">User entries exported</string>
+    <string name="csv_export_failed">User entries export FAILED!</string>
+    <string name="logs_sent">Logs sent via email</string>
+    <string name="logs_send_failed">Failed to send logs</string>
     <string name="export_options">Export Options</string>
     <string name="cloud_directory">Cloud Directory</string>
     <string name="export_settings_local">Export settings (Local)</string>
