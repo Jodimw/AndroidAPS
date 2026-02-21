@@ -49,6 +49,13 @@
     <string name="unattended_settings_export_summary">Включение данного параметра безопасно сохранит ваш пароль на этом телефоне</string>
     <string name="identification">Идентификация (электронная почта, ник в Facebook или Discord и т. п)</string>
     <!-- Provider-agnostic cloud export/import strings -->
+    <string name="exported_to_cloud">Настройки успешно экспортированы в облачное хранилище</string>
+    <string name="export_to_cloud_failed">Не удалось экспортировать в облачное хранилище</string>
+    <string name="cloud_connection_failed">Не удалось подключиться к облачному хранилищу</string>
+    <string name="loading_from_cloud">Загрузка настроек из облачного хранилища, подождите…</string>
+    <string name="cloud_folder_error">Ошибка загрузки папок из облака</string>
+    <string name="csv_uploaded_to_cloud">Записи пользователя успешно загружены в облачное хранилище в формате CSV</string>
+    <string name="cloud_reauthorize_message">Не удалось подключиться к облачному хранилищу. Хотите повторно авторизоваться?</string>
     <string name="request">Запрос</string>
     <string name="apsmode_title">Режим APS</string>
     <string name="error_asking_for_permissions">Ошибка при запросе разрешения</string>
@@ -168,6 +175,17 @@
     <string name="reset_aps_results">Сбросить результаты APS</string>
     <string name="error_accessing_filesystem_select_aaps_directory_properly">Ошибка доступа к файловой системе. Выберите каталог AAPS правильно.</string>
     <!-- Google Drive Storage -->
+    <string name="storage_local">Локальное Хранилище</string>
+    <string name="storage_google_drive">Диск Google</string>
+    <string name="select_storage_type">Выберите тип хранилища</string>
+    <string name="backup_to_google_drive">Резервное копирование на Google Диск</string>
+    <string name="google_drive_connection_error">Ошибка подключения к Google Диску</string>
+    <string name="reauthorize">Повторить аутентификацию</string>
+    <string name="cloud_auth_failed">Ошибка аутентификации в облачном хранилище</string>
+    <string name="cloud_auth_error">Ошибка аутентификации в облачном хранилище: %1$s</string>
+    <string name="enable_cloud_export_title">Включить экспорт из облака</string>
+    <string name="enable_cloud_export_message">Вы хотите включить экспорт в облако? Это включит опцию \"Все в облако\" в настройках экспорта.</string>
+    <string name="can_change_in_export_settings">Вы можете изменить это позже в настройках экспорта</string>
     <!-- Import source selection dialog -->
     <!-- Google Drive error messages (used by GoogleDriveManager) -->
     <!-- Provider-agnostic cloud storage strings -->
